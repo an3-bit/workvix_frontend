@@ -27,23 +27,32 @@ const Navbar = () => {
       setScrollPosition(position);
       setShowSearchBar(position > 100);
       
-      // Check if categoriesSection exists and user has scrolled to it
-      const categoriesSection = (window as any).categoriesSection;
+      // Check if we can find the categories section element
+      const categoriesSection = document.getElementById('categories-section');
+      
       if (categoriesSection) {
         const categoriesSectionTop = categoriesSection.getBoundingClientRect().top + window.scrollY;
-        const viewportHeight = window.innerHeight;
+        const categoriesSectionBottom = categoriesSectionTop + categoriesSection.offsetHeight;
         
-        // Show secondary nav when user is approaching the categories section
-        // Hide it when they've scrolled past it
-        if (position >= categoriesSectionTop - viewportHeight/2 && position < categoriesSectionTop + categoriesSection.offsetHeight) {
-          setShowSecondaryNav(true);
-        } else {
-          setShowSecondaryNav(false);
-        }
+        // Show secondary nav only when user is at the categories section
+        setShowSecondaryNav(
+          position >= categoriesSectionTop - window.innerHeight/2 && 
+          position < categoriesSectionBottom
+        );
+      } else {
+        // For development/testing, show after scrolling down a bit if section not found
+        setShowSecondaryNav(position > 500 && position < 1200);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
+    
+    // Add an id to the categories section for easier reference
+    const categoriesElement = document.querySelector('.categories-section');
+    if (categoriesElement) {
+      categoriesElement.id = 'categories-section';
+    }
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -202,15 +211,32 @@ const Navbar = () => {
         >
           <div className="container mx-auto px-4">
             <div className="hidden md:flex items-center justify-between py-3 overflow-x-auto">
-              {secondaryNavItems.map((item) => (
-                <a 
-                  key={item}
-                  href="#" 
-                  className="whitespace-nowrap px-3 py-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary"
-                >
-                  {item}
-                </a>
-              ))}
+              <NavigationMenu>
+                <NavigationMenuList className="flex space-x-6">
+                  {secondaryNavItems.map((item) => (
+                    <NavigationMenuItem key={item}>
+                      <NavigationMenuTrigger className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent">
+                        {item}
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent className="w-[240px] p-2">
+                        <ul className="grid w-full gap-1">
+                          {/* Generate 5 sample subcategories for each category */}
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <li key={i} className="text-sm">
+                              <a
+                                href="#"
+                                className="block select-none rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
+                              >
+                                {item} Subcategory {i + 1}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
             </div>
           </div>
         </div>
