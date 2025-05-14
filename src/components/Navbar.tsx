@@ -197,7 +197,8 @@ const Navbar = () => {
       {showSecondaryNav && (
         <div 
           ref={secondaryNavRef}
-          className="fixed top-20 left-0 right-0 z-30 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
+          className="fixed left-0 right-0 z-30 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
+          style={{ top: '80px' }} // Position it below the main navbar
         >
           <div className="container mx-auto px-4">
             <div className="hidden md:flex items-center justify-between py-3 overflow-x-auto">
