@@ -1,5 +1,6 @@
 
 import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Hero = () => {
   return (
@@ -25,11 +26,11 @@ const Hero = () => {
               <input
                 type="text"
                 placeholder="What service are you looking for today?"
-                className="search-input"
+                className="w-full py-3 px-4 outline-none text-gray-700 flex-grow"
               />
-              <button className="search-button">
+              <Button className="px-6 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-none">
                 <Search className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
           </div>
           
