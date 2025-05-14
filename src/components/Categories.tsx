@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Brush, Code, Megaphone, FileText, Video, Image, Music, Package, Globe } from 'lucide-react';
 
 const categories = [
@@ -67,9 +67,22 @@ const categories = [
 
 const Categories = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const categoriesRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Expose the ref to the global window object for the Navbar to access
+    if (categoriesRef.current) {
+      (window as any).categoriesSection = categoriesRef.current;
+    }
+    
+    return () => {
+      // Clean up on unmount
+      delete (window as any).categoriesSection;
+    };
+  }, []);
   
   return (
-    <section className="py-16 bg-gray-50">
+    <section ref={categoriesRef} id="popular-services" className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">Popular Services</h2>
         
