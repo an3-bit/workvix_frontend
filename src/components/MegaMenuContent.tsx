@@ -13,7 +13,7 @@ type MegaMenuContentProps = {
 export const MegaMenuContent = ({ sections }: MegaMenuContentProps) => {
   return (
     <div className="w-full max-w-screen-xl p-6 bg-white rounded-md shadow-lg">
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
         {sections.map((section) => (
           <div key={section.title} className="space-y-3">
             <h3 className="font-medium text-sm text-gray-500">{section.title}</h3>
