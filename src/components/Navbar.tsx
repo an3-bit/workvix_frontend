@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,14 +9,46 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { MegaMenuContent } from "@/components/MegaMenuContent";
+
+// Enhanced MegaMenu component
+const MegaMenu = ({ sections }) => {
+  return (
+    <div className="w-full bg-white p-4 shadow-lg">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-6 gap-4">
+          {sections.map((section, index) => (
+            <div key={index} className="space-y-2">
+              <h3 className="font-medium text-sm text-skillforge-primary border-b pb-1">{section.title}</h3>
+              <ul className="space-y-1">
+                {section.items.map((item, itemIndex) => (
+                  <li key={itemIndex}>
+                    <Link 
+                      to="#" 
+                      className="text-xs text-gray-600 hover:text-skillforge-primary flex items-center gap-1"
+                    >
+                      {item}
+                      {item.includes("NEW") && (
+                        <span className="bg-pink-100 text-pink-600 text-xs px-1 py-0.5 rounded-full text-[10px]">NEW</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showSecondaryNav, setShowSecondaryNav] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const secondaryNavRef = useRef<HTMLDivElement>(null);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const secondaryNavRef = useRef(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -29,20 +60,18 @@ const Navbar = () => {
       setScrollPosition(position);
       setShowSearchBar(position > 100);
       
-      // Check if we can find the categories section element
+      // Show secondary nav after scrolling to categories section
       const categoriesSection = document.getElementById('categories-section');
       
       if (categoriesSection) {
         const categoriesSectionTop = categoriesSection.getBoundingClientRect().top + window.scrollY;
         const categoriesSectionBottom = categoriesSectionTop + categoriesSection.offsetHeight;
         
-        // Show secondary nav only when user is at the categories section
         setShowSecondaryNav(
           position >= categoriesSectionTop - window.innerHeight/2 && 
           position < categoriesSectionBottom
         );
       } else {
-        // For development/testing, show after scrolling down a bit if section not found
         setShowSecondaryNav(position > 500 && position < 1200);
       }
     };
@@ -60,116 +89,34 @@ const Navbar = () => {
     };
   }, []);
 
-  // Category dropdown data
-  const categories = [
-    {
-      name: "Graphics & Design",
-      subcategories: ["Logo Design", "Brand Identity", "Web Design", "App Design", "Social Media Design", "Illustration"]
-    },
-    {
-      name: "Digital Marketing",
-      subcategories: ["Social Media Marketing", "SEO", "Content Marketing", "Video Marketing", "Email Marketing"]
-    },
-    {
-      name: "Writing & Translation",
-      subcategories: ["Articles & Blog Posts", "Website Content", "Creative Writing", "Translation", "Proofreading & Editing"]
-    },
-    {
-      name: "Programming",
-      subcategories: ["Website Development", "Mobile Apps", "Game Development", "E-commerce Development", "WordPress"]
-    },
-    {
-      name: "Video & Animation",
-      subcategories: ["Video Editing", "Animation", "Logo Animation", "Explainer Videos", "Intros & Outros"]
-    }
-  ];
-
-  // Secondary navigation data with detailed mega menu content
-  const secondaryNavItems = [
+  // Main navigation categories data
+  const mainCategories = [
     {
       name: "Graphics & Design",
       sections: [
         {
           title: "Logo & Brand Identity",
-          items: ["Logo Design", "Brand Style Guides", "Business Cards", "Stationery Design", "Fonts & Typography"]
+          items: ["Logo Design", "Brand Style Guides", "Business Cards & Stationery", "Fonts & Typography", "Logo Maker Tool"]
+        },
+        {
+          title: "Art & Illustration",
+          items: ["Illustration", "AI Artists", "AI Avatar Design", "Portraits & Caricatures", "Cartoons & Comics"]
         },
         {
           title: "Web & App Design",
           items: ["Website Design", "App Design", "UX Design", "Landing Page Design", "Icon Design"]
         },
         {
+          title: "Product & Gaming",
+          items: ["Industrial & Product Design", "Character Modeling", "Game Art", "Graphics for Streamers"]
+        },
+        {
           title: "Visual Design",
-          items: ["Image Editing", "Social Media Design", "Presentation Design", "Infographic Design", "Vector Tracing"]
+          items: ["Image Editing", "Presentation Design", "Background Removal", "Infographic Design", "Vector Tracing"]
         },
         {
           title: "Print Design",
           items: ["Flyer Design", "Brochure Design", "Poster Design", "Catalog Design", "Menu Design"]
-        },
-        {
-          title: "Packaging & Labels",
-          items: ["Packaging Design", "Book Cover Design", "Product Label Design", "Bag & Merchandise Design"]
-        },
-        {
-          title: "Illustration",
-          items: ["Character Design", "Pattern Design", "Portraits & Caricatures", "Cartoons & Comics", "Technical Drawing"]
-        }
-      ]
-    },
-    {
-      name: "Digital Marketing",
-      sections: [
-        {
-          title: "Search",
-          items: ["Search Engine Optimization (SEO)", "Local SEO", "E-Commerce SEO", "Video SEO", "SEO Audit"]
-        },
-        {
-          title: "Social Media",
-          items: ["Social Media Marketing", "Facebook Ads", "Instagram Marketing", "TikTok Shop", "LinkedIn Marketing"]
-        },
-        {
-          title: "Paid Advertising",
-          items: ["Google Ads", "Display Advertising", "PPC Management", "Retargeting", "Social Media Advertising"]
-        },
-        {
-          title: "Marketing Strategy",
-          items: ["Marketing Strategy", "Marketing Plans", "Brand Strategy", "Content Strategy", "Growth Marketing"]
-        },
-        {
-          title: "Email & Automation",
-          items: ["Email Marketing", "Marketing Automation", "Drip Campaigns", "Email Templates", "Lead Generation"]
-        },
-        {
-          title: "Analytics & Optimization",
-          items: ["Web Analytics", "Conversion Rate Optimization", "A/B Testing", "User Testing", "Marketing Analytics"]
-        }
-      ]
-    },
-    {
-      name: "Writing & Translation",
-      sections: [
-        {
-          title: "Content Writing",
-          items: ["Articles & Blog Posts", "Website Content", "Creative Writing", "Product Descriptions", "SEO Writing"]
-        },
-        {
-          title: "Business Writing",
-          items: ["Business Plans", "Grant Writing", "Technical Writing", "Case Studies", "White Papers"]
-        },
-        {
-          title: "Translation",
-          items: ["General Translation", "Legal Translation", "Technical Translation", "Medical Translation", "Marketing Translation"]
-        },
-        {
-          title: "Editing & Proofreading",
-          items: ["Proofreading", "Editing", "Content Reviews", "Fact Checking", "Grammar Checks"]
-        },
-        {
-          title: "Book & eBook",
-          items: ["Book Writing", "eBook Writing", "Ghost Writing", "Book Editing", "Self Publish Your Book"]
-        },
-        {
-          title: "UX Writing",
-          items: ["Microcopy", "User Guides", "App Content", "Product Descriptions", "Landing Page Copy"]
         }
       ]
     },
@@ -203,6 +150,35 @@ const Navbar = () => {
       ]
     },
     {
+      name: "Digital Marketing",
+      sections: [
+        {
+          title: "Search",
+          items: ["Search Engine Optimization (SEO)", "Local SEO", "E-Commerce SEO", "Video SEO", "SEO Audit"]
+        },
+        {
+          title: "Social Media",
+          items: ["Social Media Marketing", "Facebook Ads", "Instagram Marketing", "TikTok Shop", "LinkedIn Marketing"]
+        },
+        {
+          title: "Paid Advertising",
+          items: ["Google Ads", "Display Advertising", "PPC Management", "Retargeting", "Social Media Advertising"]
+        },
+        {
+          title: "Marketing Strategy",
+          items: ["Marketing Strategy", "Marketing Plans", "Brand Strategy", "Content Strategy", "Growth Marketing"]
+        },
+        {
+          title: "Email & Automation",
+          items: ["Email Marketing", "Marketing Automation", "Drip Campaigns", "Email Templates", "Lead Generation"]
+        },
+        {
+          title: "Analytics & Optimization",
+          items: ["Web Analytics", "Conversion Rate Optimization", "A/B Testing", "User Testing", "Marketing Analytics"]
+        }
+      ]
+    },
+    {
       name: "Video & Animation",
       sections: [
         {
@@ -228,6 +204,35 @@ const Navbar = () => {
         {
           title: "Social & Marketing Videos",
           items: ["Social Media Videos", "Instagram Videos", "YouTube Videos", "TikTok Videos", "Facebook Videos"]
+        }
+      ]
+    },
+    {
+      name: "Writing & Translation",
+      sections: [
+        {
+          title: "Content Writing",
+          items: ["Articles & Blog Posts", "Website Content", "Creative Writing", "Product Descriptions", "SEO Writing"]
+        },
+        {
+          title: "Books & eBooks",
+          items: ["Book Design", "Book Covers", "Book Layout Design & Typesetting", "Children's Book Illustration"]
+        },
+        {
+          title: "Translation",
+          items: ["General Translation", "Legal Translation", "Technical Translation", "Medical Translation", "Marketing Translation"]
+        },
+        {
+          title: "Business Writing",
+          items: ["Business Plans", "Grant Writing", "Technical Writing", "Case Studies", "White Papers"]
+        },
+        {
+          title: "Editing & Proofreading",
+          items: ["Proofreading", "Editing", "Content Reviews", "Fact Checking", "Grammar Checks"]
+        },
+        {
+          title: "UX Writing",
+          items: ["Microcopy", "User Guides", "App Content", "Product Descriptions", "Landing Page Copy"]
         }
       ]
     },
@@ -288,41 +293,18 @@ const Navbar = () => {
           items: ["Accounting", "Tax Preparation", "Financial Analysis", "Bookkeeping", "Financial Planning"]
         }
       ]
-    },
-    {
-      name: "Photography",
-      sections: [
-        {
-          title: "Photography Services",
-          items: ["Product Photography", "Portrait Photography", "Event Photography", "Food Photography", "Real Estate Photography"]
-        },
-        {
-          title: "Photo Editing",
-          items: ["Photo Retouching", "Image Manipulation", "Background Removal", "Color Correction", "Photo Restoration"]
-        },
-        {
-          title: "Commercial Photography",
-          items: ["Product Photography", "Fashion Photography", "Food Photography", "Real Estate Photography", "Architecture Photography"]
-        },
-        {
-          title: "Special Photography",
-          items: ["Aerial Photography", "360 Photography", "Corporate Photography", "Stock Photos", "Virtual Photography"]
-        },
-        {
-          title: "Photo Enhancements",
-          items: ["Photo Enhancement", "HDR Photos", "Image Manipulation", "Headshot Retouching", "Product Photo Enhancement"]
-        },
-        {
-          title: "Photography Tutorials",
-          items: ["Photography Courses", "Photo Editing Tutorials", "Lightroom Presets", "Photography Tips", "Photography Guides"]
-        }
-      ]
     }
   ];
 
+  // For the mobile menu, we'll use a simplified version of categories
+  const mobileCategories = mainCategories.map(category => ({
+    name: category.name,
+    subcategories: category.sections.slice(0, 2).flatMap(section => section.items.slice(0, 3))
+  }));
+
   return (
     <>
-      <header className={`sticky top-0 z-40 w-full bg-white shadow-sm transition-all duration-300 ${showSearchBar ? 'shadow-md' : ''}`}>
+      <header className={`sticky top-0 z-50 w-full bg-white shadow-sm transition-all duration-300 ${showSearchBar ? 'shadow-md' : ''}`}>
         <div className="container mx-auto px-4">
           {/* Main Navbar */}
           <div className="flex justify-between items-center h-16 md:h-20">
@@ -348,6 +330,8 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
+              <Link to="/explore-skills" className="text-gray-600 hover:text-skillforge-primary transition-colors">Explore</Link>
+              <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">SkillForge Premium</Link>
               <Link to="/blog" className="text-gray-600 hover:text-skillforge-primary transition-colors">Blog</Link>
               <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">Become a Seller</Link>
               <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">Sign In</Link>
@@ -364,33 +348,27 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Categories Navigation (Desktop) */}
+          {/* Categories Navigation (Desktop) - Fiverr-like style */}
           <div className="hidden md:block border-t">
-            <NavigationMenu className="mx-auto">
-              <NavigationMenuList className="flex justify-between w-full py-2">
-                {categories.map((category) => (
-                  <NavigationMenuItem key={category.name}>
-                    <NavigationMenuTrigger className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary">
-                      {category.name}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent className="w-[240px] p-2">
-                      <ul className="grid w-full gap-1">
-                        {category.subcategories.map((subcat) => (
-                          <li key={subcat} className="text-sm">
-                            <a
-                              href="#"
-                              className="block select-none rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
-                            >
-                              {subcat}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
+            <div className="relative">
+              <NavigationMenu className="mx-auto">
+                <NavigationMenuList className="flex justify-between w-full py-2">
+                  {mainCategories.map((category) => (
+                    <NavigationMenuItem key={category.name} className="static">
+                      <NavigationMenuTrigger 
+                        className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary"
+                        onMouseEnter={() => setActiveCategory(category.name)}
+                      >
+                        {category.name}
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent className="absolute left-0 w-screen bg-white shadow-lg z-50">
+                        <MegaMenu sections={category.sections} />
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
           </div>
 
           {/* Mobile Navigation */}
@@ -410,15 +388,16 @@ const Navbar = () => {
                 
                 <Link to="/blog" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Blog</Link>
                 
-                {categories.map((category) => (
+                {mobileCategories.map((category) => (
                   <div key={category.name} className="px-2 py-1">
                     <div className="font-medium text-gray-600">{category.name}</div>
                     <div className="ml-4 mt-1 flex flex-col space-y-1">
-                      {category.subcategories.slice(0, 3).map((subcat) => (
+                      {category.subcategories.slice(0, 4).map((subcat) => (
                         <a key={subcat} href="#" className="text-sm text-gray-500 hover:text-skillforge-primary">
                           {subcat}
                         </a>
                       ))}
+                      <a href="#" className="text-xs text-skillforge-primary hover:underline">See all...</a>
                     </div>
                   </div>
                 ))}
@@ -435,24 +414,27 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Secondary Navigation that appears at the Popular Services section */}
+      {/* Fixed secondary navigation that can appear on scroll */}
       {showSecondaryNav && (
         <div 
           ref={secondaryNavRef}
-          className="fixed left-0 right-0 z-30 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
-          style={{ top: '80px' }} // Position it below the main navbar
+          className="fixed left-0 right-0 z-40 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
+          style={{ top: '80px' }} 
         >
           <div className="container mx-auto px-4">
             <div className="hidden md:flex items-center justify-between py-3 overflow-x-auto">
               <NavigationMenu className="w-full">
                 <NavigationMenuList className="flex space-x-6 w-full justify-between">
-                  {secondaryNavItems.map((item) => (
-                    <NavigationMenuItem key={item.name}>
-                      <NavigationMenuTrigger className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent">
-                        {item.name}
+                  {mainCategories.map((category) => (
+                    <NavigationMenuItem key={category.name} className="static">
+                      <NavigationMenuTrigger 
+                        className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent"
+                        onMouseEnter={() => setActiveCategory(category.name)}
+                      >
+                        {category.name}
                       </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <MegaMenuContent sections={item.sections} />
+                      <NavigationMenuContent className="absolute left-0 w-screen bg-white shadow-lg z-50">
+                        <MegaMenu sections={category.sections} />
                       </NavigationMenuContent>
                     </NavigationMenuItem>
                   ))}
