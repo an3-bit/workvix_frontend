@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Search, Menu, X } from 'lucide-react';
 import {
@@ -231,9 +232,9 @@ const Navbar = () => {
           <div className="flex justify-between items-center h-16 md:h-20">
             <div className="flex items-center">
               {/* Logo */}
-              <a href="/" className="flex items-center mr-10">
+              <Link to="/" className="flex items-center mr-10">
                 <span className="text-2xl font-bold text-skillforge-primary">Skill<span className="text-skillforge-secondary">Forge</span></span>
-              </a>
+              </Link>
 
               {/* Search bar that appears on scroll */}
               {showSearchBar && (
@@ -251,9 +252,11 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
-              <a href="#" className="text-gray-600 hover:text-skillforge-primary transition-colors">Become a Seller</a>
-              <a href="#" className="text-gray-600 hover:text-skillforge-primary transition-colors">Sign In</a>
-              <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+              <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">Become a Seller</Link>
+              <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">Sign In</Link>
+              <Link to="/join">
+                <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -322,9 +325,11 @@ const Navbar = () => {
                 ))}
                 
                 <hr className="my-2" />
-                <a href="#" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Become a Seller</a>
-                <a href="#" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Sign In</a>
-                <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 w-full">Join</Button>
+                <Link to="/become-seller" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Become a Seller</Link>
+                <Link to="/signin" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Sign In</Link>
+                <Link to="/join">
+                  <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 w-full">Join</Button>
+                </Link>
               </nav>
             </div>
           )}
