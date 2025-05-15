@@ -9,6 +9,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { MegaMenuContent } from "@/components/MegaMenuContent";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -82,16 +83,144 @@ const Navbar = () => {
     }
   ];
 
-  // Secondary navigation data - simplified version of categories for the floating nav
+  // Secondary navigation data with detailed mega menu content
   const secondaryNavItems = [
-    "Graphics & Design",
-    "Digital Marketing",
-    "Writing & Translation",
-    "Programming & Tech",
-    "Video & Animation",
-    "Music & Audio",
-    "Business",
-    "Photography"
+    {
+      name: "Graphics & Design",
+      sections: [
+        {
+          title: "Logo & Brand Identity",
+          items: ["Logo Design", "Brand Style Guides", "Business Cards", "Stationery Design", "Fonts & Typography"]
+        },
+        {
+          title: "Web & App Design",
+          items: ["Website Design", "App Design", "UX Design", "Landing Page Design", "Icon Design"]
+        },
+        {
+          title: "Visual Design",
+          items: ["Image Editing", "Social Media Design", "Presentation Design", "Infographic Design", "Vector Tracing"]
+        }
+      ]
+    },
+    {
+      name: "Digital Marketing",
+      sections: [
+        {
+          title: "Search",
+          items: ["Search Engine Optimization (SEO)", "Local SEO", "E-Commerce SEO", "Video SEO", "SEO Audit"]
+        },
+        {
+          title: "Channel Specific",
+          items: ["Social Media Marketing", "Facebook Ads", "Instagram Marketing", "Email Marketing", "Google Ads"]
+        },
+        {
+          title: "Analytics & Strategy",
+          items: ["Marketing Strategy", "Web Analytics", "Conversion Optimization", "Email Strategy", "Marketing Plans"]
+        }
+      ]
+    },
+    {
+      name: "Writing & Translation",
+      sections: [
+        {
+          title: "Content Writing",
+          items: ["Articles & Blog Posts", "Website Content", "Creative Writing", "Product Descriptions", "SEO Writing"]
+        },
+        {
+          title: "Translation",
+          items: ["General Translation", "Legal Translation", "Technical Translation", "Medical Translation", "Marketing Translation"]
+        },
+        {
+          title: "Editing & Proofreading",
+          items: ["Proofreading", "Editing", "Content Reviews", "Fact Checking", "Grammar Checks"]
+        }
+      ]
+    },
+    {
+      name: "Programming & Tech",
+      sections: [
+        {
+          title: "Website Development",
+          items: ["WordPress", "Shopify", "Wix", "Custom Websites", "E-commerce Development"]
+        },
+        {
+          title: "Application Development",
+          items: ["Mobile Apps", "Desktop Applications", "Web Applications", "Game Development", "API Development"]
+        },
+        {
+          title: "Technical Services",
+          items: ["DevOps", "Support & IT", "Cybersecurity", "Data Analysis", "Database Design"]
+        }
+      ]
+    },
+    {
+      name: "Video & Animation",
+      sections: [
+        {
+          title: "Video Production",
+          items: ["Video Editing", "Video Production", "Short Video Ads", "Video Trailers", "Explainer Videos"]
+        },
+        {
+          title: "Animation",
+          items: ["Character Animation", "Logo Animation", "3D Animation", "Motion Graphics", "Animated GIFs"]
+        },
+        {
+          title: "Production Elements",
+          items: ["Intros & Outros", "Visual Effects", "Subtitles & Captions", "Sound Effects", "Voice Over"]
+        }
+      ]
+    },
+    {
+      name: "Music & Audio",
+      sections: [
+        {
+          title: "Music",
+          items: ["Music Production", "Vocals & Singers", "Mixing & Mastering", "Session Musicians", "Songwriting"]
+        },
+        {
+          title: "Audio Services",
+          items: ["Voice Over", "Podcast Production", "Audio Editing", "Sound Effects", "Audio Ads"]
+        },
+        {
+          title: "Production",
+          items: ["Producers & Composers", "Beats", "Jingles & Intros", "Audio Logo", "Audio Mixing"]
+        }
+      ]
+    },
+    {
+      name: "Business",
+      sections: [
+        {
+          title: "Business Planning",
+          items: ["Business Plans", "Market Research", "Business Consulting", "Financial Consulting", "Legal Consulting"]
+        },
+        {
+          title: "Business Operations",
+          items: ["Virtual Assistant", "Data Entry", "Customer Service", "E-Commerce Management", "Project Management"]
+        },
+        {
+          title: "Career Development",
+          items: ["Resume Writing", "Cover Letters", "LinkedIn Profiles", "Job Search", "Career Counseling"]
+        }
+      ]
+    },
+    {
+      name: "Photography",
+      sections: [
+        {
+          title: "Photography Services",
+          items: ["Product Photography", "Portrait Photography", "Event Photography", "Food Photography", "Real Estate Photography"]
+        },
+        {
+          title: "Photo Editing",
+          items: ["Photo Retouching", "Image Manipulation", "Background Removal", "Color Correction", "Photo Restoration"]
+        },
+        {
+          title: "Special Photography",
+          items: ["Aerial Photography", "360 Photography", "Corporate Photography", "Stock Photos", "Architecture Photography"]
+        }
+      ]
+    }
   ];
 
   return (
@@ -214,24 +343,12 @@ const Navbar = () => {
               <NavigationMenu>
                 <NavigationMenuList className="flex space-x-6">
                   {secondaryNavItems.map((item) => (
-                    <NavigationMenuItem key={item}>
+                    <NavigationMenuItem key={item.name}>
                       <NavigationMenuTrigger className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent">
-                        {item}
+                        {item.name}
                       </NavigationMenuTrigger>
-                      <NavigationMenuContent className="w-[240px] p-2">
-                        <ul className="grid w-full gap-1">
-                          {/* Generate 5 sample subcategories for each category */}
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <li key={i} className="text-sm">
-                              <a
-                                href="#"
-                                className="block select-none rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
-                              >
-                                {item} Subcategory {i + 1}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
+                      <NavigationMenuContent>
+                        <MegaMenuContent sections={item.sections} />
                       </NavigationMenuContent>
                     </NavigationMenuItem>
                   ))}

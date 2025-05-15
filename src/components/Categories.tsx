@@ -70,19 +70,21 @@ const Categories = () => {
   const categoriesRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Expose the ref to the global window object for the Navbar to access
+    // Add class for styling and identification
     if (categoriesRef.current) {
-      (window as any).categoriesSection = categoriesRef.current;
+      categoriesRef.current.classList.add('categories-section');
     }
     
     return () => {
       // Clean up on unmount
-      delete (window as any).categoriesSection;
+      if (categoriesRef.current) {
+        categoriesRef.current.classList.remove('categories-section');
+      }
     };
   }, []);
   
   return (
-    <section ref={categoriesRef} id="popular-services" className="py-16 bg-gray-50">
+    <section ref={categoriesRef} id="categories-section" className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">Popular Services</h2>
         
