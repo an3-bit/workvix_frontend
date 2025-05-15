@@ -1,0 +1,340 @@
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Book, BookOpen, FileText, Search } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+
+// Blog post type definition
+type BlogPost = {
+  id: number;
+  title: string;
+  excerpt: string;
+  category: string;
+  date: string;
+  readTime: string;
+  image: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
+};
+
+const Blog = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Sample blog posts data
+  const blogPosts: BlogPost[] = [
+    {
+      id: 1,
+      title: "How to Find the Perfect Freelancer for Your Project",
+      excerpt: "Learn the key strategies to identify and hire the best talent for your specific needs.",
+      category: "Hiring",
+      date: "May 10, 2025",
+      readTime: "5 min read",
+      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
+      author: {
+        name: "Alex Johnson",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+      }
+    },
+    {
+      id: 2,
+      title: "Building Your Freelance Portfolio: What Clients Really Want to See",
+      excerpt: "Discover what makes a portfolio stand out and how to showcase your skills effectively.",
+      category: "Freelancing",
+      date: "May 8, 2025",
+      readTime: "7 min read",
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
+      author: {
+        name: "Samantha Lee",
+        avatar: "https://randomuser.me/api/portraits/women/44.jpg"
+      }
+    },
+    {
+      id: 3,
+      title: "5 Ways to Improve Your Client Communication Skills",
+      excerpt: "Effective communication is key to successful projects. Here's how to master it.",
+      category: "Business",
+      date: "May 5, 2025",
+      readTime: "4 min read",
+      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+      author: {
+        name: "David Wilson",
+        avatar: "https://randomuser.me/api/portraits/men/67.jpg"
+      }
+    },
+    {
+      id: 4,
+      title: "Setting Your Rates: A Guide for New Freelancers",
+      excerpt: "Determining the right price for your services can be challenging. This guide will help you find the sweet spot.",
+      category: "Freelancing",
+      date: "May 1, 2025",
+      readTime: "6 min read",
+      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+      author: {
+        name: "Emily Zhang",
+        avatar: "https://randomuser.me/api/portraits/women/22.jpg"
+      }
+    },
+    {
+      id: 5,
+      title: "The Future of Remote Work: Trends to Watch in 2025",
+      excerpt: "How the freelance marketplace is evolving and what it means for both clients and service providers.",
+      category: "Trends",
+      date: "April 28, 2025",
+      readTime: "8 min read",
+      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+      author: {
+        name: "Michael Brown",
+        avatar: "https://randomuser.me/api/portraits/men/45.jpg"
+      }
+    },
+  ];
+
+  const filteredPosts = blogPosts.filter(post => 
+    post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Categories for sidebar
+  const categories = [
+    { name: "Freelancing", count: 10 },
+    { name: "Business", count: 8 },
+    { name: "Hiring", count: 6 },
+    { name: "Marketing", count: 5 },
+    { name: "Design", count: 12 },
+    { name: "Development", count: 15 },
+    { name: "Trends", count: 7 },
+  ];
+
+  // Feature articles
+  const featuredPosts = blogPosts.slice(0, 3);
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-skillforge-light to-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-skillforge-secondary mb-4">SkillForge Blog</h1>
+            <p className="text-lg text-gray-700 mb-8">Insights, tips, and strategies for freelancers and businesses</p>
+            
+            {/* Search */}
+            <div className="relative max-w-md mx-auto">
+              <input
+                type="text"
+                placeholder="Search articles..."
+                className="w-full rounded-md border border-gray-300 py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-skillforge-primary"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <Search className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-grow container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-8">
+            {searchTerm && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">
+                  Search results for: <span className="text-skillforge-primary">{searchTerm}</span>
+                </h2>
+              </div>
+            )}
+            
+            {/* Featured Article (only shown when not searching) */}
+            {!searchTerm && filteredPosts.length > 0 && (
+              <div className="mb-12">
+                <Card className="overflow-hidden border-0 shadow-lg">
+                  <div className="relative">
+                    <AspectRatio ratio={16 / 9}>
+                      <img 
+                        src={filteredPosts[0].image} 
+                        alt={filteredPosts[0].title}
+                        className="object-cover w-full h-full" 
+                      />
+                    </AspectRatio>
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-skillforge-primary text-white px-3 py-1 rounded-full text-sm">
+                        {filteredPosts[0].category}
+                      </span>
+                    </div>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-2xl md:text-3xl">{filteredPosts[0].title}</CardTitle>
+                    <CardDescription className="flex items-center gap-2 text-sm">
+                      <img 
+                        src={filteredPosts[0].author.avatar} 
+                        alt={filteredPosts[0].author.name} 
+                        className="h-6 w-6 rounded-full" 
+                      />
+                      <span>{filteredPosts[0].author.name}</span>
+                      <span>•</span>
+                      <span>{filteredPosts[0].date}</span>
+                      <span>•</span>
+                      <span>{filteredPosts[0].readTime}</span>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700">{filteredPosts[0].excerpt}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button className="bg-skillforge-secondary hover:bg-skillforge-secondary/90">
+                      Read More
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            )}
+            
+            {/* Article Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {(searchTerm ? filteredPosts : filteredPosts.slice(1)).map((post) => (
+                <Card key={post.id} className="overflow-hidden h-full border hover:border-skillforge-primary transition-all duration-300">
+                  <div className="relative">
+                    <AspectRatio ratio={16 / 9}>
+                      <img 
+                        src={post.image} 
+                        alt={post.title}
+                        className="object-cover w-full h-full" 
+                      />
+                    </AspectRatio>
+                    <div className="absolute top-2 left-2">
+                      <span className="bg-skillforge-primary/90 text-white px-2 py-0.5 rounded-full text-xs">
+                        {post.category}
+                      </span>
+                    </div>
+                  </div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{post.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <p className="text-gray-700 text-sm line-clamp-3">{post.excerpt}</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <img 
+                        src={post.author.avatar} 
+                        alt={post.author.name} 
+                        className="h-5 w-5 rounded-full" 
+                      />
+                      <span>{post.author.name}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {post.readTime}
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+            
+            {filteredPosts.length === 0 && (
+              <div className="text-center py-12">
+                <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No articles found</h3>
+                <p className="text-gray-600">
+                  We couldn't find any articles matching your search. Try using different keywords.
+                </p>
+              </div>
+            )}
+            
+            {!searchTerm && filteredPosts.length > 0 && (
+              <div className="mt-8 text-center">
+                <Button variant="outline" className="px-8">
+                  Load More Articles
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-8">
+            {/* Categories */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="h-5 w-5 text-skillforge-primary" />
+                <h3 className="text-lg font-semibold">Categories</h3>
+              </div>
+              <Separator className="mb-4" />
+              <ul className="space-y-2">
+                {categories.map((category) => (
+                  <li key={category.name}>
+                    <button className="flex items-center justify-between w-full px-2 py-1.5 text-left transition-colors hover:bg-gray-100 rounded">
+                      <span>{category.name}</span>
+                      <span className="bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                        {category.count}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            {/* Featured Articles */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Book className="h-5 w-5 text-skillforge-primary" />
+                <h3 className="text-lg font-semibold">Featured Articles</h3>
+              </div>
+              <Separator className="mb-4" />
+              <div className="space-y-4">
+                {featuredPosts.map((post) => (
+                  <div key={`featured-${post.id}`} className="flex gap-3">
+                    <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden">
+                      <img 
+                        src={post.image} 
+                        alt={post.title}
+                        className="object-cover w-full h-full" 
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium line-clamp-2 mb-1">{post.title}</h4>
+                      <p className="text-xs text-gray-500">{post.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Newsletter */}
+            <div className="bg-skillforge-primary/10 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="h-5 w-5 text-skillforge-primary" />
+                <h3 className="text-lg font-semibold">Newsletter</h3>
+              </div>
+              <p className="text-sm text-gray-700 mb-4">
+                Subscribe to our newsletter to get the latest articles and updates.
+              </p>
+              <div className="space-y-3">
+                <input 
+                  type="email" 
+                  placeholder="Your email address" 
+                  className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-skillforge-primary"
+                />
+                <Button className="w-full bg-skillforge-primary hover:bg-skillforge-primary/90">
+                  Subscribe
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default Blog;

@@ -252,6 +252,7 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
+              <Link to="/blog" className="text-gray-600 hover:text-skillforge-primary transition-colors">Blog</Link>
               <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">Become a Seller</Link>
               <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">Sign In</Link>
               <Link to="/join">
@@ -310,6 +311,8 @@ const Navbar = () => {
                     />
                   </div>
                 </div>
+                
+                <Link to="/blog" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Blog</Link>
                 
                 {categories.map((category) => (
                   <div key={category.name} className="px-2 py-1">
