@@ -100,6 +100,18 @@ const Navbar = () => {
         {
           title: "Visual Design",
           items: ["Image Editing", "Social Media Design", "Presentation Design", "Infographic Design", "Vector Tracing"]
+        },
+        {
+          title: "Print Design",
+          items: ["Flyer Design", "Brochure Design", "Poster Design", "Catalog Design", "Menu Design"]
+        },
+        {
+          title: "Packaging & Labels",
+          items: ["Packaging Design", "Book Cover Design", "Product Label Design", "Bag & Merchandise Design"]
+        },
+        {
+          title: "Illustration",
+          items: ["Character Design", "Pattern Design", "Portraits & Caricatures", "Cartoons & Comics", "Technical Drawing"]
         }
       ]
     },
@@ -111,12 +123,24 @@ const Navbar = () => {
           items: ["Search Engine Optimization (SEO)", "Local SEO", "E-Commerce SEO", "Video SEO", "SEO Audit"]
         },
         {
-          title: "Channel Specific",
-          items: ["Social Media Marketing", "Facebook Ads", "Instagram Marketing", "Email Marketing", "Google Ads"]
+          title: "Social Media",
+          items: ["Social Media Marketing", "Facebook Ads", "Instagram Marketing", "TikTok Shop", "LinkedIn Marketing"]
         },
         {
-          title: "Analytics & Strategy",
-          items: ["Marketing Strategy", "Web Analytics", "Conversion Optimization", "Email Strategy", "Marketing Plans"]
+          title: "Paid Advertising",
+          items: ["Google Ads", "Display Advertising", "PPC Management", "Retargeting", "Social Media Advertising"]
+        },
+        {
+          title: "Marketing Strategy",
+          items: ["Marketing Strategy", "Marketing Plans", "Brand Strategy", "Content Strategy", "Growth Marketing"]
+        },
+        {
+          title: "Email & Automation",
+          items: ["Email Marketing", "Marketing Automation", "Drip Campaigns", "Email Templates", "Lead Generation"]
+        },
+        {
+          title: "Analytics & Optimization",
+          items: ["Web Analytics", "Conversion Rate Optimization", "A/B Testing", "User Testing", "Marketing Analytics"]
         }
       ]
     },
@@ -128,12 +152,24 @@ const Navbar = () => {
           items: ["Articles & Blog Posts", "Website Content", "Creative Writing", "Product Descriptions", "SEO Writing"]
         },
         {
+          title: "Business Writing",
+          items: ["Business Plans", "Grant Writing", "Technical Writing", "Case Studies", "White Papers"]
+        },
+        {
           title: "Translation",
           items: ["General Translation", "Legal Translation", "Technical Translation", "Medical Translation", "Marketing Translation"]
         },
         {
           title: "Editing & Proofreading",
           items: ["Proofreading", "Editing", "Content Reviews", "Fact Checking", "Grammar Checks"]
+        },
+        {
+          title: "Book & eBook",
+          items: ["Book Writing", "eBook Writing", "Ghost Writing", "Book Editing", "Self Publish Your Book"]
+        },
+        {
+          title: "UX Writing",
+          items: ["Microcopy", "User Guides", "App Content", "Product Descriptions", "Landing Page Copy"]
         }
       ]
     },
@@ -145,12 +181,24 @@ const Navbar = () => {
           items: ["WordPress", "Shopify", "Wix", "Custom Websites", "E-commerce Development"]
         },
         {
+          title: "Web Programming",
+          items: ["JavaScript", "PHP", "Python", "Ruby", "Java"]
+        },
+        {
           title: "Application Development",
           items: ["Mobile Apps", "Desktop Applications", "Web Applications", "Game Development", "API Development"]
         },
         {
+          title: "E-Commerce",
+          items: ["Shopify", "WooCommerce", "BigCommerce", "Magento", "OpenCart"]
+        },
+        {
+          title: "Data & Analytics",
+          items: ["Data Analysis", "Data Visualization", "Database Design", "Big Data", "Machine Learning"]
+        },
+        {
           title: "Technical Services",
-          items: ["DevOps", "Support & IT", "Cybersecurity", "Data Analysis", "Database Design"]
+          items: ["DevOps", "Support & IT", "Cybersecurity", "Blockchain & Cryptocurrency", "QA Testing"]
         }
       ]
     },
@@ -166,8 +214,20 @@ const Navbar = () => {
           items: ["Character Animation", "Logo Animation", "3D Animation", "Motion Graphics", "Animated GIFs"]
         },
         {
+          title: "Streaming & Audio",
+          items: ["Live Action Explainers", "Unboxing Videos", "Product Photography", "Screencasting", "eLearning Videos"]
+        },
+        {
+          title: "Special Effects",
+          items: ["Visual Effects", "VFX", "Special Effects", "3D Modeling", "Rigging"]
+        },
+        {
           title: "Production Elements",
           items: ["Intros & Outros", "Visual Effects", "Subtitles & Captions", "Sound Effects", "Voice Over"]
+        },
+        {
+          title: "Social & Marketing Videos",
+          items: ["Social Media Videos", "Instagram Videos", "YouTube Videos", "TikTok Videos", "Facebook Videos"]
         }
       ]
     },
@@ -183,8 +243,20 @@ const Navbar = () => {
           items: ["Voice Over", "Podcast Production", "Audio Editing", "Sound Effects", "Audio Ads"]
         },
         {
+          title: "Music Lessons",
+          items: ["Guitar Lessons", "Piano Lessons", "Vocal Lessons", "DJ Lessons", "Composition"]
+        },
+        {
           title: "Production",
           items: ["Producers & Composers", "Beats", "Jingles & Intros", "Audio Logo", "Audio Mixing"]
+        },
+        {
+          title: "Streaming & Podcasts",
+          items: ["Podcast Editing", "Podcast Marketing", "Streaming Production", "Audiobook Production", "Sound Design"]
+        },
+        {
+          title: "Music Promotion",
+          items: ["Music Promotion", "Music Marketing", "Spotify Promotion", "SoundCloud Promotion", "YouTube Music Promotion"]
         }
       ]
     },
@@ -200,8 +272,20 @@ const Navbar = () => {
           items: ["Virtual Assistant", "Data Entry", "Customer Service", "E-Commerce Management", "Project Management"]
         },
         {
+          title: "Sales & Marketing",
+          items: ["Lead Generation", "Sales Funnel", "CRM Management", "Sales Copywriting", "Email Marketing"]
+        },
+        {
+          title: "Administrative Support",
+          items: ["Administrative Support", "Data Entry", "Customer Service", "Technical Support", "Office Management"]
+        },
+        {
           title: "Career Development",
           items: ["Resume Writing", "Cover Letters", "LinkedIn Profiles", "Job Search", "Career Counseling"]
+        },
+        {
+          title: "Financial Services",
+          items: ["Accounting", "Tax Preparation", "Financial Analysis", "Bookkeeping", "Financial Planning"]
         }
       ]
     },
@@ -217,8 +301,20 @@ const Navbar = () => {
           items: ["Photo Retouching", "Image Manipulation", "Background Removal", "Color Correction", "Photo Restoration"]
         },
         {
+          title: "Commercial Photography",
+          items: ["Product Photography", "Fashion Photography", "Food Photography", "Real Estate Photography", "Architecture Photography"]
+        },
+        {
           title: "Special Photography",
-          items: ["Aerial Photography", "360 Photography", "Corporate Photography", "Stock Photos", "Architecture Photography"]
+          items: ["Aerial Photography", "360 Photography", "Corporate Photography", "Stock Photos", "Virtual Photography"]
+        },
+        {
+          title: "Photo Enhancements",
+          items: ["Photo Enhancement", "HDR Photos", "Image Manipulation", "Headshot Retouching", "Product Photo Enhancement"]
+        },
+        {
+          title: "Photography Tutorials",
+          items: ["Photography Courses", "Photo Editing Tutorials", "Lightroom Presets", "Photography Tips", "Photography Guides"]
         }
       ]
     }
@@ -348,8 +444,8 @@ const Navbar = () => {
         >
           <div className="container mx-auto px-4">
             <div className="hidden md:flex items-center justify-between py-3 overflow-x-auto">
-              <NavigationMenu>
-                <NavigationMenuList className="flex space-x-6">
+              <NavigationMenu className="w-full">
+                <NavigationMenuList className="flex space-x-6 w-full justify-between">
                   {secondaryNavItems.map((item) => (
                     <NavigationMenuItem key={item.name}>
                       <NavigationMenuTrigger className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent">
