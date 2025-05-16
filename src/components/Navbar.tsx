@@ -9,6 +9,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { MegaMenuContent } from './MegaMenuContent';
 
 // Enhanced MegaMenu component
 const MegaMenu = ({ sections }) => {
@@ -350,25 +351,23 @@ const Navbar = () => {
 
           {/* Categories Navigation (Desktop) - Fiverr-like style */}
           <div className="hidden md:block border-t">
-            <div className="relative">
-              <NavigationMenu className="mx-auto">
-                <NavigationMenuList className="flex justify-between w-full py-2">
-                  {mainCategories.map((category) => (
-                    <NavigationMenuItem key={category.name} className="static">
-                      <NavigationMenuTrigger 
-                        className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary"
-                        onMouseEnter={() => setActiveCategory(category.name)}
-                      >
-                        {category.name}
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent className="absolute left-0 w-screen bg-white shadow-lg z-50">
-                        <MegaMenu sections={category.sections} />
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-              </NavigationMenu>
-            </div>
+            <NavigationMenu className="w-full">
+              <NavigationMenuList className="flex justify-between py-2">
+                {mainCategories.map((category) => (
+                  <NavigationMenuItem key={category.name}>
+                    <NavigationMenuTrigger 
+                      className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary"
+                      onMouseEnter={() => setActiveCategory(category.name)}
+                    >
+                      {category.name}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <MegaMenuContent sections={category.sections} />
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
 
           {/* Mobile Navigation */}
@@ -426,15 +425,15 @@ const Navbar = () => {
               <NavigationMenu className="w-full">
                 <NavigationMenuList className="flex space-x-6 w-full justify-between">
                   {mainCategories.map((category) => (
-                    <NavigationMenuItem key={category.name} className="static">
+                    <NavigationMenuItem key={category.name}>
                       <NavigationMenuTrigger 
                         className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent"
                         onMouseEnter={() => setActiveCategory(category.name)}
                       >
                         {category.name}
                       </NavigationMenuTrigger>
-                      <NavigationMenuContent className="absolute left-0 w-screen bg-white shadow-lg z-50">
-                        <MegaMenu sections={category.sections} />
+                      <NavigationMenuContent>
+                        <MegaMenuContent sections={category.sections} />
                       </NavigationMenuContent>
                     </NavigationMenuItem>
                   ))}
