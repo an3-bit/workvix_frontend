@@ -11,37 +11,7 @@ interface Category {
 const ExploreSkills: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const categories: Category[] = [
-    {
-      name: "Development & IT",
-      subcategories: ["Web Development", "Mobile Development", "Game Development", "Database Design", "QA & Testing"]
-    },
-    {
-      name: "Design & Creative",
-      subcategories: ["Graphics & Design", "Logo Design", "Web Design", "UX/UI Design", "Video Editing"]
-    },
-    {
-      name: "Digital Marketing",
-      subcategories: ["Social Media", "SEO", "Content Marketing", "Email Marketing", "PPC"]
-    },
-    {
-      name: "Writing & Translation",
-      subcategories: ["Articles & Blog Posts", "Translation", "Technical Writing", "Copywriting", "Proofreading"]
-    },
-    {
-      name: "Business & Finance",
-      subcategories: ["Business Plans", "Financial Analysis", "Legal Consulting", "Market Research", "Project Management"]
-    },
-  ];
-
-  const toggleCategory = (categoryName: string) => {
-    if (activeCategory === categoryName) {
-      setActiveCategory(null);
-    } else {
-      setActiveCategory(categoryName);
-    }
-  };
-
+  
   return (
     <div className="flex flex-col min-h-screen">
         <Navbar />
@@ -67,48 +37,7 @@ const ExploreSkills: React.FC = () => {
         </div>
       </div>
 
-      {/* Categories Navigation */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4">
-          <div className="flex overflow-x-auto py-4 scrollbar-hide">
-            {categories.map((category) => (
-              <div key={category.name} className="flex-shrink-0 mr-6 relative">
-                <button
-                  onClick={() => toggleCategory(category.name)}
-                  className={`flex items-center whitespace-nowrap font-medium hover:text-emerald-600 ${
-                    activeCategory === category.name ? 'text-emerald-600' : 'text-gray-700'
-                  }`}
-                >
-                  {category.name}
-                  <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${
-                    activeCategory === category.name ? 'rotate-180' : ''
-                  }`} />
-                </button>
-                
-                {activeCategory === category.name && (
-                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg py-2 z-20">
-                    {category.subcategories.map((subcat) => (
-                      <Link 
-                        key={subcat} 
-                        to={`/services/${category.name.toLowerCase().replace(/ /g, '-')}/${subcat.toLowerCase().replace(/ /g, '-')}`}
-                        className="block px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
-                      >
-                        {subcat}
-                      </Link>
-                    ))}
-                    <Link 
-                      to={`/services/${category.name.toLowerCase().replace(/ /g, '-')}`}
-                      className="block px-4 py-2 text-emerald-600 font-medium border-t border-gray-100 mt-1"
-                    >
-                      View all in {category.name}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      
 
       {/* Trending skills */}
       <div className="bg-gray-50 py-12">
@@ -147,60 +76,74 @@ const ExploreSkills: React.FC = () => {
       </div>
 
       {/* Featured Services */}
-      <div className="bg-white py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-8">Featured Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="group rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition">
-                <div className="h-48 bg-gray-200 relative">
-                  <img 
-                    src={`/api/placeholder/400/${280 + i * 5}`} 
-                    alt={`Service ${i}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded text-xs font-medium">
-                    Top Rated
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 mr-2">
-                      <img 
-                        src="/api/placeholder/100/100" 
-                        alt="Provider" 
-                        className="w-full h-full rounded-full"
-                      />
-                    </div>
-                    <span className="text-sm font-medium">Provider Name</span>
-                    <div className="ml-auto flex items-center text-amber-400">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="ml-1 text-xs text-gray-600">4.9 (120)</span>
-                    </div>
-                  </div>
-                  <Link to={`/service/${i}`}>
-                    <h3 className="font-medium mb-2 group-hover:text-emerald-600 transition">I will create a professional website for your business</h3>
-                  </Link>
-                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <div className="flex items-center text-xs text-gray-500">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>Delivery in 3 days</span>
-                    </div>
-                    <div className="text-emerald-600 font-medium">From $120</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+      
+<div className="bg-white py-12">
+  <div className="container mx-auto px-4">
+    <h2 className="text-2xl font-bold mb-8">Featured Services</h2>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[
+        { id: 1, img: 'https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg', provider: 'Alice' ,description: 'I am a highly skilled graphic designer with over 5 years of experience.', } , 
+        { id: 2, img: 'https://images.pexels.com/photos/3184298/pexels-photo-3184298.jpeg', provider: 'Bob', description: 'I specialize in creating engaging and user-friendly websites.' },
+        { id: 3, img: 'https://images.pexels.com/photos/210241/pexels-photo-210241.jpeg', provider: 'Charlie', description: 'I have experience in web development and design.'},
+        { id: 4, img: 'https://images.pexels.com/photos/4395962/pexels-photo-4395962.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', provider: 'Diana', description: 'I am a professional photographer with a passion for capturing moments.' },
+        { id: 5, img: 'https://images.pexels.com/photos/1236701/pexels-photo-1236701.jpeg', provider: 'Eve', description: 'I am a digital marketer with expertise in SEO and social media marketing.' },
+        { id: 6, img: 'https://images.pexels.com/photos/248797/pexels-photo-248797.jpeg', provider: 'Frank', description: 'I am a content writer with a knack for storytelling.' },
+      ].map(({ id, img, provider, description }) => (
+        <div key={id} className="group rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition">
+          <div className="h-48 bg-gray-200 relative">
+            <img 
+              src={`${img}?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1`}
+              alt={`Service ${id}`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded text-xs font-medium">
+              Top Rated
+            </div>
           </div>
-          <div className="text-center mt-8">
-            <Link to="/services">
-              <button className="bg-emerald-600 text-white font-medium py-2 px-6 rounded-md hover:bg-emerald-700 transition">
-                Explore all services
-              </button>
-            </Link>
+          <div className="p-4">
+            <div className="flex items-center mb-2 text-black-600 text-bold">
+              
+                
+              
+              <span className="text-sm font-medium">{provider}</span>
+              <div className="ml-auto flex items-center text-amber-400">
+                <Star className="h-4 w-4 fill-current" />
+                <span className="ml-1 text-xs text-gray-600">4.9 (120)</span>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm mb-2">
+              {description}
+            </p>
+            <div className="flex items-center mb-2">
+              <div className="flex items-center text-xs text-gray-500">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                <span>Unlimited revisions</span>
+              </div>
+              <div className="text-emerald-600 font-medium ml-auto">From $50</div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="flex items-center text-xs text-gray-500">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>Delivery in 3 days</span>
+              </div>
+              <div className="text-emerald-600 font-medium">From $120</div>
+            </div>
           </div>
         </div>
-      </div>
+      ))}
+    </div>
+    <div className="text-center mt-8">
+      <Link to="/services">
+        <button className="bg-emerald-600 text-white font-medium py-2 px-6 rounded-md hover:bg-emerald-700 transition">
+          Explore all services
+        </button>
+      </Link>
+    </div>
+  </div>
+</div>
+
+     
 
       {/* Service By Level */}
       <div className="bg-gray-50 py-12">
@@ -313,29 +256,64 @@ const ExploreSkills: React.FC = () => {
       </div>
       
       {/* Skills by Industry */}
-      <div className="bg-white py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-8">Skills by Industry</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              "Technology",
-              "E-commerce",
-              "Education",
-              "Health & Wellness",
-              "Finance",
-              "Real Estate",
-              "Entertainment",
-              "Travel & Hospitality"
-            ].map((industry, i) => (
-              <Link to={`/industry/${industry.toLowerCase().replace(/ /g, '-')}`} key={i}>
-                <div className="bg-gray-50 hover:bg-emerald-50 rounded-lg p-6 text-center transition border border-gray-100 hover:border-emerald-200 h-32 flex items-center justify-center">
-                  <h3 className="font-medium">{industry}</h3>
-                </div>
-              </Link>
-            ))}
+   {/* Skills by Industry */}
+<div className="bg-white py-12">
+  <div className="container mx-auto px-4">
+    <h2 className="text-2xl font-bold mb-8">Skills by Industry</h2>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[
+        {
+          name: "Technology",
+          image: "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg",
+        },
+        {
+          name: "E-commerce",
+          image: "https://images.pexels.com/photos/5632402/pexels-photo-5632402.jpeg",
+        },
+        {
+          name: "Education",
+          image: "https://images.pexels.com/photos/5212334/pexels-photo-5212334.jpeg",
+        },
+        {
+          name: "Health & Wellness",
+          image: "https://images.pexels.com/photos/4056723/pexels-photo-4056723.jpeg",
+        },
+        {
+          name: "Finance",
+          image: "https://images.pexels.com/photos/4386373/pexels-photo-4386373.jpeg",
+        },
+        {
+          name: "Real Estate",
+          image: "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg",
+        },
+        {
+          name: "Entertainment",
+          image: "https://images.pexels.com/photos/7991371/pexels-photo-7991371.jpeg",
+        },
+        {
+          name: "Travel & Hospitality",
+          image: "https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg",
+        },
+        
+      ].map((industry, i) => (
+        <Link
+          to={`/industry/${industry.name.toLowerCase().replace(/ /g, '-')}`}
+          key={i}
+        >
+          <div className="relative  hover:bg-emerald-50 rounded-lg p-6 text-center transition border border-gray-100 hover:border-emerald-200 h-32 flex items-center justify-center overflow-hidden">
+            <img
+              src={industry.image}
+              alt={industry.name}
+              className="absolute inset-0 w-full h-full object-cover  z-0"
+            />
+            <h3 className="font-bold z-10 text-white z-10 text-lg leading-tight">{industry.name}</h3>
           </div>
-        </div>
-      </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+</div>
+
 
       {/* CTA */}
       <div className="bg-emerald-700 text-white py-10">
