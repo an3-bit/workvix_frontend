@@ -12,44 +12,28 @@ import {
 import { MegaMenuContent } from './MegaMenuContent';
 
 // Enhanced MegaMenu component
-const MegaMenu = ({ sections }) => {
-  return (
-    <div className="w-full bg-white p-4 shadow-lg">
-      <div className="container mx-auto">
-        <div className="grid grid-cols-6 gap-4">
-          {sections.map((section, index) => (
-            <div key={index} className="space-y-2">
-              <h3 className="font-medium text-sm text-skillforge-primary border-b pb-1">{section.title}</h3>
-              <ul className="space-y-1">
-                {section.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>
-                    <Link 
-                      to="#" 
-                      className="text-xs text-gray-600 hover:text-skillforge-primary flex items-center gap-1"
-                    >
-                      {item}
-                      {item.includes("NEW") && (
-                        <span className="bg-pink-100 text-pink-600 text-xs px-1 py-0.5 rounded-full text-[10px]">NEW</span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showSecondaryNav, setShowSecondaryNav] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const secondaryNavRef = useRef(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const secondaryNavRef = useRef<HTMLDivElement | null>(null);
+
+  // Enhanced MegaMenu component
+  const scrollSecondaryNav = (direction: 'left' | 'right') => {
+    const scrollAmount = 200; // Adjust scroll amount as needed
+    if (secondaryNavRef.current) {
+      const container = secondaryNavRef.current;
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -89,6 +73,15 @@ const Navbar = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+  <div className={`secondary-navbar ${showSecondaryNav ? 'visible' : ''}`} ref={secondaryNavRef}>
+    <button onClick={() => scrollSecondaryNav('left')} className="scroll-button left">
+      <ChevronLeft />
+    </button>
+    {/* Render the secondary nav items here */}
+    <button onClick={() => scrollSecondaryNav('right')} className="scroll-button right">
+      <ChevronRight />
+    </button>
+  </div>
 
   // Main navigation categories data
   const mainCategories = [
@@ -294,7 +287,66 @@ const Navbar = () => {
           items: ["Accounting", "Tax Preparation", "Financial Analysis", "Bookkeeping", "Financial Planning"]
         }
       ]
-    }
+    },
+    {
+      name: "Finance",
+      sections: [
+        {
+          title: "Accounting & Bookkeeping",
+          items: ["Bookkeeping", "Financial Statements", "Tax Preparation", "Payroll", "QuickBooks"]
+        },
+        {
+          title: "Financial Analysis",
+          items: ["Financial Modeling", "Valuation", "Investment Analysis", "Risk Management", "Portfolio Management"]
+        },
+        {
+          title: "Business Consulting",
+          items: ["Business Plans", "Market Research", "Financial Consulting", "Legal Consulting", "Management Consulting"]
+        },
+        {
+          title: "Investment & Trading",
+          items: ["Stock Trading", "Forex Trading", "Cryptocurrency Trading", "Options Trading", "Investment Strategies"]
+        },
+        {
+          title: "Tax Services",
+          items: ["Tax Preparation", "Tax Planning", "IRS Representation", "State Taxes", "International Taxes"]
+        },
+        {
+          title: "Insurance Services",
+          items: ["Life Insurance", "Health Insurance", "Auto Insurance", "Home Insurance", "Business Insurance"]
+        }
+      ]
+    },
+    {
+      name: "AI Services",
+      sections: [
+        {
+          title: "AI Content Generation",
+          items: ["AI Writing", "AI Art Generation", "AI Music Generation", "AI Video Generation", "AI Voice Generation"]
+        },
+        { 
+          title: "AI Writing",
+          items: ["AI Writing", "AI Content Writing", "AI Blog Writing", "AI Product Writing", "AI Technical Writing"]
+        },
+        {
+          title: "AI Art Generation",
+          items: ["AI Art Generation", "AI Portrait Generation", "AI Landscape Generation", "AI Animal Generation", "AI Portrait Generation"]
+        },
+        {
+          title: "AI Music Generation",
+          items: ["AI Music Generation", "AI Songwriting", "AI Music Composition", "AI Music Production", "AI Music Mixing"]
+        },
+        {
+          title: "AI Video Generation",
+          items: ["AI Video Generation", "AI Animation", "AI Video Editing", "AI Video Production", "AI Video Marketing"]
+        },
+        {
+          title: "AI Voice Generation",
+          items: ["AI Voice Generation", "AI Voice Over", "AI Voice Cloning", "AI Voice Synthesis", "AI Voice Recognition"]
+        }
+      ]
+    },
+    
   ];
 
   // For the mobile menu, we'll use a simplified version of categories
