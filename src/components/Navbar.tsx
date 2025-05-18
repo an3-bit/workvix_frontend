@@ -414,8 +414,8 @@ const Navbar = () => {
 </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden">
-  <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
+            <div className="md:hidden  w-full flex items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
+  <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary ">
     {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
   </button>
 
