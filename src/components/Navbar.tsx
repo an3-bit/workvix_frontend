@@ -73,15 +73,6 @@ const Navbar = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
-  <div className={`secondary-navbar ${showSecondaryNav ? 'visible' : ''}`} ref={secondaryNavRef}>
-    <button onClick={() => scrollSecondaryNav('left')} className="scroll-button left">
-      <ChevronLeft />
-    </button>
-    {/* Render the secondary nav items here */}
-    <button onClick={() => scrollSecondaryNav('right')} className="scroll-button right">
-      <ChevronRight />
-    </button>
-  </div>
 
   // Main navigation categories data
   const mainCategories = [
@@ -382,24 +373,88 @@ const Navbar = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
-              <Link to="/explore-skills" className="text-gray-600 hover:text-skillforge-primary transition-colors">Explore</Link>
-              <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">SkillForge Premium</Link>
-              <Link to="/blog" className="text-gray-600 hover:text-skillforge-primary transition-colors">Blog</Link>
-              <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">Become a Seller</Link>
-              <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">Sign In</Link>
-              <Link to="/join">
-                <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+           <div className="hidden md:flex items-center space-x-6">
+  <NavigationMenu>
+    <NavigationMenuList>
+      <NavigationMenuItem>
+        <NavigationMenuTrigger className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent">
+          Explore
+        </NavigationMenuTrigger>
+        <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md">
+          <ul className="flex flex-col space-y-2">
+            <li>
+              <Link to="/blog" className="text-sm text-gray-700 hover:text-skillforge-primary">
+                Blog
               </Link>
-            </div>
+            </li>
+            <li>
+              <Link to="/explore-skills" className="text-sm text-gray-700 hover:text-skillforge-primary">
+                Explore Skills
+              </Link>
+            </li>
+          </ul>
+        </NavigationMenuContent>
+      </NavigationMenuItem>
+    </NavigationMenuList>
+  </NavigationMenu>
+
+  <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+    SkillForge Premium
+  </Link>
+  <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+    Become a Seller
+  </Link>
+  <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+    Sign In
+  </Link>
+  <Link to="/join">
+    <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+  </Link>
+</div>
+</div>
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
-          </div>
+  <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
+    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+  </button>
+
+  {isMenuOpen && (
+    <div className="mt-4 space-y-4 bg-white shadow-lg p-4 rounded-md">
+      {/* Explore Dropdown Items */}
+      <div>
+        <span className="block text-gray-600 font-medium">Explore</span>
+        <div className="pl-4 mt-2 space-y-2">
+          <Link to="/blog" className="block text-sm text-gray-700 hover:text-skillforge-primary">
+            Blog
+          </Link>
+          <Link to="/explore-skills" className="block text-sm text-gray-700 hover:text-skillforge-primary">
+            Explore Skills
+          </Link>
+        </div>
+      </div>
+
+      <Link to="/premium-services" className="block text-gray-600 hover:text-skillforge-primary">
+        SkillForge Premium
+      </Link>
+
+      <Link to="/become-seller" className="block text-gray-600 hover:text-skillforge-primary">
+        Become a Seller
+      </Link>
+
+      <Link to="/signin" className="block text-gray-600 hover:text-skillforge-primary">
+        Sign In
+      </Link>
+
+      <Link to="/join">
+        <Button className="w-full bg-skillforge-primary hover:bg-skillforge-primary/90 mt-2">
+          Join
+        </Button>
+      </Link>
+    </div>
+  )}
+</div>
+
 
           {/* Categories Navigation (Desktop) - Fiverr-like style */}
           <div className="hidden md:block border-t">
