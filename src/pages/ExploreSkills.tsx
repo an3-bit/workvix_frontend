@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ChevronDown, TrendingUp, Star, Award, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 interface Category {
   name: string;
@@ -327,6 +328,8 @@ const ExploreSkills: React.FC = () => {
           </Link>
         </div>
       </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

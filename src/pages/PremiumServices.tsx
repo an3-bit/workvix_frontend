@@ -11,7 +11,7 @@ const PremiumServices: React.FC = () => {
       skills: 'Full Stack Development • React • Node.js',
       country: 'Canada',
       rating: 5,
-      image: 'https://images.pexels.com/photos/1181695/pexels-photo-1181695.jpeg',
+      image: 'https://images.pexels.com/photos/7651804/pexels-photo-7651804.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
     },
     {
       name: 'Carlos Rodriguez',
