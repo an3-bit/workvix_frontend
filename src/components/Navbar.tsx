@@ -40,39 +40,30 @@ const Navbar = () => {
   };
 
   useEffect(() => {
-    const handleScroll = () => {
-      const position = window.scrollY;
-      setScrollPosition(position);
-      setShowSearchBar(position > 100);
-      
-      // Show secondary nav after scrolling to categories section
-      const categoriesSection = document.getElementById('categories-section');
-      
-      if (categoriesSection) {
-        const categoriesSectionTop = categoriesSection.getBoundingClientRect().top + window.scrollY;
-        const categoriesSectionBottom = categoriesSectionTop + categoriesSection.offsetHeight;
-        
-        setShowSecondaryNav(
-          position >= categoriesSectionTop - window.innerHeight/2 && 
-          position < categoriesSectionBottom
-        );
-      } else {
-        setShowSecondaryNav(position > 500 && position < 1200);
-      }
-    };
+  let lastScrollY = window.scrollY;
 
-    window.addEventListener('scroll', handleScroll);
-    
-    // Add an id to the categories section for easier reference
-    const categoriesElement = document.querySelector('.categories-section');
-    if (categoriesElement) {
-      categoriesElement.id = 'categories-section';
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    setScrollPosition(currentScrollY);
+    setShowSearchBar(currentScrollY > 100);
+
+    // Show secondary nav when scrolling UP, hide when scrolling DOWN
+    if (currentScrollY < lastScrollY) {
+      setShowSecondaryNav(true);
+    } else if (currentScrollY > lastScrollY) {
+      setShowSecondaryNav(false);
     }
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+
+    lastScrollY = currentScrollY;
+  };
+
+  window.addEventListener('scroll', handleScroll);
+
+  return () => {
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, []);
+
 
   // Main navigation categories data
   const mainCategories = [
@@ -521,10 +512,10 @@ const Navbar = () => {
       </header>
 
       {/* Fixed secondary navigation that can appear on scroll */}
-      {showSecondaryNav && (
+     {showSecondaryNav && (
         <div 
           ref={secondaryNavRef}
-          className="fixed left-0 right-0 z-40 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
+          className=" fixed top-0 left-0 right-0 z-40 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
           style={{ top: '80px' }} 
         >
           <div className="container mx-auto px-4">
