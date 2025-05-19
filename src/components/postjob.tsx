@@ -85,9 +85,9 @@ const PostJobForm = () => {
       newErrors.maxBudget = 'Maximum budget must be greater than minimum budget';
     }
     if (!formData.description.trim()) newErrors.description = 'Job description is required';
-    else if (formData.description.trim().length < 30) {
-      newErrors.description = 'Description should be at least 30 characters';
-    }
+    // else if (formData.description.trim().length < 5) {
+    //   newErrors.description = 'Description should be at least 5 characters';
+    // }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -113,7 +113,7 @@ const PostJobForm = () => {
     localStorage.setItem('skillforgeJobs', JSON.stringify([...existingJobs, newJob]));
     
     // Navigate to jobs page
-    navigate('/jobs');
+    navigate('/job-posted-notification');
   };
 
   return (
@@ -253,7 +253,7 @@ const PostJobForm = () => {
                   <p className="text-sm text-red-600">{errors.description}</p>
                 ) : (
                   <p className="text-sm text-gray-500">
-                    {formData.description.length}/500 characters (min 30)
+                    {formData.description.length} characters 
                   </p>
                 )}
               </div>

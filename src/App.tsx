@@ -14,6 +14,11 @@ import ExploreSkills from "./pages/ExploreSkills";
 import PremiumServices from "./pages/PremiumServices";
 import JobsPage from "./pages/JobsPage";
 import PostJobForm from "./components/postjob";
+import NotificationSystem from "./components/Notification";
+import JobCard from "./components/JobCard";
+import JobPostedNotification from "./pages/jobspostednotification";
+import JobBidsPage from "./pages/JobsBid";
+import ChatPage from "./pages/ChatPage";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +38,12 @@ const App = () => (
           <Route path="/premium-services" element={<PremiumServices />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/post-job" element={<PostJobForm />} />
+          <Route path="/notification" element={<NotificationSystem />} />
+          <Route path="/job-card" element={<JobCard job={{}} />} />
+          <Route path="/job-posted-notification" element={<JobPostedNotification />} />
+          <Route path="/job-bids/:jobId" element={<JobBidsPage />} />
+          <Route path="/chat/:chatId" element={<ChatPage />} />
+
           {/* Add more routes as needed */}
           {/* Catch-all route for 404 Not Found */}
           <Route path="*" element={<NotFound />} />

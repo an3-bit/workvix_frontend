@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock, DollarSign, Tag, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import JobCard from '@/components/JobCard';
+import NotificationSystem from '@/components/Notification';
 
 const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
