@@ -4,8 +4,12 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import Join from './Join';
+import { useNavigate } from 'react-router-dom';
+
 
 const BecomeSeller = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -18,7 +22,11 @@ const BecomeSeller = () => {
             <p className="text-lg md:text-xl text-gray-600 mb-8">
               Join thousands of skilled professionals who are building successful businesses on SkillForge.
             </p>
-            <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 text-white px-8 py-6 text-lg">
+            <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 text-white px-8 py-6 text-lg"
+              onClick={() => {
+                navigate('/join');
+              }}
+            >
               Get Started
             </Button>
           </div>
@@ -135,7 +143,11 @@ const BecomeSeller = () => {
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             Join our community of skilled professionals and start growing your business today.
           </p>
-          <Button className="bg-white text-skillforge-secondary hover:bg-gray-100 px-8 py-6 text-lg">
+          <Button className="bg-white text-skillforge-secondary hover:bg-gray-100 px-8 py-6 text-lg"
+            onClick={() => {
+              navigate('/join');
+            }
+          }>  
             Become a Seller Now
           </Button>
         </div>
