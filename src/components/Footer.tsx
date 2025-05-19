@@ -106,7 +106,7 @@ const Footer = () => {
         </div>
         
         <div className="text-center text-sm text-gray-500 mt-8">
-          <p>&copy; {new Date().getFullYear()} SkillForge Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Developed By Youvilab. All rights reserved.</p>
         </div>
       </div>
     </footer>

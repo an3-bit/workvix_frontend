@@ -1,8 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const Promotion = () => {
+const Promotion = () => 
+  
+  {
+    const navigate = useNavigate();
   return (
     <section className="py-16 bg-skillforge-secondary text-white">
       <div className="container mx-auto px-4">
@@ -34,7 +38,7 @@ const Promotion = () => {
               </li>
             </ul>
             
-            <Button className="cta-button">Learn More</Button>
+            <Button className="cta-button" onClick={() => navigate('/become-seller')}>Learn More</Button>
           </div>
           
           <div className="order-1 md:order-2">

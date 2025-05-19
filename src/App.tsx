@@ -12,6 +12,8 @@ import Blog from "./pages/Blog";
 import NotFound from "./pages/NotFound";
 import ExploreSkills from "./pages/ExploreSkills";
 import PremiumServices from "./pages/PremiumServices";
+import JobsPage from "./pages/JobsPage";
+import PostJobForm from "./components/postjob";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,10 @@ const App = () => (
           <Route path="/blog" element={<Blog />} />
           <Route path="/explore-skills" element={<ExploreSkills />} />
           <Route path="/premium-services" element={<PremiumServices />} />
+          <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/post-job" element={<PostJobForm />} />
+          {/* Add more routes as needed */}
+          {/* Catch-all route for 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
