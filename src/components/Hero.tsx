@@ -1,8 +1,11 @@
 
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+
 
 const Hero = () => {
+  const navigate = useNavigate();
   return (
     <section className="relative bg-skillforge-secondary pt-16 pb-20 md:pb-32 overflow-hidden">
       {/* Background Image with Overlay */}
@@ -44,6 +47,19 @@ const Hero = () => {
             <a href="#" className="hover:text-white transition-colors">WordPress</a>
             <span>•</span>
             <a href="#" className="hover:text-white transition-colors">Voice Over</a>
+          </div>
+          {/* Call-to-Action Button */}
+          <div className="flex justify-center mt-8 animate-fade-in">
+            <Button className="px-8 py-3 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-md text-white">
+              Hire Now
+            </Button>
+          </div>
+          
+          {/* Call-to-Action Button */}
+          <div className="flex justify-center mt-8 animate-fade-in">
+            <Button className="px-8 py-3 bg-skillforge-secondary hover:bg-skillforge-secondary/90 rounded-md text-white" onClick={() => navigate('/become-seller')}>
+              Learn More
+            </Button>
           </div>
         </div>
       </div>

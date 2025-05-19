@@ -34,6 +34,7 @@ const Navbar = () => {
     }
   };
 
+const [isExploreOpen, setIsExploreOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -368,9 +369,14 @@ const Navbar = () => {
   <NavigationMenu>
     <NavigationMenuList>
       <NavigationMenuItem>
-        <NavigationMenuTrigger className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent">
-          Explore
-        </NavigationMenuTrigger>
+        <NavigationMenuTrigger
+  className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent"
+  onClick={() => setIsExploreOpen(prev => !prev)}
+>
+  Explore
+</NavigationMenuTrigger>
+
+      
         <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md">
           <ul className="flex flex-col space-y-2">
             <li>
