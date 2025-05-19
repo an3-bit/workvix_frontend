@@ -1,7 +1,9 @@
 
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const CTA = () => {
+  const navigate = useNavigate();
   return (
     <section className="py-12 bg-gradient-to-r from-skillforge-secondary to-skillforge-secondary/80">
       <div className="container mx-auto px-4">
@@ -16,7 +18,7 @@ const CTA = () => {
           </div>
           
           <div className="mt-6 md:mt-0">
-            <Button className="bg-white hover:bg-gray-100 text-skillforge-secondary">
+            <Button className="bg-white hover:bg-gray-100 text-skillforge-secondary" onClick={() => navigate('/join')}>
               Get Started
             </Button>
           </div>
