@@ -227,7 +227,7 @@ const ChatPage = () => {
   const formatLastSeen = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = Math.floor((now - date) / 1000 / 60); // diff in minutes
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000 / 60); // diff in minutes
     
     if (diff < 60) {
       return `Last seen ${diff} minutes ago`;
@@ -300,7 +300,7 @@ const ChatPage = () => {
               onClick={() => navigate('/neo')}
             >
               <span className="mr-2">•</span>
-              Talk to Skillforge Neo
+              Talk to Skillforge AI 
             </button>
           </div>
           
