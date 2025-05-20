@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Send, 
   FileText, 
@@ -10,11 +10,91 @@ import {
   Search, 
   Paperclip, 
   Smile, 
-  MoreHorizontal
+  MoreHorizontal,
+  Bell,
+  Mail,
+  Heart,
+  Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+
+// Custom Navbar component for Fiverr styling
+const Navbar = () => {
+  return (
+    <div className="border-b shadow-sm bg-white">
+      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link to="/" className="text-2xl font-bold text-gray-900">
+            <span className="text-green-500">Skillforge</span><span className="text-gray-900">.</span>
+          </Link>
+        </div>
+        
+        {/* Search bar */}
+        <div className="hidden lg:flex flex-1 mx-8">
+          <div className="relative w-full max-w-2xl">
+            <input
+              type="text"
+              placeholder="What service are you looking for today?"
+              className="w-full border border-gray-300 rounded pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
+            />
+            <button className="absolute right-0 top-0 h-full bg-gray-900 text-white px-4 rounded-r">
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Navigation */}
+        <div className="flex items-center space-x-6">
+          <Link to="/upgrade" className="text-sm font-medium hidden md:block">
+            Upgrade to Pro
+          </Link>
+          <Link to="/orders" className="text-sm font-medium hidden md:block">
+            Orders
+          </Link>
+          <Link to="/pro" className="text-sm font-medium hidden md:block">
+            Try Skillforge Go
+          </Link>
+          
+          {/* Icons */}
+          <div className="flex items-center space-x-4">
+            <button className="relative">
+              <Bell className="h-5 w-5 text-gray-700" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                1
+              </span>
+            </button>
+            <button className="relative">
+              <Mail className="h-5 w-5 text-gray-700" />
+            </button>
+            <button>
+              <Heart className="h-5 w-5 text-gray-700" />
+            </button>
+            <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
+              T
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Custom Footer component 
+const Footer = () => {
+  return (
+    <div className="bg-gray-50 py-4 border-t">
+      <div className="container mx-auto px-4 text-xs text-gray-500 flex justify-between items-center">
+        <div>© 2025 Skillforge International Ltd.</div>
+        <div className="flex space-x-4">
+          <Link to="/terms">Terms of Service</Link>
+          <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/cookies">Cookie Policy</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ChatPage = () => {
   const { chatId } = useParams();
@@ -147,7 +227,7 @@ const ChatPage = () => {
   const formatLastSeen = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000 / 60); // diff in minutes
+    const diff = Math.floor((now - date) / 1000 / 60); // diff in minutes
     
     if (diff < 60) {
       return `Last seen ${diff} minutes ago`;
@@ -167,9 +247,10 @@ const ChatPage = () => {
     navigate(`/chat/${id}`);
   };
 
+
   if (loading) {
     return (
-      <div className="bg-white min-h-screen">
+      <div className="bg-gray-50 min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 py-12 flex justify-center items-center">
           <p className="text-lg">Loading chat...</p>
@@ -219,7 +300,7 @@ const ChatPage = () => {
               onClick={() => navigate('/neo')}
             >
               <span className="mr-2">•</span>
-              Talk to SkillForge AI assistant
+              Talk to Skillforge Neo
             </button>
           </div>
           
@@ -310,7 +391,7 @@ const ChatPage = () => {
                   <div className="text-sm font-medium mb-1">{job?.title || 'Frontend Development Project'}</div>
                   <div className="flex items-center text-xs text-gray-500">
                     <span className="mr-2">From: United States</span>
-                    <span>On Fiverr since Feb 2025</span>
+                    <span>On Skillforge since Feb 2025</span>
                   </div>
                 </div>
               </div>
@@ -453,58 +534,92 @@ const ChatPage = () => {
           
           {/* About Freelancer */}
           <div className="p-4 border-b">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">About freelancer</span>
-              <span className="text-sm font-semibold">{chat.freelancerName}</span>
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold">About {chat.freelancerName}</h3>
+            </div>
+            
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-gray-500">From</span>
+              <span className="text-xs">United States</span>
+            </div>
+            
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-gray-500">On Skillforge since</span>
+              <span className="text-xs">Feb 2025</span>
+            </div>
+            
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-gray-500">English</span>
+              <span className="text-xs">Native</span>
             </div>
           </div>
           
-          {/* Order Details */}
+          {/* Freelancer Stats */}
           <div className="p-4 border-b">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Order details</span>
-              <span className="text-sm font-semibold">{job?.title || 'Frontend Development Project'}</span>
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-gray-500">Response rate</span>
+              <span className="text-xs">1h</span>
             </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-sm text-gray-500">Budget</span>
-              <span className="text-sm font-semibold">${job?.minBudget || '100'} - ${job?.maxBudget || '500'}</span>
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-sm text-gray-500">Delivery time</span>
-              <span className="text-sm font-semibold">{job?.deliveryTime || '3 days'}</span>
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-sm text-gray-500">Status</span>
-              <span className="text-sm font-semibold">{chat.status || 'In Progress'}</span>
+            
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-gray-500">Rating</span>
+              <span className="text-xs flex items-center">
+                <Star className="h-3 w-3 mr-1 text-yellow-400 fill-current" />
+                5 (57)
+              </span>
             </div>
           </div>
           
-          {/* Payment Details */}
-          <div className="p-4 border-b">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Payment details</span>
-              <span className="text-sm font-semibold">${job?.maxBudget || '500'}</span>
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-sm text-gray-500">Payment method</span>
-              <span className="text-sm font-semibold">Credit Card</span>
-            </div>
-          </div>
-          
-          {/* Order Actions */}
+          {/* Related Services */}
           <div className="p-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
-              onClick={() => navigate(`/job/${job?.id}`)}
-            >
-              View Order
-            </Button>
+            <div className="flex justify-between mb-3">
+              <h3 className="text-sm font-semibold">Related Services</h3>
+              <button className="text-xs text-green-500 font-medium">See More</button>
+            </div>
+            
+            {/* Service Card */}
+            <div className="border rounded-md overflow-hidden mb-3">
+              <div className="bg-gray-100 h-32 flex items-center justify-center">
+                <div className="text-center p-4 bg-yellow-200 w-full">
+                  <div className="text-2xl font-bold">10$</div>
+                  <div className="text-xs">Only</div>
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="text-xs mb-2">Help you code in r, python sas</div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center text-xs">
+                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                    <span className="ml-1">4.9 (57)</span>
+                  </div>
+                  <div className="text-xs">FROM $10</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Service Card */}
+            <div className="border rounded-md overflow-hidden">
+              <div className="bg-gray-100 h-32 flex items-center justify-center">
+                <div className="text-center p-2">
+                  <div className="text-sm font-bold">DATA ANALYST</div>
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="text-xs mb-2">Do data cleaning, visualization</div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center text-xs">
+                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                    <span className="ml-1">4.9 (100)</span>
+                  </div>
+                  <div className="text-xs">FROM $25</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default ChatPage;
