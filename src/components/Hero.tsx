@@ -49,18 +49,22 @@ const Hero = () => {
             <a href="#" className="hover:text-white transition-colors">Voice Over</a>
           </div>
           {/* Call-to-Action Button */}
-          <div className="flex justify-center mt-8 animate-fade-in">
-            <Button className="px-8 py-3 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-md text-white" onClick={() => navigate('/post-job')}>
-              Post a Job
-            </Button>
-          </div>
-          
-          {/* Call-to-Action Button */}
-          <div className="flex justify-center mt-8 animate-fade-in">
-            <Button className="px-8 py-3 bg-skillforge-secondary hover:bg-skillforge-secondary/90 rounded-md text-white" onClick={() => navigate('/become-seller')}>
-              Learn More
-            </Button>
-          </div>
+          {/* Call-to-Action Buttons (horizontal alignment) */}
+<div className="flex justify-center gap-4 mt-8 animate-fade-in">
+  <Button
+    className="px-8 py-3 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-md text-white"
+    onClick={() => navigate('/post-job')}
+  >
+    Post a Job
+  </Button>
+  <Button
+    className="px-8 py-3 bg-orange-500 hover:bg-orange-600 rounded-md text-white"
+    onClick={() => navigate('/become-seller')}
+  >
+    Get a Job
+  </Button>
+</div>
+
         </div>
       </div>
     </section>
