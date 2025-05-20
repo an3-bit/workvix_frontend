@@ -1,6 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, FileText, DollarSign, ChevronLeft, PaperclipIcon } from 'lucide-react';
+import { 
+  Send, 
+  FileText, 
+  DollarSign, 
+  ChevronLeft, 
+  Star, 
+  ChevronDown, 
+  Search, 
+  Paperclip, 
+  Smile, 
+  MoreHorizontal
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,12 +23,17 @@ const ChatPage = () => {
   const [job, setJob] = useState(null);
   const [messageText, setMessageText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [chats, setChats] = useState([]);
+  const [searchText, setSearchText] = useState('');
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Get chat from localStorage
-    const chats = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
-    const currentChat = chats.find(c => c.id === chatId);
+    // Get all chats from localStorage
+    const allChats = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
+    setChats(allChats);
+    
+    // Get current chat
+    const currentChat = allChats.find(c => c.id === chatId);
     
     if (currentChat) {
       setChat(currentChat);
@@ -62,9 +78,10 @@ const ChatPage = () => {
     setChat(updatedChat);
     
     // Update in localStorage
-    const chats = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
-    const updatedChats = chats.map(c => c.id === chatId ? updatedChat : c);
+    const allChats = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
+    const updatedChats = allChats.map(c => c.id === chatId ? updatedChat : c);
     localStorage.setItem('skillforgeChats', JSON.stringify(updatedChats));
+    setChats(updatedChats);
     
     // Clear input
     setMessageText('');
@@ -109,6 +126,7 @@ const ChatPage = () => {
         c.id === chatId ? chatWithResponse : c
       );
       localStorage.setItem('skillforgeChats', JSON.stringify(updatedChatsAfterResponse));
+      setChats(updatedChatsAfterResponse);
     }, 1500);
   };
 
@@ -120,10 +138,22 @@ const ChatPage = () => {
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString([], { 
-      weekday: 'short', 
       month: 'short', 
-      day: 'numeric' 
+      day: 'numeric',
+      year: 'numeric'
     });
+  };
+  
+  const formatLastSeen = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000 / 60); // diff in minutes
+    
+    if (diff < 60) {
+      return `Last seen ${diff} minutes ago`;
+    }
+    
+    return `Last seen ${formatTime(timestamp)} local time`;
   };
 
   const handleKeyDown = (e) => {
@@ -132,10 +162,14 @@ const ChatPage = () => {
       handleSendMessage();
     }
   };
+  
+  const switchToChat = (id) => {
+    navigate(`/chat/${id}`);
+  };
 
   if (loading) {
     return (
-      <div className="bg-gray-50 min-h-screen">
+      <div className="bg-white min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 py-12 flex justify-center items-center">
           <p className="text-lg">Loading chat...</p>
@@ -148,65 +182,171 @@ const ChatPage = () => {
   if (!chat) return null;
 
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col">
+    <div className="bg-white min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow flex flex-col container mx-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto w-full flex-grow flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Chat Header */}
-          <div className="bg-skillforge-secondary p-4 flex items-center justify-between">
+      <div className="flex-grow flex container mx-auto py-6 px-0">
+        {/* Sidebar */}
+        <div className="w-72 border-r bg-white flex flex-col overflow-hidden">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="mr-2 text-white hover:bg-skillforge-secondary/80"
-                onClick={() => navigate('/')}
+              <h2 className="text-lg font-semibold">All messages</h2>
+              <ChevronDown className="ml-1 h-4 w-4" />
+            </div>
+            <div className="text-gray-500">
+              <Search className="h-5 w-5" />
+            </div>
+          </div>
+          
+          {/* Search Input */}
+          <div className="p-4 border-b">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search"
+                className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
+              />
+              <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+            </div>
+          </div>
+          
+          {/* Neo Button */}
+          <div className="p-4 border-b">
+            <button 
+              className="bg-gradient-to-r from-purple-700 to-purple-900 w-full py-2 rounded-md text-white font-medium flex items-center justify-center"
+              onClick={() => navigate('/neo')}
+            >
+              <span className="mr-2">•</span>
+              Talk to SkillForge AI assistant
+            </button>
+          </div>
+          
+          {/* Chat List */}
+          <div className="flex-grow overflow-y-auto">
+            {chats.map((chatItem) => (
+              <div 
+                key={chatItem.id}
+                onClick={() => switchToChat(chatItem.id)}
+                className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${chatItem.id === chatId ? 'bg-gray-100' : ''}`}
               >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
+                <div className="flex items-start">
+                  <div className="relative mr-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white">
+                      {chatItem.freelancerName.charAt(0)}
+                    </div>
+                    {chatItem.isOnline && (
+                      <div className="absolute bottom-0 right-0 bg-green-500 rounded-full w-3 h-3 border-2 border-white"></div>
+                    )}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-start">
+                      <div className="font-medium text-sm">{chatItem.freelancerName}</div>
+                      <div className="text-xs text-gray-500">{formatTime(chatItem.messages[chatItem.messages.length - 1]?.timestamp || chatItem.createdAt)}</div>
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {chatItem.messages[chatItem.messages.length - 1]?.content || "No messages yet"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Main Chat Area */}
+        <div className="flex-grow flex flex-col">
+          {/* Chat Header */}
+          <div className="border-b p-4 flex items-center justify-between bg-white">
+            <div className="flex items-center">
+              <div className="relative mr-3">
+                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white">
+                  {chat.freelancerName.charAt(0)}
+                </div>
+                <div className="absolute bottom-0 right-0 bg-green-500 rounded-full w-3 h-3 border-2 border-white"></div>
+              </div>
               
               <div>
-                <h1 className="text-lg font-bold text-white flex items-center">
-                  {chat.freelancerName}
-                </h1>
-                <p className="text-sm text-gray-200">{job?.title}</p>
+                <div className="flex items-center">
+                  <h1 className="text-base font-semibold">{chat.freelancerName}</h1>
+                  <div className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded-full">@{chat.freelancerUsername || 'username'}</div>
+                </div>
+                <p className="text-xs text-gray-500">{formatLastSeen(chat.messages[chat.messages.length - 1]?.timestamp || chat.createdAt)}</p>
               </div>
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex items-center space-x-3">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-white hover:bg-skillforge-secondary/80 flex items-center gap-1"
+                className="border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
                 onClick={() => navigate(`/job/${job?.id}`)}
               >
-                <FileText className="h-4 w-4" />
-                <span>Job Details</span>
+                <Star className="h-3 w-3 mr-1 text-yellow-400" />
+                <span>5 (57)</span>
               </Button>
               
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-white text-skillforge-secondary hover:bg-white/90 flex items-center gap-1"
+                className="border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
               >
-                <DollarSign className="h-4 w-4" />
-                <span>Payment</span>
+                <FileText className="h-3 w-3 mr-1" />
+                <span>Order details</span>
               </Button>
+              
+              <div className="text-gray-500">
+                <MoreHorizontal className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Chat Details Box */}
+          <div className="bg-gray-50 p-4 border-b">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-3">
+                <div>
+                  <div className="text-sm font-medium mb-1">{job?.title || 'Frontend Development Project'}</div>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <span className="mr-2">From: United States</span>
+                    <span>On Fiverr since Feb 2025</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
+                >
+                  <span>As a client</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
+                >
+                  <span>As a freelancer</span>
+                </Button>
+              </div>
             </div>
           </div>
           
           {/* Messages Container */}
-          <div className="flex-grow overflow-y-auto p-4 space-y-4">
+          <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-white">
             {chat.messages.map((message, index) => {
               // Check if we need to show date label (first message or date change)
               const showDateLabel = index === 0 || (
-                formatDate(message.timestamp) !== formatDate(chat.messages[index - 1].timestamp)
+                formatDate(message.timestamp) !== formatDate(chat.messages[index - 1]?.timestamp)
               );
               
               return (
                 <div key={message.id}>
                   {showDateLabel && (
                     <div className="flex justify-center my-4">
-                      <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm">
+                      <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs">
                         {formatDate(message.timestamp)}
                       </span>
                     </div>
@@ -214,24 +354,38 @@ const ChatPage = () => {
                   
                   {message.sender === 'system' ? (
                     <div className="flex justify-center my-4">
-                      <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                      <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">
                         {message.content}
                       </span>
                     </div>
                   ) : (
-                    <div className={`flex ${message.sender === 'client' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex ${message.sender === 'client' ? 'justify-end' : 'justify-start'} mb-4`}>
+                      {message.sender !== 'client' && (
+                        <div className="mr-3">
+                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm">
+                            {chat.freelancerName.charAt(0)}
+                          </div>
+                        </div>
+                      )}
                       <div className={`max-w-[70%] ${
                         message.sender === 'client' 
-                          ? 'bg-skillforge-primary text-white' 
-                          : 'bg-gray-100 text-gray-800'
-                      } rounded-lg px-4 py-2`}>
-                        <p className="whitespace-pre-wrap">{message.content}</p>
+                          ? 'bg-green-500 text-white rounded-l-2xl rounded-br-2xl' 
+                          : 'bg-gray-100 text-gray-800 rounded-r-2xl rounded-bl-2xl'
+                      } px-4 py-3`}>
+                        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                         <p className={`text-xs mt-1 ${
-                          message.sender === 'client' ? 'text-gray-200' : 'text-gray-500'
+                          message.sender === 'client' ? 'text-green-100' : 'text-gray-500'
                         }`}>
                           {formatTime(message.timestamp)}
                         </p>
                       </div>
+                      {message.sender === 'client' && (
+                        <div className="ml-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
+                            T
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -241,14 +395,22 @@ const ChatPage = () => {
           </div>
           
           {/* Message Input */}
-          <div className="p-4 border-t">
+          <div className="p-4 border-t bg-white">
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-gray-500 hover:bg-gray-100"
+                className="text-gray-400 hover:bg-gray-100 rounded-full"
               >
-                <PaperclipIcon className="h-5 w-5" />
+                <Smile className="h-5 w-5" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-400 hover:bg-gray-100 rounded-full"
+              >
+                <Paperclip className="h-5 w-5" />
               </Button>
               
               <div className="flex-grow relative">
@@ -256,8 +418,8 @@ const ChatPage = () => {
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-skillforge-primary resize-none"
-                  placeholder="Type your message..."
+                  className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 resize-none"
+                  placeholder="Type a message..."
                   rows={1}
                   style={{ maxHeight: '120px', minHeight: '44px' }}
                 />
@@ -266,17 +428,83 @@ const ChatPage = () => {
               <Button
                 disabled={!messageText.trim()}
                 onClick={handleSendMessage}
-                className="bg-skillforge-primary hover:bg-skillforge-primary/90"
+                className="bg-green-500 hover:bg-green-600 rounded-full w-10 h-10 flex items-center justify-center"
               >
                 <Send className="h-5 w-5" />
               </Button>
             </div>
           </div>
         </div>
+        
+        {/* Sidebar - Right - Order Information */}
+        <div className="w-72 border-l bg-white flex flex-col overflow-hidden">
+          {/* Order Info Header */}
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-semibold">Orders with you</h2>
+          </div>
+          
+          {/* Order Details */}
+          <div className="p-4 border-b">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">Total</span>
+              <span className="text-sm font-semibold">({chats.length})</span>
+            </div>
+          </div>
+          
+          {/* About Freelancer */}
+          <div className="p-4 border-b">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">About freelancer</span>
+              <span className="text-sm font-semibold">{chat.freelancerName}</span>
+            </div>
+          </div>
+          
+          {/* Order Details */}
+          <div className="p-4 border-b">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">Order details</span>
+              <span className="text-sm font-semibold">{job?.title || 'Frontend Development Project'}</span>
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-sm text-gray-500">Budget</span>
+              <span className="text-sm font-semibold">${job?.minBudget || '100'} - ${job?.maxBudget || '500'}</span>
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-sm text-gray-500">Delivery time</span>
+              <span className="text-sm font-semibold">{job?.deliveryTime || '3 days'}</span>
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-sm text-gray-500">Status</span>
+              <span className="text-sm font-semibold">{chat.status || 'In Progress'}</span>
+            </div>
+          </div>
+          
+          {/* Payment Details */}
+          <div className="p-4 border-b">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-500">Payment details</span>
+              <span className="text-sm font-semibold">${job?.maxBudget || '500'}</span>
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-sm text-gray-500">Payment method</span>
+              <span className="text-sm font-semibold">Credit Card</span>
+            </div>
+          </div>
+          
+          {/* Order Actions */}
+          <div className="p-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
+              onClick={() => navigate(`/job/${job?.id}`)}
+            >
+              View Order
+            </Button>
+          </div>
+        </div>
       </div>
-      <Footer />
     </div>
   );
 };
-
 export default ChatPage;
