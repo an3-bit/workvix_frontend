@@ -20,7 +20,7 @@ const BecomeSeller = () => {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">Start Earning With Your Skills Today</h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8">
-              Join thousands of skilled professionals who are building successful businesses on SkillForge.
+              Join thousands of skilled professionals who are building successful businesses on workvix.
             </p>
             <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 text-white px-8 py-6 text-lg"
               onClick={() => {
@@ -69,7 +69,7 @@ const BecomeSeller = () => {
       {/* Benefits */}
       <div className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-4xl font-bold mb-12 text-center">Why Sell on SkillForge</h2>
+          <h2 className="text-2xl md:text-4xl font-bold mb-12 text-center">Why Sell on workvix</h2>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
@@ -101,19 +101,19 @@ const BecomeSeller = () => {
               {
                 name: "Sarah Johnson",
                 role: "Graphic Designer",
-                story: "Since joining SkillForge, I've been able to quit my 9-5 job and work full-time as a freelancer. I now earn twice what I made before and have clients from all over the world.",
+                story: "Since joining workvix, I've been able to quit my 9-5 job and work full-time as a freelancer. I now earn twice what I made before and have clients from all over the world.",
                 avatar: "https://randomuser.me/api/portraits/women/44.jpg"
               },
               {
                 name: "Michael Chen",
                 role: "Web Developer",
-                story: "SkillForge helped me turn my coding skills into a thriving business. I started with small projects and now have a team of developers working with me on enterprise-level projects.",
+                story: "workvix helped me turn my coding skills into a thriving business. I started with small projects and now have a team of developers working with me on enterprise-level projects.",
                 avatar: "https://randomuser.me/api/portraits/men/22.jpg"
               },
               {
                 name: "Aisha Patel",
                 role: "Content Writer",
-                story: "As a stay-at-home mom, SkillForge gave me the flexibility to earn while taking care of my family. I've built a loyal client base and my writing portfolio has grown exponentially.",
+                story: "As a stay-at-home mom, workvix gave me the flexibility to earn while taking care of my family. I've built a loyal client base and my writing portfolio has grown exponentially.",
                 avatar: "https://randomuser.me/api/portraits/women/67.jpg"
               }
             ].map((story, index) => (
@@ -161,8 +161,8 @@ const BecomeSeller = () => {
           <div className="max-w-3xl mx-auto space-y-6">
             {[
               {
-                question: "How much does it cost to join SkillForge as a seller?",
-                answer: "Joining SkillForge as a seller is completely free. We only take a small commission when you complete a project successfully."
+                question: "How much does it cost to join workvix as a seller?",
+                answer: "Joining workvix as a seller is completely free. We only take a small commission when you complete a project successfully."
               },
               {
                 question: "How and when do I get paid?",

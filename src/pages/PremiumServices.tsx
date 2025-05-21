@@ -35,7 +35,7 @@ const PremiumServices: React.FC = () => {
       role: 'CTO, TechNova',
       image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
       feedback:
-        'We partnered with a data expert from SkillForge Premium and saw instant improvements in our reporting and insights.',
+        'We partnered with a data expert from workvix Premium and saw instant improvements in our reporting and insights.',
       rating: 5,
     },
     {
@@ -43,7 +43,7 @@ const PremiumServices: React.FC = () => {
       role: 'Founder, MarketGenius',
       image: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg',
       feedback:
-        'SkillForge Premium made it incredibly easy to find a world-class designer who understood our brand from day one.',
+        'workvix is a game-changer for our team. The workvix team was able to deliver a custom solution within a tight deadline, and the results were outstanding.',
       rating: 4.9,
     },
   ];
@@ -57,7 +57,7 @@ const PremiumServices: React.FC = () => {
         <div className="container mx-auto px-4 py-16 md:py-24">
           <div className="flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="md:w-1/2 space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold">SkillForge Premium</h1>
+              <h1 className="text-4xl md:text-5xl font-bold">workvix Premium</h1>
               <p className="text-xl">
                 A business solution designed for teams. Connect with top-tier professionals handpicked for quality and service excellence.
               </p>
@@ -170,7 +170,7 @@ const PremiumServices: React.FC = () => {
         <div className="container mx-auto px-4 text-center ">
           <h2 className="text-3xl font-bold mb-4 text-emerald-800 ">Ready to elevate your projects?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-emerald-800 ">
-            Connect with premium talent and take your business to the next level with SkillForge Premium.
+            Connect with premium talent and take your business to the next level with workvix Premium.
           </p>
           <Link to="/contact-premium">
             <button className="bg-white text-emerald-800 font-medium py-3 px-8 rounded-md hover:bg-gray-100 transition">
