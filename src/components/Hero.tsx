@@ -53,7 +53,7 @@ const Hero = () => {
 <div className="flex justify-center gap-4 mt-8 animate-fade-in">
   <Button
     className="px-8 py-3 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-md text-white"
-    onClick={() => navigate('/post-job')}
+    onClick={() => navigate('/signin')}
   >
     Post a Job
   </Button>

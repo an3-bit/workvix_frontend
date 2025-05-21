@@ -347,7 +347,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
             <div className="flex items-center">
               {/* Logo */}
               <Link to="/" className="flex items-center mr-10">
-                <span className="text-2xl font-bold text-skillforge-primary">Skill<span className="text-skillforge-secondary">Forge</span></span>
+                <span className="text-2xl font-bold text-skillforge-primary">Work<span className="text-orange-500 text-vix-primary">vix</span></span>
               </Link>
 
               {/* Search bar that appears on scroll */}
