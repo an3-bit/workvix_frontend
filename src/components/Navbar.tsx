@@ -405,7 +405,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
     Sign In
   </Link>
   <Link to="/join">
-    <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+    <Button className="bg-orange-500 text-white hover:bg-skillforge-primary/90">Join</Button>
   </Link>
 </div>
 </div>
