@@ -54,30 +54,12 @@ const Footer = () => {
   return (
     <footer className="bg-white border-t border-gray-200">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {categories.map((category) => (
-            <div key={category.title}>
-              <h3 className="font-bold text-lg mb-4">{category.title}</h3>
-              <ul className="space-y-2">
-                {category.links.map((link) => (
-                  <li key={link}>
-                    <a 
-                      href="#" 
-                      className="text-gray-600 hover:text-skillforge-primary transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+       
         
         <div className="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t border-gray-200">
           <div className="mb-4 md:mb-0">
             <a href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-skillforge-secondary">vix</span></span>
+              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
             </a>
           </div>
           
@@ -105,10 +87,33 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="text-center text-sm text-gray-500 mt-8">
-          <p>&copy; {new Date().getFullYear()} Developed By Youvilab. All rights reserved.</p>
-        </div>
+        
       </div>
+       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-8 justify-center align-center">
+          {categories.map((category) => (
+            <div key={category.title}>
+              <h3 className="font-bold text-lg mb-4">{category.title}</h3>
+              <ul className="space-y-2">
+                {category.links.map((link) => (
+                  <li key={link}>
+                    <a 
+                      href="#" 
+                      className="text-gray-600 hover:text-skillforge-primary transition-colors"
+                    >
+                      {link}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+            
+        </div>
+        <div className="text-center mt-8">
+          <p className="text-gray-500 text-sm">
+            &copy; {new Date().getFullYear()} workvix. All rights reserved developed by <a href="#" className="text-skillforge-primary hover:underline">Youvilab Technologies</a>.
+          </p>
+        </div>
     </footer>
   );
 };

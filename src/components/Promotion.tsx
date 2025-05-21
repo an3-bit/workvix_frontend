@@ -13,7 +13,7 @@ const Promotion = () =>
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="order-2 md:order-1 animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-skillforge-primary">SkillForge</span>Pro
+              <span className="text-skillforge-primary">workvix</span>Pro
             </h2>
             <h3 className="text-2xl mb-6">
               The premium freelance solution for businesses
