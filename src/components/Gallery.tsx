@@ -46,8 +46,10 @@ const Gallery = () => {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Made on SkillForge</h2>
-        
+        <h2 className="text-3xl font-bold text-center mb-12">Made on WorkVix</h2>
+        <p className="text-center text-gray-600 mb-8">
+          Discover the amazing projects created by our talented freelancers.
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {projects.map((project) => (
             <div 

@@ -347,7 +347,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
             <div className="flex items-center">
               {/* Logo */}
               <Link to="/" className="flex items-center mr-10">
-                <span className="text-2xl font-bold text-skillforge-primary">Work<span className="text-orange-500 text-vix-primary">vix</span></span>
+                <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-skillforge-secondary">vix</span></span>
               </Link>
 
               {/* Search bar that appears on scroll */}
@@ -396,7 +396,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
   </NavigationMenu>
 
   <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-    SkillForge Premium
+    workvix Premium
   </Link>
   <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
     Become a Seller
@@ -405,7 +405,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
     Sign In
   </Link>
   <Link to="/join">
-    <Button className="bg-orange-500 text-white hover:bg-skillforge-primary/90">Join</Button>
+    <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
   </Link>
 </div>
 </div>
@@ -432,7 +432,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
       </div>
 
       <Link to="/premium-services" className="block text-gray-600 hover:text-skillforge-primary">
-        SkillForge Premium
+        WorkVix Premium
       </Link>
 
       <Link to="/become-seller" className="block text-gray-600 hover:text-skillforge-primary">

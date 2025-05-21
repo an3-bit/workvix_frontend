@@ -30,8 +30,10 @@ const categories = [
     links: [
       "Help & Support",
       "Trust & Safety",
-      "Selling on SkillForge",
-      "Buying on SkillForge",
+      "Selling on WorkVix",
+      "Buying on WorkVix",
+      "Affiliate Program",
+     
     ],
   },
   {
@@ -76,7 +78,7 @@ const Footer = () => {
           <div className="mb-4 md:mb-0">
             <a href="/" className="flex items-center">
               <span className="text-2xl font-bold text-skillforge-primary">
-                Skill<span className="text-skillforge-secondary">Forge</span>
+                Work<span className="text-skillforge-secondary">Vix</span>
               </span>
             </a>
           </div>

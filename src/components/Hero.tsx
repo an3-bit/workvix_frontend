@@ -53,7 +53,7 @@ const Hero = () => {
 <div className="flex justify-center gap-4 mt-8 animate-fade-in">
   <Button
     className="px-8 py-3 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-md text-white"
-    onClick={() => navigate('/signin')}
+    onClick={() => navigate('/post-job')}
   >
     Post a Job
   </Button>
@@ -61,7 +61,7 @@ const Hero = () => {
     className="px-8 py-3 bg-orange-500 hover:bg-orange-600 rounded-md text-white"
     onClick={() => navigate('/become-seller')}
   >
-    Get a Job
+    Find a Job
   </Button>
 </div>
 
