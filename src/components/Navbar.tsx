@@ -396,7 +396,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
   </NavigationMenu>
 
   <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-    workvix Premium
+    <span className="text-2xl  text-skillforge-primary">work<span className="text-orange-500 text-skillforge-secondary">vix</span></span> Premium
   </Link>
   <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
     Become a Seller

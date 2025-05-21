@@ -77,9 +77,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t border-gray-200">
           <div className="mb-4 md:mb-0">
             <a href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-skillforge-primary">
-                Work<span className="text-skillforge-secondary">Vix</span>
-              </span>
+              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-skillforge-secondary">vix</span></span>
             </a>
           </div>
           
