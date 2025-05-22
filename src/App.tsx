@@ -19,6 +19,10 @@ import JobCard from "./components/JobCard";
 import JobPostedNotification from "./pages/jobspostednotification";
 import JobBidsPage from "./pages/JobsBid";
 import ChatPage from "./pages/ChatPage";
+import ClientDashboard from "./pages/client/clientdashboard";
+import FreelancerDashboard from "./pages/freelancer/freelancerdashboard";
+import AdminDashboard from "./pages/support/admindash";
+import Dashboard from "./pages/home2/home2";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +47,10 @@ const App = () => (
           <Route path="/job-posted-notification" element={<JobPostedNotification />} />
           <Route path="/job-bids/:jobId" element={<JobBidsPage />} />
           <Route path="/chat/:chatId" element={<ChatPage />} />
+          <Route path="/client-dashboard" element={<ClientDashboard />} />
+          <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
 
           {/* Add more routes as needed */}
           {/* Catch-all route for 404 Not Found */}

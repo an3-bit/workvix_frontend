@@ -25,7 +25,7 @@ const JobPostedNotification = () => {
 
   const handleViewBids = () => {
     if (job) {
-      navigate(`/job-bids/${job.id}`);
+      navigate(`/join`);
     }
   };
 
@@ -42,7 +42,7 @@ const JobPostedNotification = () => {
             </div>
             
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
-              Thank you for choosing SkillForge!
+              Thank you for choosing workvix!
             </h1>
             
             <p className="text-lg text-gray-600 mb-6">
