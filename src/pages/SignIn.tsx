@@ -31,7 +31,7 @@ const SignIn = () => {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
           // User is already logged in, redirect to dashboard
-          navigate('/client-dashboard');
+          navigate('/dashboard');
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
