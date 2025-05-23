@@ -155,36 +155,7 @@ const inspirationCategories = [
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      {/* <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-green-600">workvix.</h1>
-              <div className="hidden md:flex space-x-6">
-                <a href="#" className="text-gray-700 hover:text-green-600">Graphics & Design</a>
-                <a href="#" className="text-gray-700 hover:text-green-600">Programming & Tech</a>
-                <a href="#" className="text-gray-700 hover:text-green-600">Digital Marketing</a>
-                <a href="#" className="text-gray-700 hover:text-green-600">Video & Animation</a>
-                <a href="#" className="text-gray-700 hover:text-green-600">Writing & Translation</a>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative hidden md:block">
-                <input
-                  type="text"
-                  placeholder="What service are you looking for today?"
-                  className="w-80 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-                <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-              <Button variant="outline">Orders</Button>
-              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                A
-              </div>
-            </div>
-          </div>
-        </div>
-      </header> */}
+      
       <Navbar />
 
    {/* Hero Section - WorkVix Go */}
@@ -409,7 +380,7 @@ const inspirationCategories = [
           
           <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <span className="text-2xl font-bold text-green-600">workvix.</span>
+              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
               <span className="text-sm text-gray-600">© WorkVix International Ltd. 2025</span>
             </div>
             <div className="flex space-x-4">
