@@ -79,7 +79,7 @@ const inspirationCategories = [
   },
   {
     title: "Packaging & Label Design",
-    image: "https://images.pexels.com/photos/1661004/pexels-photo-1661004.jpeg",
+    image: "https://images.pexels.com/photos/2608496/pexels-photo-2608496.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     category: "Design"
   }
 ];
@@ -98,7 +98,7 @@ const inspirationCategories = [
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/dashboard" className="text-2xl font-bold text-gray-900">
-              <span className="text-green-500">workvix</span><span className="text-gray-900">.</span>
+               <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
             </Link>
           </div>
           
