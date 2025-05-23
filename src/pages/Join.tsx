@@ -124,12 +124,12 @@ const Join = () => {
       }
 
       toast({
-        title: "Welcome to SkillForge!",
+        title: "Welcome to workvix!",
         description: "Your account has been created successfully.",
       });
 
       // Redirect to client dashboard
-      navigate('/client-dashboard');
+      navigate('/dashboard');
 
     } catch (error: any) {
       console.error("Registration error:", error);
