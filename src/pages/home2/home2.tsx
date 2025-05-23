@@ -125,7 +125,7 @@ const inspirationCategories = [
               Orders
             </Link>
             <Link to="/pro" className="text-sm font-medium hidden md:block">
-              Try workvix Pro
+              Try workvix Go
             </Link>
             
             {/* Icons */}
