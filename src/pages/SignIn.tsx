@@ -85,7 +85,7 @@ const SignIn = () => {
       });
 
       // Redirect to client dashboard
-      navigate('/client-dashboard');
+      navigate('/dashboard');
 
     } catch (error: any) {
       console.error("Sign in error:", error);
