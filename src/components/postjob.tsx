@@ -4,6 +4,9 @@ import { Check, ChevronDown, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { getCurrentUser } from '@/lib/auth';
 
 const JOB_CATEGORIES = [
   "Web Development",
@@ -25,6 +28,7 @@ const JOB_CATEGORIES = [
 
 const PostJobForm = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -33,6 +37,8 @@ const PostJobForm = () => {
     description: '',
   });
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   type FormErrors = {
     title?: string;
     category?: string;
@@ -85,37 +91,122 @@ const PostJobForm = () => {
       newErrors.maxBudget = 'Maximum budget must be greater than minimum budget';
     }
     if (!formData.description.trim()) newErrors.description = 'Job description is required';
-    // else if (formData.description.trim().length < 5) {
-    //   newErrors.description = 'Description should be at least 5 characters';
-    // }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+  
+//   if (!validateForm()) return;
+  
+//   setIsSubmitting(true);
+  
+//   try {
+//     // Calculate average budget
+//     const minBudget = Number(formData.minBudget);
+//     const maxBudget = Number(formData.maxBudget);
+//     const averageBudget = (minBudget + maxBudget) / 2;
     
-    if (!validateForm()) return;
+//     // Insert job into Supabase without requiring client_id
+//     const { data, error } = await supabase
+//       .from('jobs')
+//       .insert([
+//         {
+//           title: formData.title,
+//           description: formData.description,
+//           budget: averageBudget,
+//           status: 'open',
+//           category: formData.category,
+//           created_at: new Date().toISOString(),
+//           // client_id is now optional in your schema (nullable)
+//           client_id: null 
+//         }
+//       ])
+//       .select();
     
-    // Get existing jobs from localStorage or initialize empty array
-    const existingJobs = JSON.parse(localStorage.getItem('skillforgeJobs') || '[]');
+//     if (error) {
+//       throw error;
+//     }
     
-    // Create new job with unique ID and timestamp
-    const newJob = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString(),
-      status: 'open',
-    };
+//     // Show success message
+//     toast({
+//       title: 'Job Posted Successfully',
+//       description: 'Your job has been posted and is now visible to freelancers.',
+//     });
     
-    // Add new job to array and save back to localStorage
-    localStorage.setItem('skillforgeJobs', JSON.stringify([...existingJobs, newJob]));
+//     // Navigate to success page
+//     navigate('/job-posted-notification');
     
-    // Navigate to jobs page
-    navigate('/job-posted-notification');
-  };
-
+//   } catch (error) {
+//     console.error('Error posting job:', error);
+//     toast({
+//       title: 'Error Posting Job',
+//       description: error.message || 'Failed to post job. Please try again.',
+//       variant: 'destructive',
+//     });
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+// };
+// In your PostJobForm component, modify the handleSubmit function:
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
+  
+  setIsSubmitting(true);
+  
+  try {
+    // Calculate average budget
+    const minBudget = Number(formData.minBudget);
+    const maxBudget = Number(formData.maxBudget);
+    const averageBudget = (minBudget + maxBudget) / 2;
+    
+    // Insert job into Supabase
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert([
+        {
+          title: formData.title,
+          description: formData.description,
+          min_budget: minBudget,
+          max_budget: maxBudget,
+          budget: averageBudget,
+          status: 'open',
+          category: formData.category,
+          created_at: new Date().toISOString(),
+          client_id: null 
+        }
+      ])
+      .select()
+      .single(); // Add .single() to get just one record
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Show success message
+    toast({
+      title: 'Job Posted Successfully',
+      description: 'Your job has been posted and is now visible to freelancers.',
+    });
+    
+    // Navigate to the job bids page with the new job ID
+    navigate(`/job-posted-notification`);
+    
+  } catch (error) {
+    console.error('Error posting job:', error);
+    toast({
+      title: 'Error Posting Job',
+      description: error.message || 'Failed to post job. Please try again.',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   return (
     <div className="bg-gray-50 min-h-screen py-12">
         <Navbar />
@@ -264,8 +355,9 @@ const PostJobForm = () => {
               <Button
                 type="submit"
                 className="w-full py-3 bg-skillforge-primary hover:bg-skillforge-primary/90"
+                disabled={isSubmitting}
               >
-                Post Job
+                {isSubmitting ? 'Posting...' : 'Post Job'}
               </Button>
             </div>
           </form>

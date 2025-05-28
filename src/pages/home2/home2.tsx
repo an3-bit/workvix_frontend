@@ -2,6 +2,9 @@ import React from 'react';
 import { Search, Star,  Heart, Play, Bookmark, Mail, Bell} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
  const recommendedServices = [
@@ -91,66 +94,78 @@ const inspirationCategories = [
     { icon: "📋", title: "Copy Paste", desc: "Quick copy paste tasks" },
     { icon: "⌨️", title: "Data Typing", desc: "Fast and accurate typing" }
   ];
-  const Navbar = () => {
-    return (
-      <div className="border-b shadow-sm bg-white">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/dashboard" className="text-2xl font-bold text-gray-900">
-               <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
-            </Link>
+ 
+
+const Navbar = () => {
+  const navigate = useNavigate();
+  const handleNavigate = () => {
+    // Navigation logic here
+    navigate("/chat/:chatId");
+  };
+
+  // You need to return the JSX for the Navbar here
+  return (
+    <div className="border-b shadow-sm bg-white">
+      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link to="/dashboard" className="text-2xl font-bold text-gray-900">
+             <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
+          </Link>
+        </div>
+        
+        {/* Search bar */}
+        <div className="hidden lg:flex flex-1 mx-8">
+          <div className="relative w-full max-w-2xl">
+            <input
+              type="text"
+              placeholder="What service are you looking for today?"
+              className="w-full border border-gray-300 rounded pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
+            />
+            <button className="absolute right-0 top-0 h-full bg-gray-900 text-white px-4 rounded-r">
+              <Search className="h-4 w-4" />
+            </button>
           </div>
+        </div>
+        
+        {/* Navigation */}
+        <div className="flex items-center space-x-6">
+          <Link to="/upgrade" className="text-sm font-medium hidden md:block">
+            Upgrade to Pro
+          </Link>
+          <Link to="/orders" className="text-sm font-medium hidden md:block">
+            Orders
+          </Link>
+          <Link to="/pro" className="text-sm font-medium hidden md:block">
+            Try workvix Go
+          </Link>
           
-          {/* Search bar */}
-          <div className="hidden lg:flex flex-1 mx-8">
-            <div className="relative w-full max-w-2xl">
-              <input
-                type="text"
-                placeholder="What service are you looking for today?"
-                className="w-full border border-gray-300 rounded pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
-              />
-              <button className="absolute right-0 top-0 h-full bg-gray-900 text-white px-4 rounded-r">
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          
-          {/* Navigation */}
-          <div className="flex items-center space-x-6">
-            <Link to="/upgrade" className="text-sm font-medium hidden md:block">
-              Upgrade to Pro
-            </Link>
-            <Link to="/orders" className="text-sm font-medium hidden md:block">
-              Orders
-            </Link>
-            <Link to="/pro" className="text-sm font-medium hidden md:block">
-              Try workvix Go
-            </Link>
-            
-            {/* Icons */}
-            <div className="flex items-center space-x-4">
-              <button className="relative">
-                <Bell className="h-5 w-5 text-gray-700" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  1
-                </span>
-              </button>
-              <button className="relative">
+          {/* Icons */}
+          <div className="flex items-center space-x-4">
+            <button className="relative" onClick={() => {/* TODO: Provide job.id or remove this button */}}>
+              <Bell className="h-5 w-5 text-gray-700" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"></span>
+            </button>
+              <button className="relative" onClick={handleNavigate}>
                 <Mail className="h-5 w-5 text-gray-700" />
               </button>
-              <button>
-                <Heart className="h-5 w-5 text-gray-700" />
-              </button>
-              <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
-                T
-              </div>
+            
+            <button>
+              <Heart className="h-5 w-5 text-gray-700" />
+            </button>
+            <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
+              T
             </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
+
+     
+
+   
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -164,6 +179,7 @@ const inspirationCategories = [
   style={{
     backgroundImage: "url('https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260')",
   }}
+   
 >
   {/* Overlay */}
   <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-black/20 z-0"></div>
@@ -263,6 +279,7 @@ const inspirationCategories = [
                     src={service.image} 
                     alt={service.title}
                     className="w-full h-40 object-cover"
+                    loading="lazy"
                   />
                   <div className="absolute top-2 left-2">
                     <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -320,6 +337,7 @@ const inspirationCategories = [
                     src={item.image} 
                     alt={item.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity"></div>
                   <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
@@ -405,3 +423,5 @@ const inspirationCategories = [
 };
 
 export default Dashboard;
+
+

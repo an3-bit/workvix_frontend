@@ -4,30 +4,78 @@ import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
+
 const JobPostedNotification = () => {
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get all jobs and find the most recently posted one
-    const jobs = JSON.parse(localStorage.getItem('skillforgeJobs') || '[]');
-    if (jobs.length > 0) {
-      // Sort by creation date (newest first) and get the first one
-      const latestJob = jobs.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0];
-      setJob(latestJob);
-    } else {
-      // If no jobs found, redirect to post job page
-      navigate('/post-job');
-    }
+    const fetchLatestJob = async () => {
+      try {
+        // Fetch the most recent job from Supabase
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error) throw error;
+        
+        if (data) {
+          setJob(data);
+        } else {
+          // If no jobs found, redirect to post job page
+          navigate('/post-job');
+        }
+      } catch (error) {
+        console.error('Error fetching job:', error);
+        // Fallback to localStorage if Supabase fails
+        const jobs = JSON.parse(localStorage.getItem('skillforgeJobs') || '[]');
+        if (jobs.length > 0) {
+          const latestJob = jobs.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0];
+          setJob(latestJob);
+        } else {
+          navigate('/post-job');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestJob();
   }, [navigate]);
 
-  const handleViewBids = () => {
-    if (job) {
-      navigate(`/join`);
-    }
-  };
+  const handleViewBids = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    // User not logged in
+    navigate('/join');
+  } else if (job?.id) {
+    // User is logged in
+    navigate(`/job-bids/${job.id}`);
+  }
+};
+
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Navbar />
+        <div className="container mx-auto px-4 py-12 flex justify-center items-center">
+          <p className="text-lg">Loading job details...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!job) return null;
 
@@ -55,7 +103,7 @@ const JobPostedNotification = () => {
               <p className="font-medium text-gray-800">{job.title}</p>
               <div className="flex justify-between mt-2 text-gray-600">
                 <span>Category: {job.category}</span>
-                <span>Budget: ${job.minBudget} - ${job.maxBudget}</span>
+                <span>Budget: ${job.min_budget || job.minBudget} - ${job.max_budget || job.maxBudget}</span>
               </div>
             </div>
             
@@ -66,8 +114,6 @@ const JobPostedNotification = () => {
               >
                 View Bids
               </Button>
-              
-            
             </div>
           </div>
         </div>
