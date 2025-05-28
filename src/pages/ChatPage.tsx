@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Send, 
   FileText, 
@@ -17,75 +17,16 @@ import {
   Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Nav2 from '@/components/Nav2';
 
-// Custom Navbar component for Fiverr styling
-const Navbar = () => {
-  return (
-    <div className="border-b shadow-sm bg-white">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link to="/" className="text-2xl font-bold text-gray-900">
-            <span className="text-green-500">workvix</span><span className="text-gray-900">.</span>
-          </Link>
-        </div>
-        
-        {/* Search bar */}
-        <div className="hidden lg:flex flex-1 mx-8">
-          <div className="relative w-full max-w-2xl">
-            <input
-              type="text"
-              placeholder="What service are you looking for today?"
-              className="w-full border border-gray-300 rounded pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
-            />
-            <button className="absolute right-0 top-0 h-full bg-gray-900 text-white px-4 rounded-r">
-              <Search className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Navigation */}
-        <div className="flex items-center space-x-6">
-          <Link to="/upgrade" className="text-sm font-medium hidden md:block">
-            Upgrade to Pro
-          </Link>
-          <Link to="/orders" className="text-sm font-medium hidden md:block">
-            Orders
-          </Link>
-          <Link to="/pro" className="text-sm font-medium hidden md:block">
-            Try Skillforge Go
-          </Link>
-          
-          {/* Icons */}
-          <div className="flex items-center space-x-4">
-            <button className="relative">
-              <Bell className="h-5 w-5 text-gray-700" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                1
-              </span>
-            </button>
-            <button className="relative">
-              <Mail className="h-5 w-5 text-gray-700" />
-            </button>
-            <button>
-              <Heart className="h-5 w-5 text-gray-700" />
-            </button>
-            <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
-              T
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+
 
 // Custom Footer component 
 const Footer = () => {
   return (
     <div className="bg-gray-50 py-4 border-t">
       <div className="container mx-auto px-4 text-xs text-gray-500 flex justify-between items-center">
-        <div>© 2025 Skillforge International Ltd.</div>
+        <div>© 2025 Workvix International Ltd.</div>
         <div className="flex space-x-4">
           <Link to="/terms">Terms of Service</Link>
           <Link to="/privacy">Privacy Policy</Link>
@@ -97,42 +38,100 @@ const Footer = () => {
 };
 
 const ChatPage = () => {
-  const { chatId } = useParams();
   const navigate = useNavigate();
-  const [chat, setChat] = useState(null);
-  const [job, setJob] = useState(null);
   const [messageText, setMessageText] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [chats, setChats] = useState([]);
-  const [searchText, setSearchText] = useState('');
   const messagesEndRef = useRef(null);
+  const [searchText, setSearchText] = useState('');
 
-  useEffect(() => {
-    // Get all chats from localStorage
-    const allChats = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
-    setChats(allChats);
-    
-    // Get current chat
-    const currentChat = allChats.find(c => c.id === chatId);
-    
-    if (currentChat) {
-      setChat(currentChat);
-      
-      // Get related job
-      const jobs = JSON.parse(localStorage.getItem('skillforgeJobs') || '[]');
-      const relatedJob = jobs.find(j => j.id === currentChat.jobId);
-      
-      if (relatedJob) {
-        setJob(relatedJob);
+  // Static chat data
+  const [chat, setChat] = useState({
+    id: 'static_chat_1',
+    freelancerName: 'John Doe',
+    freelancerUsername: 'johndoe',
+    isOnline: true,
+    createdAt: new Date().toISOString(),
+    messages: [
+      {
+        id: 'msg_1',
+        sender: 'system',
+        content: 'You connected with John Doe',
+        timestamp: new Date(Date.now() - 86400000).toISOString()
+      },
+      {
+        id: 'msg_2',
+        sender: 'freelancer',
+        content: 'Hi there! Thanks for reaching out. How can I help you today?',
+        timestamp: new Date(Date.now() - 3600000).toISOString()
+      },
+      {
+        id: 'msg_3',
+        sender: 'client',
+        content: 'Hi John! I need help with a React project. Are you available?',
+        timestamp: new Date(Date.now() - 1800000).toISOString()
       }
-    } else {
-      // If chat not found, redirect to dashboard
-      navigate('/');
+    ]
+  });
+
+  // Static job data
+  const job = {
+    id: 'static_job_1',
+    title: 'React Frontend Development',
+    minBudget: '300',
+    maxBudget: '500'
+  };
+
+  // Static chats list
+  const [chats, setChats] = useState([
+    {
+      id: 'static_chat_1',
+      freelancerName: 'John Doe',
+      freelancerUsername: 'johndoe',
+      isOnline: true,
+      createdAt: new Date().toISOString(),
+      messages: [
+        {
+          id: 'msg_1',
+          sender: 'system',
+          content: 'You connected with John Doe',
+          timestamp: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: 'msg_2',
+          sender: 'freelancer',
+          content: 'Hi there! Thanks for reaching out. How can I help you today?',
+          timestamp: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          id: 'msg_3',
+          sender: 'client',
+          content: 'Hi John! I need help with a React project. Are you available?',
+          timestamp: new Date(Date.now() - 1800000).toISOString()
+        }
+      ]
+    },
+    {
+      id: 'static_chat_2',
+      freelancerName: 'Sarah Smith',
+      freelancerUsername: 'sarahsmith',
+      isOnline: false,
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      messages: [
+        {
+          id: 'msg_4',
+          sender: 'system',
+          content: 'You connected with Sarah Smith',
+          timestamp: new Date(Date.now() - 172800000).toISOString()
+        },
+        {
+          id: 'msg_5',
+          sender: 'freelancer',
+          content: 'Hello! I saw your project for UI design. I have some questions.',
+          timestamp: new Date(Date.now() - 172800000).toISOString()
+        }
+      ]
     }
-    
-    setLoading(false);
-  }, [chatId, navigate]);
-  
+  ]);
+
   // Scroll to bottom of messages when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -144,7 +143,7 @@ const ChatPage = () => {
     // Create new message
     const newMessage = {
       id: `msg_${Date.now()}`,
-      sender: 'client', // In a real app, this would be determined by user type
+      sender: 'client',
       content: messageText,
       timestamp: new Date().toISOString()
     };
@@ -156,12 +155,6 @@ const ChatPage = () => {
     };
     
     setChat(updatedChat);
-    
-    // Update in localStorage
-    const allChats = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
-    const updatedChats = allChats.map(c => c.id === chatId ? updatedChat : c);
-    localStorage.setItem('skillforgeChats', JSON.stringify(updatedChats));
-    setChats(updatedChats);
     
     // Clear input
     setMessageText('');
@@ -199,14 +192,6 @@ const ChatPage = () => {
       };
       
       setChat(chatWithResponse);
-      
-      // Update in localStorage
-      const chatsAfterResponse = JSON.parse(localStorage.getItem('skillforgeChats') || '[]');
-      const updatedChatsAfterResponse = chatsAfterResponse.map(c => 
-        c.id === chatId ? chatWithResponse : c
-      );
-      localStorage.setItem('skillforgeChats', JSON.stringify(updatedChatsAfterResponse));
-      setChats(updatedChatsAfterResponse);
     }, 1500);
   };
 
@@ -244,27 +229,15 @@ const ChatPage = () => {
   };
   
   const switchToChat = (id) => {
-    navigate(`/chat/${id}`);
+    const selectedChat = chats.find(c => c.id === id);
+    if (selectedChat) {
+      setChat(selectedChat);
+    }
   };
-
-
-  if (loading) {
-    return (
-      <div className="bg-gray-50 min-h-screen">
-        <Navbar />
-        <div className="container mx-auto px-4 py-12 flex justify-center items-center">
-          <p className="text-lg">Loading chat...</p>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!chat) return null;
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
-      <Navbar />
+      <Nav2 />
       <div className="flex-grow flex container mx-auto py-6 px-0">
         {/* Sidebar */}
         <div className="w-72 border-r bg-white flex flex-col overflow-hidden">
@@ -300,7 +273,7 @@ const ChatPage = () => {
               onClick={() => navigate('/neo')}
             >
               <span className="mr-2">•</span>
-              Talk to Skillforge AI 
+              Talk to Support 
             </button>
           </div>
           
@@ -310,7 +283,7 @@ const ChatPage = () => {
               <div 
                 key={chatItem.id}
                 onClick={() => switchToChat(chatItem.id)}
-                className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${chatItem.id === chatId ? 'bg-gray-100' : ''}`}
+                className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${chatItem.id === chat.id ? 'bg-gray-100' : ''}`}
               >
                 <div className="flex items-start">
                   <div className="relative mr-3">
@@ -362,7 +335,6 @@ const ChatPage = () => {
                 variant="outline"
                 size="sm"
                 className="border-gray-300 text-gray-600 hover:bg-gray-50 text-xs"
-                onClick={() => navigate(`/job/${job?.id}`)}
               >
                 <Star className="h-3 w-3 mr-1 text-yellow-400" />
                 <span>5 (57)</span>
@@ -391,7 +363,7 @@ const ChatPage = () => {
                   <div className="text-sm font-medium mb-1">{job?.title || 'Frontend Development Project'}</div>
                   <div className="flex items-center text-xs text-gray-500">
                     <span className="mr-2">From: United States</span>
-                    <span>On Skillforge since Feb 2025</span>
+                    <span>On Workvix since Feb 2025</span>
                   </div>
                 </div>
               </div>
@@ -544,7 +516,7 @@ const ChatPage = () => {
             </div>
             
             <div className="flex justify-between mb-2">
-              <span className="text-xs text-gray-500">On Skillforge since</span>
+              <span className="text-xs text-gray-500">On workvix since</span>
               <span className="text-xs">Feb 2025</span>
             </div>
             

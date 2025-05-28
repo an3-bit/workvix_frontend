@@ -23,6 +23,7 @@ import ClientDashboard from "./pages/client/clientdashboard";
 import FreelancerDashboard from "./pages/freelancer/freelancerdashboard";
 import AdminDashboard from "./pages/support/admindash";
 import Dashboard from "./pages/home2/home2";
+import Logout from "./pages/logout";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,8 @@ const App = () => (
           <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/logout" element={<Logout />} />
+
 
           {/* Add more routes as needed */}
           {/* Catch-all route for 404 Not Found */}
