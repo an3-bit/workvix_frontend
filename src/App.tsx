@@ -24,6 +24,7 @@ import FreelancerDashboard from "./pages/freelancer/freelancerdashboard";
 import AdminDashboard from "./pages/support/admindash";
 import Dashboard from "./pages/home2/home2";
 import Logout from "./pages/logout";
+import JoinSelection from "./pages/joinselection";
 
 const queryClient = new QueryClient();
 
@@ -37,7 +38,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/become-seller" element={<BecomeSeller />} />
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/join" element={<Join />} />
+          {/* <Route path="/join" element={<Join />} /> */}
           <Route path="/blog" element={<Blog />} />
           <Route path="/explore-skills" element={<ExploreSkills />} />
           <Route path="/premium-services" element={<PremiumServices />} />
@@ -53,6 +54,9 @@ const App = () => (
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/logout" element={<Logout />} />
+          
+          <Route path="/join" element={<JoinSelection />} />
+          <Route path="/join/:role" element={<Join />} />
 
 
           {/* Add more routes as needed */}

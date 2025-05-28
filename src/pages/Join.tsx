@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const registrationFormSchema = z.object({
 });
 
 const Join = () => {
+  const { role } = useParams<{ role: 'client' | 'freelancer' }>();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,8 +42,9 @@ const Join = () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
-          // User is already logged in, redirect to dashboard
           navigate('/dashboard');
+        } else if (!role || !['client', 'freelancer'].includes(role)) {
+          navigate('/join'); // Redirect to role selection if invalid role
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
@@ -51,7 +54,7 @@ const Join = () => {
     };
 
     checkAuthStatus();
-  }, [navigate]);
+  }, [navigate, role]);
 
   const form = useForm<z.infer<typeof registrationFormSchema>>({
     resolver: zodResolver(registrationFormSchema),
@@ -68,6 +71,8 @@ const Join = () => {
   const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
     setIsSubmitting(true);
     try {
+      if (!role) throw new Error("No role specified");
+
       // Create user account with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
@@ -76,59 +81,48 @@ const Join = () => {
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
+            role: role // Store role in user metadata
           }
         }
       });
 
-      if (authError) {
-        toast({
-          title: "Registration Error",
-          description: authError.message,
-          variant: "destructive",
-        });
-        return;
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("User creation failed");
+
+      // Create profile in the appropriate table
+      const profileData = {
+        id: authData.user.id,
+        email: values.email,
+        first_name: values.firstName,
+        last_name: values.lastName,
+        created_at: new Date().toISOString()
+      };
+
+      // Add role-specific fields
+      if (role === 'freelancer') {
+        profileData.skills = [];
+        profileData.hourly_rate = null;
       }
 
-      if (!authData.user) {
-        toast({
-          title: "Registration Error",
-          description: "User creation failed - no user data returned",
-          variant: "destructive",
-        });
-        return;
-      }
+      const { error } = await supabase
+        .from(role === 'client' ? 'clients' : 'freelancers')
+        .insert([profileData]);
 
-      // Update user profile with "user" role
-      await updateUserProfile(authData.user.id, {
-        role: "user",
-      });
-
-      // Insert user data into the clients table
-      const { error: clientError } = await supabase
-        .from('clients')
-        .insert([{
-          id: authData.user.id,
-          email: values.email,
-          first_name: values.firstName,
-          last_name: values.lastName,
-          created_at: new Date().toISOString()
-        }]);
-
-      if (clientError) {
-        console.error("Client profile creation error:", clientError);
+      if (error) {
+        console.error(`${role} profile creation error:`, error);
         toast({
           title: "Profile Creation Warning",
-          description: "Account created but profile setup incomplete. You can complete it later.",
+          description: "Account created but profile setup incomplete. Please complete your profile.",
           variant: "default",
         });
       }
 
       toast({
-        title: "Welcome to workvix!",
+        title: `Welcome to WorkVix as a ${role}!`,
         description: "Your account has been created successfully.",
       });
 
-      // Redirect to client dashboard
+      // Redirect to appropriate dashboard
       navigate('/dashboard');
 
     } catch (error: any) {
@@ -164,7 +158,9 @@ const Join = () => {
           <div className="container px-4 mx-auto sm:px-6">
             <div className="max-w-md mx-auto">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold">Create your account</h1>
+                <h1 className="text-3xl font-bold">
+                  {role === 'client' ? 'Client' : 'Freelancer'} Registration
+                </h1>
                 <p className="mt-2 text-sm text-gray-600">
                   Already have an account?{" "}
                   <a href="/signin" className="font-medium text-blue-600 hover:text-blue-500">
@@ -281,7 +277,7 @@ const Join = () => {
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                        {isSubmitting ? 'Creating Account...' : `Sign Up as ${role === 'client' ? 'Client' : 'Freelancer'}`}
                       </Button>
                     </form>
                   </Form>
