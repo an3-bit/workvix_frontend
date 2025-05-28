@@ -6,28 +6,71 @@ import { supabase } from '@/integrations/supabase/client';
 const Nav2 = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
+    const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     useEffect(() => {
-        const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-        };
+    const fetchUserRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        fetchUser();
+      // Check if user exists in clients table
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('id', user.id)
+        .single();
 
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN') {
-                setUser(session?.user);
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-            }
-        });
+      if (clientData) {
+        setUserRole('client');
+        return;
+      }
 
-        return () => subscription.unsubscribe();
-    }, []);
+      // Check if user exists in freelancers table
+      const { data: freelancerData } = await supabase
+        .from('freelancers')
+        .select('id')
+        .eq('id', user.id)
+        .single();
 
+      if (freelancerData) {
+        setUserRole('freelancer');
+      }
+    };
+
+    fetchUserRole();
+
+    // Update auth state change listener similarly
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Repeat the same check as above
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (clientData) {
+          setUserRole('client');
+          return;
+        }
+
+        const { data: freelancerData } = await supabase
+          .from('freelancers')
+          .select('id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (freelancerData) {
+          setUserRole('freelancer');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUserRole(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
     const handleChat = () => {
         navigate("/chat/:chatId");
     };
@@ -42,19 +85,19 @@ const Nav2 = () => {
         const email = user.email || '';
         return email.charAt(0).toUpperCase();
     };
-// Add this inside your Nav2 component
-useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-        if (isDropdownOpen && !(event.target as Element).closest('.relative')) {
-            setIsDropdownOpen(false);
-        }
-    };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-    };
-}, [isDropdownOpen]);
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (isDropdownOpen && !(event.target as Element).closest('.relative')) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDropdownOpen]);
 
     return (
         <div className="border-b shadow-sm bg-white fixed top-0 left-0 right-0 z-50">
@@ -82,6 +125,18 @@ useEffect(() => {
                 
                 {/* Navigation */}
                 <div className="flex items-center space-x-6">
+                    {/* Conditional navigation based on user role */}
+                    {userRole === 'client' && (
+                        <Link to="/bids" className="text-sm font-medium hidden md:block">
+                            Bids
+                        </Link>
+                    )}
+                    {userRole === 'freelancer' && (
+                        <Link to="/jobs" className="text-sm font-medium hidden md:block">
+                            Jobs
+                        </Link>
+                    )}
+                    
                     <Link to="/upgrade" className="text-sm font-medium hidden md:block">
                         Upgrade to Pro
                     </Link>

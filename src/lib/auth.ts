@@ -144,3 +144,22 @@ export async function updateUserProfile(id: string, data: {
     .eq("id", id);
   return { error };
 }
+
+// lib/auth.ts
+export const getUserRole = async (userId: string) => {
+  const { data: clientData } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (clientData) return 'client';
+
+  const { data: freelancerData } = await supabase
+    .from('freelancers')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  return freelancerData ? 'freelancer' : null;
+};
