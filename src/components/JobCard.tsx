@@ -12,7 +12,11 @@ const JobCard = ({ job }) => {
 
   // Format date to be more readable
   const formatDate = (dateString) => {
+    if (!dateString) return 'Recently';
+    
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Recently';
+    
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -24,7 +28,11 @@ const JobCard = ({ job }) => {
     } else if (diffDays < 7) {
       return `${diffDays} days ago`;
     } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
     }
   };
 
@@ -32,7 +40,6 @@ const JobCard = ({ job }) => {
     setShowContact(true);
     
     // Simulate notification to freelancers
-    // In a real app, this would be handled by a backend service
     setTimeout(() => {
       setNotifications([
         {
@@ -42,6 +49,11 @@ const JobCard = ({ job }) => {
         }
       ]);
     }, 1000);
+  };
+
+  const handleBackToDashboard = () => {
+    // Navigate back to the dashboard
+    window.location.href = '/dashboard'; // Adjust this path as needed
   };
 
   const startBidding = () => {
@@ -68,8 +80,20 @@ const JobCard = ({ job }) => {
 
   // Get first 100 characters of description and add ellipsis if longer
   const truncateDescription = (text, maxLength = 100) => {
+    if (!text) return '';
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  };
+
+  // Calculate budget display
+  const getBudgetDisplay = () => {
+    if (job.min_budget && job.max_budget) {
+      return `$${job.min_budget} - $${job.max_budget}`;
+    }
+    if (job.budget) {
+      return `$${job.budget}`;
+    }
+    return 'Negotiable';
   };
 
   return (
@@ -79,7 +103,7 @@ const JobCard = ({ job }) => {
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-semibold text-gray-900">{job.title}</h2>
           <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-            {job.status}
+            {job.status || 'Open'}
           </span>
         </div>
         
@@ -87,15 +111,15 @@ const JobCard = ({ job }) => {
         <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-1 text-gray-400" />
-            Posted {formatDate(job.createdAt)}
+            Posted {formatDate(job.created_at)}
           </div>
           <div className="flex items-center">
             <Tag className="h-4 w-4 mr-1 text-gray-400" />
-            {job.category}
+            {job.category || 'Uncategorized'}
           </div>
           <div className="flex items-center">
             <DollarSign className="h-4 w-4 mr-1 text-gray-400" />
-            ${job.minBudget} - ${job.maxBudget}
+            {getBudgetDisplay()}
           </div>
         </div>
         
@@ -129,15 +153,13 @@ const JobCard = ({ job }) => {
           </div>
           
           <p className="text-gray-600 mb-4">
-            Our support team will connect you with a qualified freelancer for this job.
+            Our support team will connect you with the client shortly.
           </p>
           
           {notifications.length > 0 && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
-              <p className="text-blue-700 font-medium">Notification sent to freelancers!</p>
-              <p className="text-blue-600 text-sm mt-1">
-                The first freelancer to respond will be connected with you.
-              </p>
+              <p className="text-blue-700 font-medium">Notification sent to client!</p>
+              <p className="text-blue-600">{notifications[0].message}</p>
             </div>
           )}
           
@@ -178,9 +200,9 @@ const JobCard = ({ job }) => {
                   value={bidAmount}
                   onChange={(e) => setBidAmount(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-skillforge-primary focus:outline-none"
-                  placeholder={`Between ${job.minBudget} and ${job.maxBudget}`}
-                  min={job.minBudget}
-                  max={job.maxBudget}
+                  placeholder={job.min_budget ? `Between ${job.min_budget} and ${job.max_budget}` : 'Enter your bid amount'}
+                  min={job.min_budget}
+                  max={job.max_budget}
                 />
               </div>
             </div>
@@ -225,7 +247,14 @@ const JobCard = ({ job }) => {
           <p className="text-gray-600">
             Your bid has been sent to the client. You'll be notified when they respond.
           </p>
+           <button
+          className="mt-4 text-blue-600 hover:underline"
+          onClick={() => {handleBackToDashboard()}}
+        >
+          Back to Dashboard
+        </button>
         </div>
+       
       )}
     </div>
   );

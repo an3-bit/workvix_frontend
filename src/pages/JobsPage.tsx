@@ -3,6 +3,7 @@ import { Clock, DollarSign, Tag, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import JobCard from '@/components/JobCard';
 import NotificationSystem from '@/components/Notification';
+import { supabase } from '@/integrations/supabase/client';
 
 const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -10,16 +11,57 @@ const JobsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load jobs on component mount
+  // Load jobs from Supabase
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'open') // Only fetch open jobs
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setJobs(data || []);
+      setFilteredJobs(data || []);
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(data?.map(job => job.category) || [])];
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Set up real-time subscription
+  const setupRealtime = () => {
+    const subscription = supabase
+      .channel('jobs_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'jobs' },
+        (payload) => {
+          // Refresh jobs when there are changes
+          fetchJobs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  };
+
+  // Initial load and setup real-time
   useEffect(() => {
-    const loadedJobs = JSON.parse(localStorage.getItem('skillforgeJobs') || '[]');
-    setJobs(loadedJobs);
-    setFilteredJobs(loadedJobs);
-    
-    // Extract unique categories
-    const uniqueCategories = [...new Set(loadedJobs.map(job => job.category))];
-    setCategories(uniqueCategories);
+    fetchJobs();
+    const cleanup = setupRealtime();
+    return cleanup;
   }, []);
 
   // Filter jobs when search or category changes
@@ -53,11 +95,22 @@ const JobsPage = () => {
     setSelectedCategory('');
   };
 
-  // Simulate navigation to the job posting page
   const navigateToPostJob = () => {
     console.log('Navigating to post job page');
     // In a real app with react-router: navigate('/post-job')
   };
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center py-12">
+            <p>Loading jobs...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen py-12">
