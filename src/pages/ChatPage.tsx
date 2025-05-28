@@ -238,7 +238,7 @@ const ChatPage = () => {
   return (
     <div className="bg-white min-h-screen flex flex-col">
       <Nav2 />
-      <div className="flex-grow flex container mx-auto py-6 px-0">
+      <div className="flex-grow flex container mx-auto py-6 px-0 mt-16">
         {/* Sidebar */}
         <div className="w-72 border-r bg-white flex flex-col overflow-hidden">
           {/* Sidebar Header */}
