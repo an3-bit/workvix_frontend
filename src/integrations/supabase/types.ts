@@ -17,6 +17,7 @@ export type Database = {
           last_name: string
           created_at: string
           updated_at: string | null
+          role: 'client' | null
         }
         Insert: {
           id: string
@@ -56,6 +57,7 @@ export type Database = {
           portfolio_links: string[] | null
           created_at: string
           updated_at: string | null
+          role: 'freelancer' | null
         }
         Insert: {
           id: string

@@ -9,41 +9,107 @@ const Nav2 = () => {
     const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-    useEffect(() => {
-    const fetchUserRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+//     useEffect(() => {
+//     const fetchUserRole = async () => {
+//       const { data: { user } } = await supabase.auth.getUser();
+//       if (!user) return;
 
-      // Check if user exists in clients table
-      const { data: clientData } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('id', user.id)
-        .single();
+//       // Check if user exists in clients table
+//       const { data: clientData } = await supabase
+//         .from('clients')
+//         .select('id')
+//         .eq('id', user.id)
+//         .single();
 
-      if (clientData) {
-        setUserRole('client');
-        return;
-      }
+//       if (clientData) {
+//         setUserRole('client');
+//         return;
+//       }
 
-      // Check if user exists in freelancers table
-      const { data: freelancerData } = await supabase
-        .from('freelancers')
-        .select('id')
-        .eq('id', user.id)
-        .single();
+//       // Check if user exists in freelancers table
+//       const { data: freelancerData } = await supabase
+//         .from('freelancers')
+//         .select('id')
+//         .eq('id', user.id)
+//         .single();
 
-      if (freelancerData) {
-        setUserRole('freelancer');
-      }
-    };
+//       if (freelancerData) {
+//         setUserRole('freelancer');
+//       }
+//     };
 
-    fetchUserRole();
+//     fetchUserRole();
 
-    // Update auth state change listener similarly
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+//     // Update auth state change listener similarly
+//     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+//       if (event === 'SIGNED_IN' && session?.user) {
+//         // Repeat the same check as above
+//         const { data: clientData } = await supabase
+//           .from('clients')
+//           .select('id')
+//           .eq('id', session.user.id)
+//           .single();
+
+//         if (clientData) {
+//           setUserRole('client');
+//           return;
+//         }
+
+//         const { data: freelancerData } = await supabase
+//           .from('freelancers')
+//           .select('id')
+//           .eq('id', session.user.id)
+//           .single();
+
+//         if (freelancerData) {
+//           setUserRole('freelancer');
+//         }
+//       } else if (event === 'SIGNED_OUT') {
+//         setUserRole(null);
+//       }
+//     });
+
+//     return () => subscription.unsubscribe();
+//   }, []);
+useEffect(() => {
+  const fetchUserRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // ✅ Set the user in state
+    setUser(user);
+
+    // Check if user exists in clients table
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (clientData) {
+      setUserRole('client');
+      return;
+    }
+
+    // Check if user exists in freelancers table
+    const { data: freelancerData } = await supabase
+      .from('freelancers')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (freelancerData) {
+      setUserRole('freelancer');
+    }
+  };
+
+  fetchUserRole();
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        // Repeat the same check as above
+        setUser(session.user); // ✅ Set user on sign in
+
         const { data: clientData } = await supabase
           .from('clients')
           .select('id')
@@ -65,12 +131,15 @@ const Nav2 = () => {
           setUserRole('freelancer');
         }
       } else if (event === 'SIGNED_OUT') {
+        setUser(null);       // ✅ Reset user on sign out
         setUserRole(null);
       }
-    });
+    }
+  );
 
-    return () => subscription.unsubscribe();
-  }, []);
+  return () => subscription.unsubscribe();
+}, []);
+
     const handleChat = () => {
         navigate("/chat/:chatId");
     };
@@ -140,7 +209,7 @@ const Nav2 = () => {
                     <Link to="/upgrade" className="text-sm font-medium hidden md:block">
                         Upgrade to Pro
                     </Link>
-                    <Link to="/orders" className="text-sm font-medium hidden md:block">
+                    <Link to="/jobs" className="text-sm font-medium hidden md:block">
                         Orders
                     </Link>
                     <Link to="/pro" className="text-sm font-medium hidden md:block">

@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import JobCard from '@/components/JobCard';
 import NotificationSystem from '@/components/Notification';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import Nav2 from '@/components/Nav2';
+import Footer from '@/components/Footer';
 
 const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -113,7 +116,8 @@ const JobsPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen py-12">
+    <div className="bg-gray-50 min-h-screen py-12 mt-16">
+      <Nav2 />
       <div className="container mx-auto px-4">
         <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -213,6 +217,7 @@ const JobsPage = () => {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
