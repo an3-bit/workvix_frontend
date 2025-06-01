@@ -64,6 +64,9 @@ const Navbar = () => {
   };
 }, []);
 
+const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
+
+
   // Main navigation categories data
   const mainCategories = [
     {
@@ -364,33 +367,39 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
            <div className="hidden md:flex items-center space-x-6">
-  <NavigationMenu>
-    <NavigationMenuList>
-      <NavigationMenuItem>
-        <NavigationMenuTrigger
-          className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent z-[60]"
-          onClick={() => setIsExploreOpen(prev => !prev)}
-        >
-          Explore
-        </NavigationMenuTrigger>
+ <NavigationMenu>
+  <NavigationMenuList>
+    <NavigationMenuItem>
+      <NavigationMenuTrigger className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent">
+        Explore
+      </NavigationMenuTrigger>
 
-        <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md z-[60] border">
-          <ul className="flex flex-col space-y-2">
-            <li>
-              <Link to="/blog" className="text-sm text-gray-700 hover:text-skillforge-primary">
-                Blog
-              </Link>
-            </li>
-            <li>
-              <Link to="/explore-skills" className="text-sm text-gray-700 hover:text-skillforge-primary">
-                Explore Skills
-              </Link>
-            </li>
-          </ul>
-        </NavigationMenuContent>
-      </NavigationMenuItem>
-    </NavigationMenuList>
-  </NavigationMenu>
+      <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md">
+        <ul className="flex flex-col space-y-2">
+          <li>
+            <Link
+              to="/blog"
+              onClick={() => setHideSecondaryMenu(true)}
+              className="text-sm text-gray-700 hover:text-skillforge-primary"
+            >
+              Blog
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/explore-skills"
+              onClick={() => setHideSecondaryMenu(true)}
+              className="text-sm text-gray-700 hover:text-skillforge-primary"
+            >
+              Explore Skills
+            </Link>
+          </li>
+        </ul>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+</NavigationMenu>
+
 
   <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
     <span className="text-2xl  text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span> Pro
@@ -451,23 +460,26 @@ const Navbar = () => {
 
           {/* Categories Navigation (Desktop) - Fiverr-like style */}
           <div className="hidden md:block border-t">
-            <NavigationMenu className="w-full">
-              <NavigationMenuList className="flex justify-between py-2">
-                {mainCategories.map((category) => (
-                  <NavigationMenuItem key={category.name}>
-                    <NavigationMenuTrigger 
-                      className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary z-[40]"
-                      onMouseEnter={() => setActiveCategory(category.name)}
-                    >
-                      {category.name}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent className="z-[40]">
-                      <MegaMenuContent sections={category.sections} />
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
+            {!hideSecondaryMenu && (
+  <NavigationMenu className="w-full">
+    <NavigationMenuList className="flex justify-between py-2">
+      {mainCategories.map((category) => (
+        <NavigationMenuItem key={category.name}>
+          <NavigationMenuTrigger 
+            className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary"
+            onMouseEnter={() => setActiveCategory(category.name)}
+          >
+            {category.name}
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <MegaMenuContent sections={category.sections} />
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      ))}
+    </NavigationMenuList>
+  </NavigationMenu>
+)}
+
           </div>
 
           {/* Mobile Navigation */}
