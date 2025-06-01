@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { updateUserProfile } from "@/lib/auth";
 
 const registrationFormSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -36,7 +35,6 @@ const Join = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Check if user is already authenticated
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -44,7 +42,7 @@ const Join = () => {
         if (data.session) {
           navigate('/dashboard');
         } else if (!role || !['client', 'freelancer'].includes(role)) {
-          navigate('/join'); // Redirect to role selection if invalid role
+          navigate('/joinselection');
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
@@ -73,15 +71,15 @@ const Join = () => {
     try {
       if (!role) throw new Error("No role specified");
 
-      // Create user account with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
-            role: role // Store role in user metadata
+            role: role
           }
         }
       });
@@ -89,7 +87,7 @@ const Join = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error("User creation failed");
 
-      // Create profile in the appropriate table
+      // Create role-specific profile
       const baseProfileData = {
         id: authData.user.id,
         email: values.email,
@@ -98,17 +96,16 @@ const Join = () => {
         created_at: new Date().toISOString()
       };
 
-      // Add role-specific fields for freelancers
       const profileData = role === 'freelancer' 
-        ? { ...baseProfileData, skills: [], hourly_rate: null }
+        ? { ...baseProfileData, skills: [], hourly_rate: null, bio: null, portfolio_links: [] }
         : baseProfileData;
 
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from(role === 'client' ? 'clients' : 'freelancers')
         .insert([profileData]);
 
-      if (error) {
-        console.error(`${role} profile creation error:`, error);
+      if (profileError) {
+        console.error(`${role} profile creation error:`, profileError);
         toast({
           title: "Profile Creation Warning",
           description: "Account created but profile setup incomplete. Please complete your profile.",
@@ -117,11 +114,10 @@ const Join = () => {
       }
 
       toast({
-        title: `Welcome to WorkVix as a ${role}!`,
-        description: "Your account has been created successfully.",
+        title: `Welcome to Skillforge as a ${role}!`,
+        description: "Your account has been created successfully. Please check your email for verification.",
       });
 
-      // Redirect to appropriate dashboard
       navigate('/dashboard');
 
     } catch (error: any) {
@@ -162,9 +158,9 @@ const Join = () => {
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
                   Already have an account?{" "}
-                  <a href="/signin" className="font-medium text-blue-600 hover:text-blue-500">
+                  <Link to="/signin" className="font-medium text-blue-600 hover:text-blue-500">
                     Sign in
-                  </a>
+                  </Link>
                 </p>
               </div>
               
@@ -257,13 +253,13 @@ const Join = () => {
                             <div className="space-y-1 leading-none">
                               <FormLabel className="text-sm">
                                 I agree to the{" "}
-                                <a href="#" className="text-blue-600 hover:underline">
+                                <Link to="#" className="text-blue-600 hover:underline">
                                   Terms of Service
-                                </a>{" "}
+                                </Link>{" "}
                                 and{" "}
-                                <a href="#" className="text-blue-600 hover:underline">
+                                <Link to="#" className="text-blue-600 hover:underline">
                                   Privacy Policy
-                                </a>
+                                </Link>
                               </FormLabel>
                               <FormMessage />
                             </div>
@@ -280,31 +276,6 @@ const Join = () => {
                       </Button>
                     </form>
                   </Form>
-                  
-                  <div className="mt-6">
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300" />
-                      </div>
-                      <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">Or sign up with</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        disabled={isSubmitting}
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
-                        </svg>
-                        Sign up with Google
-                      </Button>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>

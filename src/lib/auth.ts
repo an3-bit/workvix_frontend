@@ -11,6 +11,7 @@ export async function signUp(email: string, password: string, metadata?: {
   first_name?: string; 
   last_name?: string; 
   full_name?: string;
+  role?: 'client' | 'freelancer';
 }) {
   console.log("Attempting to sign up with metadata:", metadata);
   try {
@@ -18,6 +19,7 @@ export async function signUp(email: string, password: string, metadata?: {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: metadata,
       },
     });

@@ -1,33 +1,24 @@
+
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import BecomeSeller from "./pages/BecomeSeller";
-import SignIn from "./pages/SignIn";
-import Join from "./pages/Join";
-import Blog from "./pages/Blog";
-import NotFound from "./pages/NotFound";
-import ExploreSkills from "./pages/ExploreSkills";
-import PremiumServices from "./pages/PremiumServices";
-import JobsPage from "./pages/JobsPage";
-import PostJobForm from "./components/postjob";
-import NotificationSystem from "./components/Notification";
-import JobCard from "./components/JobCard";
-import JobPostedNotification from "./pages/jobspostednotification";
-import JobBidsPage from "./pages/JobsBid";
-import ChatPage from "./pages/ChatPage";
-import ClientDashboard from "./pages/client/clientdashboard";
-import FreelancerDashboard from "./pages/freelancer/freelancerdashboard";
-import AdminDashboard from "./pages/support/admindash";
-import Dashboard from "./pages/home2/home2";
-import Logout from "./pages/logout";
-import JoinSelection from "./pages/joinselection";
-import FreelancerBidsPage from "./pages/FreelancerBidsPage";
-import CheckoutPage from "./pages/CheckoutPage";
 
 const queryClient = new QueryClient();
+
+// Lazy load components
+const SignIn = lazy(() => import("./pages/SignIn"));
+const Join = lazy(() => import("./pages/Join"));
+const JoinSelection = lazy(() => import("./pages/joinselection"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const JobsPage = lazy(() => import("./pages/JobsPage"));
+const FreelancerBidsPage = lazy(() => import("./pages/FreelancerBidsPage"));
+const JobsBid = lazy(() => import("./pages/JobsBid"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -35,34 +26,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/become-seller" element={<BecomeSeller />} />
-          <Route path="/signin" element={<SignIn />} />
-          {/* <Route path="/join" element={<Join />} /> */}
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/explore-skills" element={<ExploreSkills />} />
-          <Route path="/premium-services" element={<PremiumServices />} />
-          <Route path="/jobs" element={<JobsPage />} />
-          <Route path="/freelancer-jobs" element={<FreelancerBidsPage />} />
-          <Route path="/post-job" element={<PostJobForm />} />
-          <Route path="/notification" element={<NotificationSystem />} />
-          <Route path="/job-card" element={<JobCard job={{}} />} />
-          <Route path="/job-posted-notification" element={<JobPostedNotification />} />
-          <Route path="/job-bids/:jobId" element={<JobBidsPage />} />
-          <Route path="/checkout/:bidId" element={<CheckoutPage />} />
-          <Route path="/chat/:chatId" element={<ChatPage />} />
-          <Route path="/client-dashboard" element={<ClientDashboard />} />
-          <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/logout" element={<Logout />} />
-          
-          <Route path="/join" element={<JoinSelection />} />
-          <Route path="/join/:role" element={<Join />} />
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/join" element={<JoinSelection />} />
+            <Route path="/joinselection" element={<JoinSelection />} />
+            <Route path="/join/:role" element={<Join />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/jobs" element={<JobsPage />} />
+            <Route path="/bids" element={<FreelancerBidsPage />} />
+            <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
+            <Route path="/checkout/:bidId" element={<CheckoutPage />} />
+            <Route path="/chat/:chatId" element={<ChatPage />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
