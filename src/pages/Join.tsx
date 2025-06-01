@@ -90,7 +90,7 @@ const Join = () => {
       if (!authData.user) throw new Error("User creation failed");
 
       // Create profile in the appropriate table
-      const profileData = {
+      const baseProfileData = {
         id: authData.user.id,
         email: values.email,
         first_name: values.firstName,
@@ -98,11 +98,10 @@ const Join = () => {
         created_at: new Date().toISOString()
       };
 
-      // Add role-specific fields
-      if (role === 'freelancer') {
-        profileData.skills = [];
-        profileData.hourly_rate = null;
-      }
+      // Add role-specific fields for freelancers
+      const profileData = role === 'freelancer' 
+        ? { ...baseProfileData, skills: [], hourly_rate: null }
+        : baseProfileData;
 
       const { error } = await supabase
         .from(role === 'client' ? 'clients' : 'freelancers')
