@@ -20,6 +20,7 @@ const Navbar = () => {
   const [showSecondaryNav, setShowSecondaryNav] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
   const secondaryNavRef = useRef<HTMLDivElement | null>(null);
 
   // Enhanced MegaMenu component
@@ -33,8 +34,6 @@ const Navbar = () => {
       });
     }
   };
-
-const [isExploreOpen, setIsExploreOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -64,7 +63,6 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
     window.removeEventListener('scroll', handleScroll);
   };
 }, []);
-
 
   // Main navigation categories data
   const mainCategories = [
@@ -370,14 +368,13 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
     <NavigationMenuList>
       <NavigationMenuItem>
         <NavigationMenuTrigger
-  className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent"
-  onClick={() => setIsExploreOpen(prev => !prev)}
->
-  Explore
-</NavigationMenuTrigger>
+          className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent z-[60]"
+          onClick={() => setIsExploreOpen(prev => !prev)}
+        >
+          Explore
+        </NavigationMenuTrigger>
 
-      
-        <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md">
+        <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md z-[60] border">
           <ul className="flex flex-col space-y-2">
             <li>
               <Link to="/blog" className="text-sm text-gray-700 hover:text-skillforge-primary">
@@ -407,7 +404,6 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
   <Link to="/join">
     <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
   </Link>
-</div>
 </div>
 
             {/* Mobile Menu Button */}
@@ -452,7 +448,6 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
   )}
 </div>
 
-
           {/* Categories Navigation (Desktop) - Fiverr-like style */}
           <div className="hidden md:block border-t">
             <NavigationMenu className="w-full">
@@ -460,12 +455,12 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
                 {mainCategories.map((category) => (
                   <NavigationMenuItem key={category.name}>
                     <NavigationMenuTrigger 
-                      className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary"
+                      className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary z-[40]"
                       onMouseEnter={() => setActiveCategory(category.name)}
                     >
                       {category.name}
                     </NavigationMenuTrigger>
-                    <NavigationMenuContent>
+                    <NavigationMenuContent className="z-[40]">
                       <MegaMenuContent sections={category.sections} />
                     </NavigationMenuContent>
                   </NavigationMenuItem>
@@ -521,7 +516,7 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
      {showSecondaryNav && (
         <div 
           ref={secondaryNavRef}
-          className=" fixed top-0 left-0 right-0 z-40 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
+          className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
           style={{ top: '80px' }} 
         >
           <div className="container mx-auto px-4">
@@ -531,12 +526,12 @@ const [isExploreOpen, setIsExploreOpen] = useState(false);
                   {mainCategories.map((category) => (
                     <NavigationMenuItem key={category.name}>
                       <NavigationMenuTrigger 
-                        className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent"
+                        className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent z-[30]"
                         onMouseEnter={() => setActiveCategory(category.name)}
                       >
                         {category.name}
                       </NavigationMenuTrigger>
-                      <NavigationMenuContent>
+                      <NavigationMenuContent className="z-[30]">
                         <MegaMenuContent sections={category.sections} />
                       </NavigationMenuContent>
                     </NavigationMenuItem>
