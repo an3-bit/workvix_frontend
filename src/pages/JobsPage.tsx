@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Clock, DollarSign, Tag, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ const JobsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Load jobs from Supabase
   const fetchJobs = async () => {
@@ -23,7 +25,7 @@ const JobsPage = () => {
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
-        .eq('status', 'open') // Only fetch open jobs
+        .eq('status', 'open')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -99,13 +101,13 @@ const JobsPage = () => {
   };
 
   const navigateToPostJob = () => {
-    console.log('Navigating to post job page');
-    // In a real app with react-router: navigate('/post-job')
+    navigate('/post-job');
   };
 
   if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen py-12">
+        <Nav2 />
         <div className="container mx-auto px-4">
           <div className="text-center py-12">
             <p>Loading jobs...</p>

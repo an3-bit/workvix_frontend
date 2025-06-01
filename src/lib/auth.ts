@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -145,7 +146,6 @@ export async function updateUserProfile(id: string, data: {
   return { error };
 }
 
-// lib/auth.ts
 export const getUserRole = async (userId: string) => {
   const { data: clientData } = await supabase
     .from('clients')

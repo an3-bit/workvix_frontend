@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, Mail, Heart, ChevronDown, User, LogOut } from 'lucide-react';
@@ -9,136 +10,73 @@ const Nav2 = () => {
     const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-//     useEffect(() => {
-//     const fetchUserRole = async () => {
-//       const { data: { user } } = await supabase.auth.getUser();
-//       if (!user) return;
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
 
-//       // Check if user exists in clients table
-//       const { data: clientData } = await supabase
-//         .from('clients')
-//         .select('id')
-//         .eq('id', user.id)
-//         .single();
+            setUser(user);
 
-//       if (clientData) {
-//         setUserRole('client');
-//         return;
-//       }
+            // Check if user exists in clients table
+            const { data: clientData } = await supabase
+                .from('clients')
+                .select('id')
+                .eq('id', user.id)
+                .single();
 
-//       // Check if user exists in freelancers table
-//       const { data: freelancerData } = await supabase
-//         .from('freelancers')
-//         .select('id')
-//         .eq('id', user.id)
-//         .single();
+            if (clientData) {
+                setUserRole('client');
+                return;
+            }
 
-//       if (freelancerData) {
-//         setUserRole('freelancer');
-//       }
-//     };
+            // Check if user exists in freelancers table
+            const { data: freelancerData } = await supabase
+                .from('freelancers')
+                .select('id')
+                .eq('id', user.id)
+                .single();
 
-//     fetchUserRole();
+            if (freelancerData) {
+                setUserRole('freelancer');
+            }
+        };
 
-//     // Update auth state change listener similarly
-//     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-//       if (event === 'SIGNED_IN' && session?.user) {
-//         // Repeat the same check as above
-//         const { data: clientData } = await supabase
-//           .from('clients')
-//           .select('id')
-//           .eq('id', session.user.id)
-//           .single();
+        fetchUserRole();
 
-//         if (clientData) {
-//           setUserRole('client');
-//           return;
-//         }
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    setUser(session.user);
 
-//         const { data: freelancerData } = await supabase
-//           .from('freelancers')
-//           .select('id')
-//           .eq('id', session.user.id)
-//           .single();
+                    const { data: clientData } = await supabase
+                        .from('clients')
+                        .select('id')
+                        .eq('id', session.user.id)
+                        .single();
 
-//         if (freelancerData) {
-//           setUserRole('freelancer');
-//         }
-//       } else if (event === 'SIGNED_OUT') {
-//         setUserRole(null);
-//       }
-//     });
+                    if (clientData) {
+                        setUserRole('client');
+                        return;
+                    }
 
-//     return () => subscription.unsubscribe();
-//   }, []);
-useEffect(() => {
-  const fetchUserRole = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+                    const { data: freelancerData } = await supabase
+                        .from('freelancers')
+                        .select('id')
+                        .eq('id', session.user.id)
+                        .single();
 
-    // ✅ Set the user in state
-    setUser(user);
+                    if (freelancerData) {
+                        setUserRole('freelancer');
+                    }
+                } else if (event === 'SIGNED_OUT') {
+                    setUser(null);
+                    setUserRole(null);
+                }
+            }
+        );
 
-    // Check if user exists in clients table
-    const { data: clientData } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (clientData) {
-      setUserRole('client');
-      return;
-    }
-
-    // Check if user exists in freelancers table
-    const { data: freelancerData } = await supabase
-      .from('freelancers')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (freelancerData) {
-      setUserRole('freelancer');
-    }
-  };
-
-  fetchUserRole();
-
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user); // ✅ Set user on sign in
-
-        const { data: clientData } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (clientData) {
-          setUserRole('client');
-          return;
-        }
-
-        const { data: freelancerData } = await supabase
-          .from('freelancers')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (freelancerData) {
-          setUserRole('freelancer');
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);       // ✅ Reset user on sign out
-        setUserRole(null);
-      }
-    }
-  );
-
-  return () => subscription.unsubscribe();
-}, []);
+        return () => subscription.unsubscribe();
+    }, []);
 
     const handleChat = () => {
         navigate("/chat/:chatId");

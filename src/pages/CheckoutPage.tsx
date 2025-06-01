@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const CheckoutPage = () => {
   const { bidId } = useParams();
@@ -24,25 +25,29 @@ const CheckoutPage = () => {
   useEffect(() => {
     const fetchBidDetails = async () => {
       try {
-        // For now, use mock data since tables might not be created yet
-        // TODO: Replace with real query once tables are created
-        const mockBid = {
-          id: bidId,
-          amount: 150,
-          freelancers: {
-            first_name: 'John',
-            last_name: 'Doe',
-            email: 'john@example.com'
-          },
-          jobs: {
-            id: 'mock-job-1',
-            title: 'Web Development Project',
-            category: 'Programming & Tech'
-          }
-        };
+        // Fetch bid details with related job and freelancer data
+        const { data: bidData, error: bidError } = await supabase
+          .from('bids')
+          .select(`
+            *,
+            jobs (
+              id,
+              title,
+              category
+            ),
+            freelancers (
+              first_name,
+              last_name,
+              email
+            )
+          `)
+          .eq('id', bidId)
+          .single();
+
+        if (bidError) throw bidError;
         
-        setBid(mockBid);
-        setJob(mockBid.jobs);
+        setBid(bidData);
+        setJob(bidData.jobs);
       } catch (error) {
         console.error('Error fetching bid details:', error);
         toast({
@@ -56,14 +61,35 @@ const CheckoutPage = () => {
       }
     };
 
-    fetchBidDetails();
+    if (bidId) {
+      fetchBidDetails();
+    }
   }, [bidId, navigate, toast]);
 
   const handlePayment = async () => {
     setProcessing(true);
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create order record
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert([
+          {
+            bid_id: bidId,
+            amount: bid.amount * 1.05, // Including 5% service fee
+            status: 'paid',
+            payment_method: paymentMethod
+          }
+        ]);
+
+      if (orderError) throw orderError;
+
+      // Update bid status to paid
+      const { error: bidError } = await supabase
+        .from('bids')
+        .update({ status: 'paid' })
+        .eq('id', bidId);
+
+      if (bidError) throw bidError;
 
       toast({
         title: 'Payment Successful',

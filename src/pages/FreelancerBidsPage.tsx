@@ -64,8 +64,21 @@ const FreelancerBidsPage = () => {
         return;
       }
 
-      // For now, just show success message since table might not exist yet
-      // TODO: Replace with real insert once tables are created
+      const { error } = await supabase
+        .from('bids')
+        .insert([
+          {
+            job_id: jobId,
+            freelancer_id: session.user.id,
+            amount: parseFloat(bid.amount),
+            message: bid.message,
+            delivery_time: bid.delivery_time,
+            status: 'pending'
+          }
+        ]);
+
+      if (error) throw error;
+
       toast({
         title: 'Success',
         description: 'Your bid has been submitted successfully',
