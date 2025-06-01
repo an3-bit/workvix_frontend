@@ -447,6 +447,7 @@ const Navbar = () => {
     </div>
   )}
 </div>
+          </div>
 
           {/* Categories Navigation (Desktop) - Fiverr-like style */}
           <div className="hidden md:block border-t">
