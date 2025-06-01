@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Clock, User, Briefcase, DollarSign } from 'lucide-react';
@@ -5,18 +6,19 @@ import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 const JobBidsPage = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
+  const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const bidders = MOCK_BIDDERS;
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchJob = async () => {
+    const fetchJobAndBids = async () => {
       if (!jobId) {
         setError('Job ID not provided.');
         setLoading(false);
@@ -24,30 +26,74 @@ const JobBidsPage = () => {
       }
 
       try {
-        const { data, error } = await supabase
+        // Fetch job details
+        const { data: jobData, error: jobError } = await supabase
           .from('jobs')
           .select('*')
           .eq('id', jobId)
           .single();
 
-        if (error) throw error;
-        setJob(data);
+        if (jobError) throw jobError;
+        setJob(jobData);
+
+        // Fetch bids for this job with freelancer details
+        const { data: bidsData, error: bidsError } = await supabase
+          .from('bids')
+          .select(`
+            *,
+            freelancers (
+              first_name,
+              last_name,
+              email
+            )
+          `)
+          .eq('job_id', jobId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+
+        if (bidsError) throw bidsError;
+        setBids(bidsData || []);
       } catch (err) {
-        console.error('Failed to fetch job:', err.message);
+        console.error('Failed to fetch job and bids:', err.message);
         setError('Could not load job details. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJob();
+    fetchJobAndBids();
   }, [jobId]);
 
-  const handleSelectBidder = (bidderId) => {
-    const selected = bidders.find(b => b.id === bidderId);
-    if (!selected || !job) return;
-    console.log(`Selected ${selected.name} for job ${job.title}`);
-    navigate(`/chat/mock-chat-${Date.now()}`);
+  const handleSelectBidder = async (bidId, freelancerId) => {
+    try {
+      // Update bid status to accepted
+      const { error } = await supabase
+        .from('bids')
+        .update({ status: 'accepted' })
+        .eq('id', bidId);
+
+      if (error) throw error;
+
+      // Update job status to in_progress
+      await supabase
+        .from('jobs')
+        .update({ status: 'in_progress' })
+        .eq('id', jobId);
+
+      toast({
+        title: 'Bid Accepted',
+        description: 'You have successfully selected this freelancer.',
+      });
+
+      navigate(`/checkout/${bidId}`);
+    } catch (error) {
+      console.error('Error selecting bidder:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to select bidder. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -68,7 +114,7 @@ const JobBidsPage = () => {
         <Navbar />
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-xl font-bold mb-4 text-red-600">{error}</h2>
-          <Button onClick={() => navigate('/dashboard')} className="bg-skillforge-primary hover:bg-skillforge-primary/90">
+          <Button onClick={() => navigate('/dashboard')} className="bg-blue-600 hover:bg-blue-700">
             Back to Dashboard
           </Button>
         </div>
@@ -83,7 +129,7 @@ const JobBidsPage = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-            <div className="bg-skillforge-secondary p-6">
+            <div className="bg-blue-600 p-6">
               <h1 className="text-2xl font-bold text-white">{job.title}</h1>
               <div className="flex flex-wrap gap-4 mt-2 text-gray-200">
                 <span className="flex items-center">
@@ -102,121 +148,78 @@ const JobBidsPage = () => {
             </div>
           </div>
 
-          <h2 className="text-xl font-bold mb-4">Bids ({bidders.length})</h2>
-          <div className="space-y-6">
-            {bidders.map((bidder) => (
-              <div key={bidder.id} className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                  <div className="flex items-center mb-4 md:mb-0">
-                    <img
-                      src={bidder.avatar}
-                      alt={bidder.name}
-                      className="w-12 h-12 rounded-full object-cover mr-4"
-                    />
-                    <div>
-                      <h3 className="text-lg font-semibold">{bidder.name}</h3>
-                      <div className="flex items-center mt-1 text-sm text-gray-600">
-                        <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
-                        {bidder.rating} ({bidder.review_count} reviews)
+          <h2 className="text-xl font-bold mb-4">Bids ({bids.length})</h2>
+          
+          {bids.length > 0 ? (
+            <div className="space-y-6">
+              {bids.map((bid) => (
+                <div key={bid.id} className="bg-white rounded-lg shadow-md p-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                    <div className="flex items-center mb-4 md:mb-0">
+                      <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold mr-4">
+                        {bid.freelancers?.first_name?.charAt(0) || 'F'}
+                        {bid.freelancers?.last_name?.charAt(0) || 'L'}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {bid.freelancers?.first_name} {bid.freelancers?.last_name}
+                        </h3>
+                        <div className="flex items-center mt-1 text-sm text-gray-600">
+                          <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
+                          New Freelancer
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-blue-600">${bid.amount}</div>
+                      <div className="text-sm text-gray-500 flex items-center justify-end mt-1">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {bid.delivery_time}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-skillforge-primary">${bidder.amount}</div>
-                    <div className="text-sm text-gray-500 flex items-center justify-end mt-1">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {bidder.delivery_time}
+
+                  <p className="text-gray-700 mb-4">{bid.message}</p>
+
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center text-gray-600 text-sm">
+                      <User className="h-4 w-4 mr-1" />
+                      Submitted {new Date(bid.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        onClick={() => navigate(`/chat/${bid.freelancer_id}`)}
+                      >
+                        Message
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleSelectBidder(bid.id, bid.freelancer_id)}
+                      >
+                        Select & Proceed
+                      </Button>
                     </div>
                   </div>
                 </div>
-
-                <p className="text-gray-700 mb-4">{bidder.message}</p>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {bidder.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center text-gray-600 text-sm">
-                    <User className="h-4 w-4 mr-1" />
-                    {bidder.completed_jobs} jobs completed
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-skillforge-primary text-skillforge-primary hover:bg-skillforge-primary/10"
-                      onClick={() => navigate(`/freelancer/${bidder.freelancer_id}`)}
-                    >
-                      View Profile
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-skillforge-primary hover:bg-skillforge-primary/90"
-                      onClick={() => handleSelectBidder(bidder.id)}
-                    >
-                      Select & Chat
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+              <h3 className="text-xl font-medium text-gray-900 mb-2">No bids yet</h3>
+              <p className="text-gray-600">
+                Freelancers haven't started bidding on this job yet. Check back later!
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <Footer />
     </div>
   );
 };
-
-// Mock bidders
-const MOCK_BIDDERS = [
-  {
-    id: 'bid1',
-    freelancer_id: 'freelancer1',
-    name: 'Alex Johnson',
-    avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    rating: 4.9,
-    review_count: 124,
-    completed_jobs: 78,
-    amount: 450,
-    delivery_time: '5 days',
-    message: "I'm a professional web developer with 8+ years of experience. I've worked on similar projects and can deliver high-quality results within your timeframe.",
-    skills: ['React', 'Node.js', 'TypeScript', 'UI/UX'],
-  },
-  {
-    id: 'bid2',
-    freelancer_id: 'freelancer2',
-    name: 'Samantha Lee',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    rating: 4.7,
-    review_count: 86,
-    completed_jobs: 52,
-    amount: 380,
-    delivery_time: '4 days',
-    message: "Hello! I've reviewed your job requirements and I'm confident I can deliver exactly what you need. I specialize in creating clean, responsive designs.",
-    skills: ['WordPress', 'PHP', 'CSS', 'JavaScript'],
-  },
-  {
-    id: 'bid3',
-    freelancer_id: 'freelancer3',
-    name: 'Miguel Hernandez',
-    avatar: 'https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    rating: 4.8,
-    review_count: 103,
-    completed_jobs: 65,
-    amount: 500,
-    delivery_time: '7 days',
-    message: "I can offer a comprehensive solution for your project. With my expertise in full-stack development, I'll ensure your website is technically sound.",
-    skills: ['Full Stack', 'React', 'MongoDB', 'Express'],
-  }
-];
 
 export default JobBidsPage;

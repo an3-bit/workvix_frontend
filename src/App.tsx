@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,8 @@ import AdminDashboard from "./pages/support/admindash";
 import Dashboard from "./pages/home2/home2";
 import Logout from "./pages/logout";
 import JoinSelection from "./pages/joinselection";
+import FreelancerBidsPage from "./pages/FreelancerBidsPage";
+import CheckoutPage from "./pages/CheckoutPage";
 
 const queryClient = new QueryClient();
 
@@ -43,11 +44,13 @@ const App = () => (
           <Route path="/explore-skills" element={<ExploreSkills />} />
           <Route path="/premium-services" element={<PremiumServices />} />
           <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/freelancer-jobs" element={<FreelancerBidsPage />} />
           <Route path="/post-job" element={<PostJobForm />} />
           <Route path="/notification" element={<NotificationSystem />} />
           <Route path="/job-card" element={<JobCard job={{}} />} />
           <Route path="/job-posted-notification" element={<JobPostedNotification />} />
           <Route path="/job-bids/:jobId" element={<JobBidsPage />} />
+          <Route path="/checkout/:bidId" element={<CheckoutPage />} />
           <Route path="/chat/:chatId" element={<ChatPage />} />
           <Route path="/client-dashboard" element={<ClientDashboard />} />
           <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
@@ -58,9 +61,6 @@ const App = () => (
           <Route path="/join" element={<JoinSelection />} />
           <Route path="/join/:role" element={<Join />} />
 
-
-          {/* Add more routes as needed */}
-          {/* Catch-all route for 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
