@@ -1,38 +1,32 @@
 
 import { useState, useEffect } from 'react';
 
-interface UseCountUpOptions {
+export interface UseCountUpOptions {
   end: number;
   duration?: number;
   start?: number;
 }
 
-export const useCountUp = ({ end, duration = 2000, start = 0 }: UseCountUpOptions) => {
+export const useCountUp = (options: UseCountUpOptions | number) => {
+  const config = typeof options === 'number' ? { end: options } : options;
+  const { end, duration = 2000, start = 0 } = config;
+  
   const [count, setCount] = useState(start);
 
   useEffect(() => {
     let startTime: number;
-    let animationFrame: number;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
       
-      const currentCount = Math.floor(progress * (end - start) + start);
-      setCount(currentCount);
-
+      setCount(Math.floor(progress * (end - start) + start));
+      
       if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
       }
     };
-
-    animationFrame = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-    };
+    
+    requestAnimationFrame(animate);
   }, [end, duration, start]);
 
   return count;

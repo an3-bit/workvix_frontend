@@ -1,78 +1,114 @@
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
-import { StarIcon } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
-const testimonials = [
-  {
-    name: "John Kimani",
-    role: "Maize Farmer",
-    image: "https://images.pexels.com/photos/4110397/pexels-photo-4110397.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    text: "SurplusSoko has transformed my farming business. I now get better prices for my produce and faster payments.",
-  },
-  {
-    name: "Mary Wanjiku",
-    role: "Tomato Farmer",
-    image: "https://images.pexels.com/photos/1385294/pexels-photo-1385294.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    text: "The platform is so easy to use! I just dial *384*45# and within hours I have buyers for my tomatoes.",
-  },
-  // {
-  //   name: "Peter Ochieng",
-  //   role: "Bean Farmer",
-  //   image: "https://images.pexels.com/photos/1035835/pexels-photo-1035835.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-  //   text: "Since joining SurplusSoko, my income has doubled and I've expanded my farm size significantly.",
-  // },
-  {
-    name: "Sarah Adhiambo",
-    role: "Potato Farmer",
-    image: "https://images.pexels.com/photos/30567438/pexels-photo-30567438/free-photo-of-portrait-of-a-woman-by-the-ocean-in-mombasa.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    text: "The quality verification system gives buyers confidence in my produce. It's a win-win for everyone.",
-  },
-];
+export const TestimonialsSection = () => {
+  const testimonials = [
+    {
+      name: "Grace Wanjiku",
+      role: "Vegetable Farmer",
+      location: "Kiambu County",
+      content: "SokoConnect changed everything for me. I now sell directly to supermarkets and restaurants. My income has tripled in just 6 months!",
+      rating: 5,
+      avatar: "GW"
+    },
+    {
+      name: "Peter Ochieng",
+      role: "Maize Farmer", 
+      location: "Uasin Gishu County",
+      content: "The SMS feature is perfect for me. I don't have a smartphone, but I can still connect with buyers across the country. Technology that actually works!",
+      rating: 5,
+      avatar: "PO"
+    },
+    {
+      name: "Sarah Muthoni",
+      role: "Wholesale Buyer",
+      location: "Nairobi",
+      content: "Finding quality produce was always a challenge. Now I have direct relationships with farmers and can guarantee freshness to my customers.",
+      rating: 5,
+      avatar: "SM"
+    }
+  ];
 
-export function TestimonialsSection() {
   return (
-    <section className="py-12 sm:py-16 bg-soko-cream">
-      <div className="container px-4 mx-auto sm:px-6">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <Badge variant="sokoGreen" className="mb-4">Testimonials</Badge>
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">What Our Farmers Say</h2>
+    <section className="py-16 bg-gradient-to-br from-green-50 to-orange-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            What Our Community Says
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Real stories from farmers and buyers who are transforming their businesses with SokoConnect
+          </p>
         </div>
 
-        <Carousel className="w-full max-w-5xl mx-auto" opts={{ loop: true, align: "start", dragFree: true }}>
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {testimonials.map((testimonial, index) => (
-              <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                <Card className="h-full border-none shadow-lg">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center gap-3 sm:gap-4 mb-4">
-                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-                        <img src={testimonial.image} alt={testimonial.name} className="object-cover" />
-                      </Avatar>
-                      <div>
-                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{testimonial.name}</h4>
-                        <p className="text-xs sm:text-sm text-gray-600">{testimonial.role}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(5)].map((_, i) => (
-                        <StarIcon key={i} className="w-4 h-4 fill-soko-orange text-soko-orange" />
-                      ))}
-                    </div>
-                    <p className="text-gray-700">{testimonial.text}</p>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        <div className="grid lg:grid-cols-3 gap-8 mb-12">
+          {testimonials.map((testimonial, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                
+                <Quote className="h-8 w-8 text-green-600 mb-4" />
+                
+                <blockquote className="text-gray-700 mb-6 italic">
+                  "{testimonial.content}"
+                </blockquote>
+                
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                    <span className="font-semibold text-green-600">{testimonial.avatar}</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                    <p className="text-xs text-gray-500">{testimonial.location}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Trust Indicators */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-3xl font-bold text-green-600 mb-2">4.8/5</div>
+              <p className="text-gray-600">Average Rating</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-green-600 mb-2">95%</div>
+              <p className="text-gray-600">Satisfaction Rate</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-green-600 mb-2">24/7</div>
+              <p className="text-gray-600">Support Available</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-green-600 mb-2">1000+</div>
+              <p className="text-gray-600">Happy Users</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            Join Our Growing Community
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            Start connecting with buyers and farmers today. No setup fees, no hidden costs.
+          </p>
+          <Button className="bg-green-600 hover:bg-green-700 text-white">
+            Get Started Free
+          </Button>
+        </div>
       </div>
     </section>
   );
-}
+};

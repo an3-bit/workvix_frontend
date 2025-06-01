@@ -1,202 +1,177 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, MessageSquare, ShoppingBag } from "lucide-react";
+import { Smartphone, MessageSquare, TrendingUp, Users, MapPin, Clock } from "lucide-react";
 
-export function DemoSection() {
-  const [step, setStep] = useState(1);
-  const [message, setMessage] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 4) {
-      setStep(step + 1);
-    } else {
-      setStep(1);
-    }
-    setMessage("");
-  };
-
+export const DemoSection = () => {
   return (
-    <section className="py-16 bg-white">
-      <div className="container px-4 mx-auto sm:px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <Badge variant="sokoGreen" className="mb-4">Try It Out</Badge>
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Experience SurplusSoko</h2>
-          <p className="mt-4 text-lg text-gray-600">
-            See how easily farmers and buyers connect through our platform
+    <section className="py-16 bg-gradient-to-br from-green-50 to-orange-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            See SokoConnect in Action
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Experience how our platform transforms agricultural trading in Kenya
           </p>
         </div>
 
-        <div className="mt-12 max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Farmer Interface</h3>
-                <Badge variant="sokoGreen">USSD *384*45#</Badge>
-              </div>
-              
-              <div className="space-y-4">
-                <div className={`p-3 rounded-lg ${step >= 1 ? "bg-soko-green/10 border-l-4 border-soko-green" : "bg-gray-100"}`}>
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-soko-green/20 text-soko-green flex items-center justify-center text-xs font-bold">
-                      1
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Demo Video/Image Placeholder */}
+          <div className="order-2 lg:order-1">
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <div className="bg-gradient-to-r from-green-600 to-green-700 p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                      <Smartphone className="h-6 w-6 text-green-600" />
                     </div>
-                    <p className="ml-3 text-sm font-medium text-gray-900">Welcome to SurplusSoko</p>
-                  </div>
-                  <div className="mt-2 ml-9 text-xs text-gray-600">
-                    1. List produce<br />
-                    2. View offers<br />
-                    3. Check prices<br />
-                    4. Help
-                  </div>
-                </div>
-                
-                <div className={`p-3 rounded-lg ${step >= 2 ? "bg-soko-green/10 border-l-4 border-soko-green" : "bg-gray-100"}`}>
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-soko-green/20 text-soko-green flex items-center justify-center text-xs font-bold">
-                      2
-                    </div>
-                    <p className="ml-3 text-sm font-medium text-gray-900">List Your Produce</p>
-                  </div>
-                  <div className="mt-2 ml-9 text-xs text-gray-600">
-                    Enter crop type:<br />
-                    MAIZE
-                  </div>
-                </div>
-                
-                <div className={`p-3 rounded-lg ${step >= 3 ? "bg-soko-green/10 border-l-4 border-soko-green" : "bg-gray-100"}`}>
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-soko-green/20 text-soko-green flex items-center justify-center text-xs font-bold">
-                      3
-                    </div>
-                    <p className="ml-3 text-sm font-medium text-gray-900">Enter Quantity & Location</p>
-                  </div>
-                  <div className="mt-2 ml-9 text-xs text-gray-600">
-                    Enter KGs: 100<br />
-                    Location: KISUMU<br />
-                    Price (KSH): 3000
-                  </div>
-                </div>
-                
-                <div className={`p-3 rounded-lg ${step >= 4 ? "bg-soko-green/10 border-l-4 border-soko-green" : "bg-gray-100"}`}>
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-soko-green/20 text-soko-green flex items-center justify-center text-xs font-bold">
-                      4
-                    </div>
-                    <p className="ml-3 text-sm font-medium text-gray-900">Confirmation</p>
-                  </div>
-                  <div className="mt-2 ml-9 text-xs text-gray-600">
-                    {step >= 4 ? (
-                      <>
-                        <div className="flex items-center">
-                          <CheckCircle className="w-4 h-4 text-soko-green" />
-                          <span className="ml-1 text-soko-green font-medium">Listed successfully!</span>
-                        </div>
-                        Crop: MAIZE<br />
-                        Quantity: 100KG<br />
-                        Location: KISUMU<br />
-                        Price: KSH 3000<br />
-                        <span className="text-xs text-soko-green">Buyers notified: 5</span>
-                      </>
-                    ) : (
-                      "Waiting for submission..."
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="mt-6">
-                <div className="flex gap-2">
-                  <Input 
-                    type="text" 
-                    value={message} 
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder={step === 1 ? "Enter 1 to list produce" : step === 2 ? "Type MAIZE" : step === 3 ? "Type 100 KISUMU 3000" : "Type 1 to confirm"}
-                    className="flex-1" 
-                  />
-                  <Button type="submit" variant="sokoGreen" size="icon">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
-            </div>
-            
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Buyer Interface</h3>
-                <Badge variant="sokoOrange">SMS Notifications</Badge>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="p-3 rounded-lg bg-white border border-gray-200 shadow-sm">
-                  <div className="flex items-start">
-                    <MessageSquare className="w-5 h-5 text-soko-orange flex-shrink-0 mt-1" />
-                    <div className="ml-3">
-                      <p className="text-xs text-gray-500">Today, 10:34 AM</p>
-                      <p className="text-sm text-gray-900 mt-1">
-                        <span className="font-medium">SurplusSoko Alert:</span> New listing matching your needs!
-                      </p>
-                      <p className="text-sm text-gray-700 mt-1">
-                        100KG of MAIZE available in KISUMU for KSH 3000. Quality verified by Kisumu Farmers Cooperative.
-                      </p>
-                      <p className="text-sm text-gray-700 mt-1">
-                        Reply YES to purchase or CALL 0722123456 for more info.
-                      </p>
+                    <div>
+                      <h3 className="text-white font-semibold text-lg">SokoConnect Mobile</h3>
+                      <p className="text-green-100">Live Trading Platform</p>
                     </div>
                   </div>
                 </div>
                 
-                {step >= 4 && (
-                  <div className="p-3 rounded-lg bg-white border border-gray-200 shadow-sm">
-                    <div className="flex items-start">
-                      <ShoppingBag className="w-5 h-5 text-soko-green flex-shrink-0 mt-1" />
-                      <div className="ml-3">
-                        <p className="text-xs text-gray-500">Today, 10:36 AM</p>
-                        <p className="text-sm text-gray-900 mt-1">
-                          <span className="font-medium">SurplusSoko:</span> Purchase confirmed!
-                        </p>
-                        <p className="text-sm text-gray-700 mt-1">
-                          You have successfully purchased 100KG of MAIZE from Jane in KISUMU. Payment of KSH 3000 completed via M-Pesa.
-                        </p>
-                        <p className="text-sm text-gray-700 mt-1">
-                          Pickup scheduled for today by 5PM by our partner Twiga Foods. Tracking code: SK38291
-                        </p>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className="text-orange-600 font-semibold text-sm">JK</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">John Kamau</p>
+                        <p className="text-sm text-gray-600">Nakuru County</p>
                       </div>
                     </div>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Farmer
+                    </Badge>
                   </div>
-                )}
+
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-gray-900">Fresh Tomatoes</h4>
+                      <span className="text-lg font-bold text-orange-600">KSh 45/kg</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">500kg available • Grade A quality</p>
+                    <div className="flex space-x-2">
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Contact
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-sm font-semibold text-gray-900">15% Price Increase</p>
+                      <p className="text-xs text-gray-600">This week</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <Users className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                      <p className="text-sm font-semibold text-gray-900">24 Active Buyers</p>
+                      <p className="text-xs text-gray-600">In your area</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              <div className="mt-6">
-                <div className="p-4 bg-soko-orange/10 rounded-lg border border-soko-orange/30">
-                  <h4 className="text-sm font-medium text-gray-900">Buyer Benefits</h4>
-                  <ul className="mt-2 space-y-2">
-                    <li className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-soko-orange mt-0.5 flex-shrink-0" />
-                      <span className="ml-2 text-xs text-gray-700">Direct access to verified farmers</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-soko-orange mt-0.5 flex-shrink-0" />
-                      <span className="ml-2 text-xs text-gray-700">Quality assurance through cooperative verification</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-soko-orange mt-0.5 flex-shrink-0" />
-                      <span className="ml-2 text-xs text-gray-700">15% average reduction in procurement costs</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-4 h-4 text-soko-orange mt-0.5 flex-shrink-0" />
-                      <span className="ml-2 text-xs text-gray-700">Same-day delivery via our logistics network</span>
-                    </li>
-                  </ul>
+
+              {/* Floating notification */}
+              <div className="absolute -top-4 -right-4 bg-white rounded-lg shadow-lg p-3 border border-green-200">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-gray-900">New order received!</span>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Features List */}
+          <div className="order-1 lg:order-2">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                  Everything you need to trade successfully
+                </h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Smartphone className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">SMS-Based Trading</h4>
+                      <p className="text-gray-600">Trade using simple SMS commands. No smartphone required.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">Local Market Intelligence</h4>
+                      <p className="text-gray-600">Real-time pricing and demand data from your area.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Clock className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">Instant Notifications</h4>
+                      <p className="text-gray-600">Get notified immediately when buyers show interest.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Users className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">Verified Network</h4>
+                      <p className="text-gray-600">Trade with confidence in our verified farmer and buyer network.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <Button className="bg-green-600 hover:bg-green-700 text-white">
+                  Start Free Trial
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-green-600 mb-2">500+</div>
+            <p className="text-gray-600">Active Farmers</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-orange-600 mb-2">200+</div>
+            <p className="text-gray-600">Registered Buyers</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-600 mb-2">50K+</div>
+            <p className="text-gray-600">Successful Trades</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-purple-600 mb-2">25</div>
+            <p className="text-gray-600">Counties Covered</p>
           </div>
         </div>
       </div>
     </section>
   );
-}
+};

@@ -1,86 +1,103 @@
 
-import { Badge } from "@/components/ui/badge";
-import { MessageCircle, ShoppingBag, Truck, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Smartphone, Users, TrendingUp, MessageSquare } from "lucide-react";
 
-export function HowItWorksSection() {
+export const HowItWorksSection = () => {
+  const steps = [
+    {
+      number: "01",
+      title: "Register & List",
+      description: "Farmers register and list their produce with details like quantity, quality, and price.",
+      icon: Smartphone,
+      color: "green"
+    },
+    {
+      number: "02", 
+      title: "Connect & Negotiate",
+      description: "Buyers browse listings and connect directly with farmers via SMS or calls.",
+      icon: Users,
+      color: "orange"
+    },
+    {
+      number: "03",
+      title: "Trade & Grow",
+      description: "Complete transactions safely and build long-term trading relationships.",
+      icon: TrendingUp,
+      color: "blue"
+    }
+  ];
+
   return (
-    <section className="py-16 bg-white" id="how-it-works">
-      <div className="container px-4 mx-auto sm:px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <Badge variant="sokoGreen" className="mb-4">Simple Process</Badge>
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">How SurplusSoko Works</h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Connect to markets using any basic mobile phone, no internet required
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            How SokoConnect Works
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Simple, secure, and designed for everyone - from tech-savvy farmers to traditional traders
           </p>
+          <Button className="mt-6 bg-green-600 hover:bg-green-700 text-white">
+            Get Started Now
+          </Button>
         </div>
 
-        <div className="mt-16">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-sm">
-              <div className="flex items-center justify-center w-12 h-12 mb-4 bg-soko-green/10 text-soko-green rounded-full">
-                <MessageCircle className="w-6 h-6" />
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          {steps.map((step, index) => {
+            const IconComponent = step.icon;
+            const colorClasses = {
+              green: "bg-green-100 text-green-600",
+              orange: "bg-orange-100 text-orange-600", 
+              blue: "bg-blue-100 text-blue-600"
+            };
+
+            return (
+              <div key={index} className="text-center">
+                <div className="relative mb-6">
+                  <div className={`w-20 h-20 ${colorClasses[step.color]} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    <IconComponent className="h-8 w-8" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    {step.number}
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
               </div>
-              <div className="absolute top-4 -left-4 w-8 h-8 rounded-full bg-soko-green flex items-center justify-center text-white font-bold shadow-md">
-                1
+            );
+          })}
+        </div>
+
+        {/* SMS Feature Highlight */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex items-center mb-4">
+                <MessageSquare className="h-8 w-8 text-green-600 mr-3" />
+                <h3 className="text-2xl font-bold text-gray-900">SMS Trading Made Simple</h3>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">List Your Produce</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Dial *384*45# and follow the prompts to list your surplus crops, quantity, location, and price.
+              <p className="text-gray-600 mb-6">
+                No smartphone? No problem! Our SMS system lets you trade using any basic phone. 
+                Just send simple commands and get connected with buyers instantly.
               </p>
-              <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-100">
-                <p className="text-xs font-medium text-gray-800">Example:</p>
-                <p className="text-xs text-gray-600">"MAIZE 100KG KISUMU 3000KSH"</p>
+              <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm">
+                <p className="text-gray-700 mb-2">
+                  <span className="text-green-600">Send:</span> SELL TOMATO 500KG 45 NAKURU
+                </p>
+                <p className="text-gray-700">
+                  <span className="text-green-600">Get:</span> Your listing is live! Buyers will contact you.
+                </p>
               </div>
             </div>
-
-            <div className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-sm">
-              <div className="flex items-center justify-center w-12 h-12 mb-4 bg-soko-orange/10 text-soko-orange rounded-full">
-                <ShoppingBag className="w-6 h-6" />
-              </div>
-              <div className="absolute top-4 -left-4 w-8 h-8 rounded-full bg-soko-orange flex items-center justify-center text-white font-bold shadow-md">
-                2
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Instant Buyer Alerts</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Registered buyers receive SMS alerts about your listing based on their preferences and location.
-              </p>
-              <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-100">
-                <p className="text-xs font-medium text-gray-800">SMS Alert:</p>
-                <p className="text-xs text-gray-600">"New: 100KG Maize available in Kisumu for KSH 3000. Reply YES to purchase."</p>
-              </div>
-            </div>
-
-            <div className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-sm">
-              <div className="flex items-center justify-center w-12 h-12 mb-4 bg-soko-green/10 text-soko-green rounded-full">
-                <Truck className="w-6 h-6" />
-              </div>
-              <div className="absolute top-4 -left-4 w-8 h-8 rounded-full bg-soko-green flex items-center justify-center text-white font-bold shadow-md">
-                3
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Secure Payment & Pickup</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Buyers pay via M-Pesa, and our logistics partners handle same-day pickup and delivery.
-              </p>
-              <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-100">
-                <p className="text-xs font-medium text-gray-800">M-Pesa:</p>
-                <p className="text-xs text-gray-600">Secure payment confirmation sent to both parties</p>
-              </div>
-            </div>
-
-            <div className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-sm">
-              <div className="flex items-center justify-center w-12 h-12 mb-4 bg-soko-orange/10 text-soko-orange rounded-full">
-                <CheckCircle className="w-6 h-6" />
-              </div>
-              <div className="absolute top-4 -left-4 w-8 h-8 rounded-full bg-soko-orange flex items-center justify-center text-white font-bold shadow-md">
-                4
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Quality Verification</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                Local cooperative groups verify produce quality, ensuring trust between farmers and buyers.
-              </p>
-              <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-100">
-                <p className="text-xs font-medium text-gray-800">Trust System:</p>
-                <p className="text-xs text-gray-600">Verified farmers receive priority listing and premium pricing</p>
+            <div className="bg-gradient-to-br from-green-50 to-orange-50 rounded-xl p-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Smartphone className="h-8 w-8 text-white" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Works on Any Phone</h4>
+                <p className="text-gray-600 text-sm">
+                  From basic Nokia phones to the latest smartphones - SokoConnect works for everyone.
+                </p>
               </div>
             </div>
           </div>
@@ -88,4 +105,4 @@ export function HowItWorksSection() {
       </div>
     </section>
   );
-}
+};

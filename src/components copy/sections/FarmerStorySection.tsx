@@ -1,52 +1,113 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
-export function FarmerStorySection() {
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, Quote } from "lucide-react";
+
+export const FarmerStorySection = () => {
   return (
-    <section className="py-12 sm:py-16 bg-soko-earth">
-      <div className="container px-4 mx-auto sm:px-6">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <Badge variant="sokoOrange" className="mb-4">Real Stories</Badge>
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Transforming Lives</h2>
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Real Stories from Real Farmers
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Discover how SokoConnect is transforming lives across Kenya
+          </p>
+          <Button variant="outline" className="mt-6 border-orange-500 text-orange-600 hover:bg-orange-50">
+            Read All Stories
+          </Button>
         </div>
-        
-        <div className="max-w-4xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-sm border border-gray-100">
-          <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
-            <div className="mx-auto md:mx-0 md:w-1/3 max-w-[240px]">
-              <div className="aspect-square rounded-full overflow-hidden">
-                <img 
-                  src="https://images.pexels.com/photos/7551442/pexels-photo-7551442.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
-                  alt="Jane, maize farmer from Kisumu"
-                  className="w-full h-full object-cover" 
-                />
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Story 1 */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <Quote className="h-8 w-8 text-green-600 mb-4" />
+              <blockquote className="text-gray-700 mb-4 italic">
+                "Before SokoConnect, I was selling my tomatoes for KSh 20 per kg to middlemen. Now I connect directly with buyers and earn KSh 45 per kg. My family's life has completely changed."
+              </blockquote>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="font-semibold text-green-600">MK</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Mary Kinyanjui</p>
+                  <p className="text-sm text-gray-600">Kiambu County • Tomato Farmer</p>
+                </div>
               </div>
-            </div>
-            <div className="md:w-2/3">
-              <h3 className="text-2xl font-bold text-gray-900">Jane's Story</h3>
-              <p className="text-sm font-medium text-soko-green mt-1">Maize Farmer, Kisumu County</p>
-              
-              <div className="mt-4 prose text-gray-700">
-                <p>"For years, I would work tirelessly only to lose much of my maize harvest to spoilage or sell at throwaway prices to middlemen. I had no choice – I needed cash quickly, and had no way to reach better buyers."</p>
-                
-                <p className="mt-4">"Since discovering SurplusSoko last season, everything changed. I simply dial *384*45# after harvest, list my 100kg of maize, and within hours, I'm connected to schools and processors who pay me double what middlemen offered."</p>
-                
-                <p className="mt-4 font-semibold">"My income has doubled, and I've expanded my farm with the extra profits. My children can now stay in school without interruption."</p>
+              <Button variant="ghost" className="w-full mt-4 text-green-600 hover:text-green-700">
+                Read Full Story
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Story 2 */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <Quote className="h-8 w-8 text-green-600 mb-4" />
+              <blockquote className="text-gray-700 mb-4 italic">
+                "The SMS feature is amazing! I don't need a smartphone. I just send a simple message and buyers contact me directly. Technology finally works for farmers like me."
+              </blockquote>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="font-semibold text-orange-600">JM</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">John Mwangi</p>
+                  <p className="text-sm text-gray-600">Nakuru County • Maize Farmer</p>
+                </div>
               </div>
-              
-              <div className="mt-6">
-                <Link to="/success-stories">
-                  <Button variant="sokoGreen" className="group">
-                    More Success Stories
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+              <Button variant="ghost" className="w-full mt-4 text-green-600 hover:text-green-700">
+                Read Full Story
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Story 3 */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <Quote className="h-8 w-8 text-green-600 mb-4" />
+              <blockquote className="text-gray-700 mb-4 italic">
+                "As a buyer, SokoConnect helps me source quality produce directly from farmers. The quality is better and prices are fair for everyone."
+              </blockquote>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="font-semibold text-blue-600">AK</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Alice Kimani</p>
+                  <p className="text-sm text-gray-600">Nairobi • Wholesale Buyer</p>
+                </div>
               </div>
-            </div>
+              <Button variant="ghost" className="w-full mt-4 text-green-600 hover:text-green-700">
+                Read Full Story
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-16 text-center bg-gradient-to-r from-green-50 to-orange-50 rounded-2xl p-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            Ready to Write Your Success Story?
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            Join thousands of farmers and buyers who are already benefiting from direct trade connections.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button className="bg-green-600 hover:bg-green-700 text-white">
+              Register as Farmer
+            </Button>
+            <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
+              Register as Buyer
+            </Button>
           </div>
         </div>
       </div>
     </section>
   );
-}
+};
