@@ -106,7 +106,7 @@ const PostJobForm = () => {
     try {
       // Check if user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (!session || !session.user) {
         toast({
           title: 'Authentication Required',
           description: 'You must be logged in to post a job.',
@@ -115,6 +115,21 @@ const PostJobForm = () => {
         navigate('/auth');
         return;
       }
+
+      // Optionally, check if the user exists in your users table
+      // const { data: userData, error: userError } = await supabase
+      //   .from('users')
+      //   .select('id')
+      //   .eq('id', session.user.id)
+      //   .single();
+      // if (userError || !userData) {
+      //   toast({
+      //     title: 'User Not Found',
+      //     description: 'Your account could not be found. Please contact support.',
+      //     variant: 'destructive',
+      //   });
+      //   return;
+      // }
 
       // Calculate average budget
       const minBudget = Number(formData.minBudget);
@@ -317,6 +332,7 @@ const PostJobForm = () => {
                 {isSubmitting ? 'Posting...' : 'Post Job'}
               </Button>
             </div>
+
           </form>
         </div>
       </div>

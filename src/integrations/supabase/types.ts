@@ -183,7 +183,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       orders: {
