@@ -20,7 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
 
-// Types
+// Types - Updated to match database response
 interface Job {
   id: string;
   title: string;
@@ -39,7 +39,7 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string; // Changed from union type to string
   created_at: string;
   job: {
     title: string;

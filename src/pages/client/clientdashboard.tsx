@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -18,14 +17,14 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
 
-// Types
+// Types - Updated to match database response
 interface Job {
   id: string;
   title: string;
   description: string;
   budget: number;
   created_at: string;
-  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  status: string; // Changed from union type to string
   category: string;
 }
 
@@ -34,7 +33,7 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string; // Changed from union type to string
   created_at: string;
   freelancer: {
     first_name: string;
