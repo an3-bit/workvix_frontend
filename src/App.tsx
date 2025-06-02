@@ -29,6 +29,8 @@ const PostJobForm = lazy(() => import("./components/postjob"));
 const FreelancerNotifications = lazy(() => import("./pages/freelancer/FreelancerNotifications"));
 const FreelancerPortfolio = lazy(() => import("./pages/freelancer/FreelancerPortfolio"));
 const FreelancerEarnings = lazy(() => import("./pages/freelancer/FreelancerEarnings"));
+const Blog = lazy(() => import("./pages/Blog"));
+const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -63,6 +65,8 @@ const App = () => (
             <Route path="/freelancer/notifications" element={<FreelancerNotifications />} />
             <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
             <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/explore-skills" element={<ExploreSkills />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
