@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -15,7 +14,9 @@ import {
   FileText,
   CheckCircle,
   Award,
-  TrendingUp
+  TrendingUp,
+  Portfolio,
+  Eye
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
@@ -319,7 +320,7 @@ const FreelancerDashboard: React.FC = () => {
         {/* Quick Actions */}
         <div className="mt-8 bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <button
               onClick={() => navigate('/jobs')}
               className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -345,11 +346,27 @@ const FreelancerDashboard: React.FC = () => {
             </button>
             
             <button
-              onClick={() => navigate('/freelancer/profile')}
+              onClick={() => navigate('/freelancer/notifications')}
               className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <User className="h-8 w-8 text-orange-600 mb-2" />
-              <span className="text-sm font-medium">Profile</span>
+              <Bell className="h-8 w-8 text-orange-600 mb-2" />
+              <span className="text-sm font-medium">Notifications</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/freelancer/portfolio')}
+              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Eye className="h-8 w-8 text-indigo-600 mb-2" />
+              <span className="text-sm font-medium">Portfolio</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/freelancer/earnings')}
+              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <DollarSign className="h-8 w-8 text-green-600 mb-2" />
+              <span className="text-sm font-medium">Earnings</span>
             </button>
           </div>
         </div>

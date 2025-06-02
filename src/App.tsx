@@ -25,6 +25,10 @@ const UpgradeToProPage = lazy(() => import("./pages/UpgradeToProPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const WorkVixGoPage = lazy(() => import("./pages/WorkVixGoPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
+const PostJobForm = lazy(() => import("./components/postjob"));
+const FreelancerNotifications = lazy(() => import("./pages/freelancer/FreelancerNotifications"));
+const FreelancerPortfolio = lazy(() => import("./pages/freelancer/FreelancerPortfolio"));
+const FreelancerEarnings = lazy(() => import("./pages/freelancer/FreelancerEarnings"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -55,6 +59,10 @@ const App = () => (
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/post-job" element={<PostJobForm />} />
+            <Route path="/freelancer/notifications" element={<FreelancerNotifications />} />
+            <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
+            <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
