@@ -25,31 +25,20 @@ const Dashboard = () => {
 
         setUser(session.user);
 
-        // Check if user is a client
-        const { data: clientData } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
+        // Check both roles in parallel for faster loading
+        const [clientCheck, freelancerCheck] = await Promise.all([
+          supabase.from('clients').select('id').eq('id', session.user.id).single(),
+          supabase.from('freelancers').select('id').eq('id', session.user.id).single()
+        ]);
 
-        if (clientData) {
+        if (clientCheck.data) {
           setUserRole('client');
-          setLoading(false);
-          return;
-        }
-
-        // Check if user is a freelancer
-        const { data: freelancerData } = await supabase
-          .from('freelancers')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (freelancerData) {
+        } else if (freelancerCheck.data) {
           setUserRole('freelancer');
         } else {
           // User has no role, redirect to role selection
           navigate('/joinselection');
+          return;
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -64,19 +53,22 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
+  if (!userRole) {
+    return null; // Will redirect in useEffect
+  }
+
   return (
     <AuthGuard>
-      {userRole === 'client' && <ClientDashboard />}
-      {userRole === 'freelancer' && <FreelancerDashboard />}
+      {userRole === 'client' ? <ClientDashboard /> : <FreelancerDashboard />}
     </AuthGuard>
   );
 };

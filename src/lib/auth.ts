@@ -148,20 +148,19 @@ export async function updateUserProfile(id: string, data: {
   return { error };
 }
 
-export const getUserRole = async (userId: string) => {
-  const { data: clientData } = await supabase
-    .from('clients')
-    .select('id')
-    .eq('id', userId)
-    .single();
+export const getUserRole = async (userId: string): Promise<'client' | 'freelancer' | null> => {
+  try {
+    // Check both roles in parallel for faster response
+    const [clientCheck, freelancerCheck] = await Promise.all([
+      supabase.from('clients').select('id').eq('id', userId).single(),
+      supabase.from('freelancers').select('id').eq('id', userId).single()
+    ]);
 
-  if (clientData) return 'client';
-
-  const { data: freelancerData } = await supabase
-    .from('freelancers')
-    .select('id')
-    .eq('id', userId)
-    .single();
-
-  return freelancerData ? 'freelancer' : null;
+    if (clientCheck.data) return 'client';
+    if (freelancerCheck.data) return 'freelancer';
+    return null;
+  } catch (error) {
+    console.error('Error checking user role:', error);
+    return null;
+  }
 };

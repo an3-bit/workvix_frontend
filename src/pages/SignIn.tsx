@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { getUserRole } from "@/lib/auth";
 
 const signInFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -82,7 +83,7 @@ const SignIn = () => {
         description: "You have been signed in successfully.",
       });
 
-      // Redirect to dashboard
+      // Redirect to dashboard (the Dashboard component will handle role-based routing)
       navigate('/dashboard');
 
     } catch (error: any) {
@@ -102,7 +103,10 @@ const SignIn = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <p>Loading...</p>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
         </main>
         <Footer />
       </div>
