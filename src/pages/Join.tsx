@@ -114,7 +114,7 @@ const Join = () => {
       }
 
       toast({
-        title: `Welcome to Skillforge as a ${role}!`,
+        title: `Welcome to workvix as a ${role}!`,
         description: "Your account has been created successfully. Please check your email for verification.",
       });
 
