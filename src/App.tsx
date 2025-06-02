@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import FreelancerDashboard from "./pages/freelancer/freelancerdashboard";
 import ClientDashboard from "./pages/client/clientdashboard";
+import PremiumServices from "./pages/PremiumServices";
+import BecomeSeller from "./pages/BecomeSeller";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
             <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/explore-skills" element={<ExploreSkills />} />
+            <Route path="/premium-services" element={<PremiumServices />} />
+            <Route path="/become-seller" element={<BecomeSeller />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
