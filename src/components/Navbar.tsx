@@ -66,7 +66,6 @@ const Navbar = () => {
 
 const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
 
-
   // Main navigation categories data
   const mainCategories = [
     {
