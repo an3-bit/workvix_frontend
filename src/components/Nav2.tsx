@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, Mail, Heart, ChevronDown, User, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import BidNotifications from './BidNotifications';
 
 const Nav2 = () => {
     const navigate = useNavigate();
@@ -147,7 +148,7 @@ const Nav2 = () => {
                     <Link to="/upgrade" className="text-sm font-medium hidden md:block">
                         Upgrade to Pro
                     </Link>
-                    <Link to="/jobs" className="text-sm font-medium hidden md:block">
+                    <Link to="/orders" className="text-sm font-medium hidden md:block">
                         Orders
                     </Link>
                     <Link to="/pro" className="text-sm font-medium hidden md:block">
@@ -156,17 +157,25 @@ const Nav2 = () => {
                     
                     {/* Icons */}
                     <div className="flex items-center space-x-4">
-                        <button className="relative">
-                            <Bell className="h-5 w-5 text-gray-700" />
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
-                        </button>
+                        {/* Use BidNotifications component for clients */}
+                        {userRole === 'client' ? (
+                            <BidNotifications />
+                        ) : (
+                            <button className="relative">
+                                <Bell className="h-5 w-5 text-gray-700" />
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
+                            </button>
+                        )}
+                        
                         <button className="relative" onClick={handleChat}>
                             <Mail className="h-5 w-5 text-gray-700" />
                         </button>
                         
-                        <button>
-                            <Heart className="h-5 w-5 text-gray-700" />
-                        </button>
+                        <Link to="/wishlist">
+                            <button>
+                                <Heart className="h-5 w-5 text-gray-700" />
+                            </button>
+                        </Link>
                         
                         {/* User dropdown */}
                         <div className="relative">

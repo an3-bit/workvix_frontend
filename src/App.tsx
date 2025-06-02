@@ -21,7 +21,10 @@ const FreelancerBidsPage = lazy(() => import("./pages/FreelancerBidsPage"));
 const JobsBid = lazy(() => import("./pages/JobsBid"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
-
+const UpgradeToProPage = lazy(() => import("./pages/UpgradeToProPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const WorkVixGoPage = lazy(() => import("./pages/WorkVixGoPage"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -48,6 +51,10 @@ const App = () => (
             <Route path="/chat/:chatId" element={<ChatPage />} />
             <Route path="/freelancer" element={<FreelancerDashboard />} />
             <Route path="/client" element={<ClientDashboard />} />
+            <Route path="/upgrade" element={<UpgradeToProPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/pro" element={<WorkVixGoPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
