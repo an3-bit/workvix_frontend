@@ -31,15 +31,17 @@ const Dashboard = () => {
           supabase.from('freelancers').select('id').eq('id', session.user.id).single()
         ]);
 
-        if (clientCheck.data) {
-          setUserRole('client');
-        } else if (freelancerCheck.data) {
-          setUserRole('freelancer');
-        } else {
-          // User has no role, redirect to role selection
-          navigate('/joinselection');
-          return;
-        }
+      if (clientCheck.data) {
+        setUserRole('client');
+        navigate('/client');
+      } else if (freelancerCheck.data) {
+        setUserRole('freelancer');
+        navigate('/freelancer');
+      } else {
+        // User has no role, redirect to role selection
+        navigate('/client'); // or '/freelancer' based on your logic
+        return;
+      }
       } catch (error) {
         console.error('Error fetching user role:', error);
         navigate('/signin');
@@ -66,9 +68,11 @@ const Dashboard = () => {
     return null; // Will redirect in useEffect
   }
 
+ 
   return (
     <AuthGuard>
-      {userRole === 'client' ? <ClientDashboard /> : <FreelancerDashboard />}
+      {/* Navigation handled in useEffect, render nothing */}
+      {null}
     </AuthGuard>
   );
 };
