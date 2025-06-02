@@ -11,13 +11,34 @@ import { supabase } from "@/integrations/supabase/client";
 const JoinSelection = () => {
   const navigate = useNavigate();
 
+  // useEffect(() => {
+  //   const checkAuthStatus = async () => {
+  //     try {
+  //       const { data } = await supabase.auth.getSession();
+  //       if (data.session) {
+  //         navigate('/dashboard');
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking auth status:", error);
+  //     }
+  //   };
+
+  //   checkAuthStatus();
+  // }, [navigate]);
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
-          navigate('/dashboard');
-        }
+          const { role } = data.session.user.user_metadata;
+          if (role === 'client') {
+            navigate('/client');
+          } else if (role === 'freelancer') {
+            navigate('/freelancer');
+          } else {
+            navigate('/dashboard');
+          }
+        };
       } catch (error) {
         console.error("Error checking auth status:", error);
       }

@@ -10,6 +10,7 @@ import FreelancerDashboard from "./pages/freelancer/freelancerdashboard";
 import ClientDashboard from "./pages/client/clientdashboard";
 import PremiumServices from "./pages/PremiumServices";
 import BecomeSeller from "./pages/BecomeSeller";
+import JobPostedNotification from "./pages/jobspostednotification";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/explore-skills" element={<ExploreSkills />} />
             <Route path="/premium-services" element={<PremiumServices />} />
             <Route path="/become-seller" element={<BecomeSeller />} />
+            <Route path="/job-posted-notification" element={<JobPostedNotification />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

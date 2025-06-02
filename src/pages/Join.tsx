@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -39,8 +38,8 @@ const Join = () => {
     const checkAuthStatus = async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          navigate('/dashboard');
+        if (data.session && role) {
+          navigate(`/${role}`);
         } else if (!role || !['client', 'freelancer'].includes(role)) {
           navigate('/joinselection');
         }
@@ -75,7 +74,6 @@ const Join = () => {
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
@@ -87,7 +85,6 @@ const Join = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error("User creation failed");
 
-      // Create role-specific profile
       const baseProfileData = {
         id: authData.user.id,
         email: values.email,
@@ -96,7 +93,7 @@ const Join = () => {
         created_at: new Date().toISOString()
       };
 
-      const profileData = role === 'freelancer' 
+      const profileData = role === 'freelancer'
         ? { ...baseProfileData, skills: [], hourly_rate: null, bio: null, portfolio_links: [] }
         : baseProfileData;
 
@@ -107,18 +104,17 @@ const Join = () => {
       if (profileError) {
         console.error(`${role} profile creation error:`, profileError);
         toast({
-          title: "Profile Creation Warning",
-          description: "Account created but profile setup incomplete. Please complete your profile.",
-          variant: "default",
+          title: "Profile Warning",
+          description: "Account created but profile setup incomplete.",
         });
       }
 
       toast({
-        title: `Welcome to workvix as a ${role}!`,
-        description: "Your account has been created successfully. Please check your email for verification.",
+        title: `Welcome to Workvix as a ${role}!`,
+        description: "Account created successfully.",
       });
 
-      navigate('/dashboard');
+      navigate(`/${role}`);
 
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -147,7 +143,6 @@ const Join = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
       <main className="flex-1">
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 py-16">
           <div className="container px-4 mx-auto sm:px-6">
@@ -163,7 +158,6 @@ const Join = () => {
                   </Link>
                 </p>
               </div>
-              
               <Card>
                 <CardContent className="p-6">
                   <Form {...form}>
@@ -196,21 +190,19 @@ const Join = () => {
                           )}
                         />
                       </div>
-                      
                       <FormField
                         control={form.control}
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email address</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="john.doe@example.com" {...field} />
+                              <Input type="email" placeholder="you@example.com" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={form.control}
                         name="password"
@@ -224,13 +216,12 @@ const Join = () => {
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={form.control}
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Confirm password</FormLabel>
+                            <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
                               <Input type="password" placeholder="••••••••" {...field} />
                             </FormControl>
@@ -238,20 +229,19 @@ const Join = () => {
                           </FormItem>
                         )}
                       />
-                      
                       <FormField
                         control={form.control}
                         name="agreeToTerms"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormItem className="flex items-start space-x-3">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
                               />
                             </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-sm">
+                            <div className="text-sm leading-snug">
+                              <FormLabel>
                                 I agree to the{" "}
                                 <Link to="#" className="text-blue-600 hover:underline">
                                   Terms of Service
@@ -266,13 +256,12 @@ const Join = () => {
                           </FormItem>
                         )}
                       />
-
                       <Button
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Creating Account...' : `Sign Up as ${role === 'client' ? 'Client' : 'Freelancer'}`}
+                        {isSubmitting ? "Creating Account..." : `Sign Up as ${role}`}
                       </Button>
                     </form>
                   </Form>
@@ -282,7 +271,6 @@ const Join = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

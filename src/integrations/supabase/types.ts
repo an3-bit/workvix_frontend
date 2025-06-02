@@ -1,382 +1,391 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+import { createClient } from '@supabase/supabase-js'
+import { Database } from './types'
 
-export type Database = {
-  public: {
-    Tables: {
-      bids: {
-        Row: {
-          amount: number
-          created_at: string
-          delivery_time: string
-          freelancer_id: string | null
-          id: string
-          job_id: string | null
-          message: string
-          status: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          delivery_time: string
-          freelancer_id?: string | null
-          id?: string
-          job_id?: string | null
-          message: string
-          status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          delivery_time?: string
-          freelancer_id?: string | null
-          id?: string
-          job_id?: string | null
-          message?: string
-          status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bids_freelancer_id_fkey"
-            columns: ["freelancer_id"]
-            isOneToOne: false
-            referencedRelation: "freelancers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bids_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      clients: {
-        Row: {
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clients_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      freelancers: {
-        Row: {
-          bio: string | null
-          created_at: string
-          email: string
-          first_name: string
-          hourly_rate: number | null
-          id: string
-          last_name: string
-          portfolio_links: string[] | null
-          skills: string[] | null
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string
-          email: string
-          first_name: string
-          hourly_rate?: number | null
-          id: string
-          last_name: string
-          portfolio_links?: string[] | null
-          skills?: string[] | null
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string
-          hourly_rate?: number | null
-          id?: string
-          last_name?: string
-          portfolio_links?: string[] | null
-          skills?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "freelancers_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      jobs: {
-        Row: {
-          budget: number
-          category: string
-          client_id: string | null
-          created_at: string
-          description: string
-          id: string
-          max_budget: number | null
-          min_budget: number | null
-          status: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          budget: number
-          category: string
-          client_id?: string | null
-          created_at?: string
-          description: string
-          id?: string
-          max_budget?: number | null
-          min_budget?: number | null
-          status?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          budget?: number
-          category?: string
-          client_id?: string | null
-          created_at?: string
-          description?: string
-          id?: string
-          max_budget?: number | null
-          min_budget?: number | null
-          status?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "jobs_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+
+// Types for registration
+export interface RegisterData {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  phone?: string
+  userType: 'client' | 'freelancer'
+  hourlyRate?: number // for freelancers
+}
+
+export interface LoginData {
+  email: string
+  password: string
+}
+
+// Authentication service
+export class AuthService {
+  // Register a new user
+  static async register(data: RegisterData) {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            phone: data.phone || null,
+            user_type: data.userType,
+            hourly_rate: data.hourlyRate || null
           }
-        ]
+        }
+      })
+
+      if (authError) {
+        throw new Error(authError.message)
       }
-      orders: {
-        Row: {
-          amount: number
-          bid_id: string | null
-          created_at: string
-          id: string
-          payment_method: string | null
-          status: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          bid_id?: string | null
-          created_at?: string
-          id?: string
-          payment_method?: string | null
-          status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          bid_id?: string | null
-          created_at?: string
-          id?: string
-          payment_method?: string | null
-          status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_bid_id_fkey"
-            columns: ["bid_id"]
-            isOneToOne: false
-            referencedRelation: "bids"
-            referencedColumns: ["id"]
-          },
-        ]
+
+      return {
+        success: true,
+        user: authData.user,
+        message: 'Registration successful! Please check your email to verify your account.'
       }
-      profiles: {
-        Row: {
-          created_at: string
-          email: string
-          first_name: string | null
-          id: string
-          last_name: string | null
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          first_name?: string | null
-          id: string
-          last_name?: string | null
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
+    } catch (error) {
+      console.error('Registration error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Registration failed'
       }
     }
-    Views: {
-      [_ in never]: never
+  }
+
+  // Login user
+  static async login(data: LoginData) {
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password
+      })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      return {
+        success: true,
+        user: authData.user,
+        session: authData.session
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Login failed'
+      }
     }
-    Functions: {
-      [_ in never]: never
+  }
+
+  // Logout user
+  static async logout() {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      return { success: true }
+    } catch (error) {
+      console.error('Logout error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Logout failed'
+      }
     }
-    Enums: {
-      [_ in never]: never
+  }
+
+  // Get current user
+  static async getCurrentUser() {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (error) throw error
+      
+      return {
+        success: true,
+        user
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get user'
+      }
     }
-    CompositeTypes: {
-      [_ in never]: never
+  }
+
+  // Add role to existing user (client or freelancer)
+  static async addUserRole(role: 'client' | 'freelancer') {
+    try {
+      const { data, error } = await supabase.rpc('add_user_role', {
+        user_role: role
+      })
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      console.error('Add role error:', error)
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to add role'
+      }
+    }
+  }
+
+  // Get user profile with roles
+  static async getUserProfile() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get profile data
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) throw profileError
+
+      // Check if user is a client
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      // Check if user is a freelancer
+      const { data: freelancerData } = await supabase
+        .from('freelancers')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      return {
+        success: true,
+        profile,
+        isClient: !!clientData,
+        isFreelancer: !!freelancerData,
+        clientData,
+        freelancerData
+      }
+    } catch (error) {
+      console.error('Get profile error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get profile'
+      }
     }
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+// Updated Job service to match frontend data structure
+export class JobService {
+  // Create a new job (aligned with frontend form data)
+  static async createJob(jobData: {
+    title: string
+    description: string
+    category: string
+    min_budget: number
+    max_budget: number
+    budget: number // calculated average from frontend
+  }) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        throw new Error('User must be authenticated to post a job')
       }
-      ? R
-      : never
-    : never
 
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert({
+          title: jobData.title,
+          description: jobData.description,
+          category: jobData.category,
+          min_budget: jobData.min_budget,
+          max_budget: jobData.max_budget,
+          budget: jobData.budget,
+          client_id: user.id,
+          status: 'open'
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        success: true,
+        job: data
       }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+    } catch (error) {
+      console.error('Create job error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create job'
       }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    }
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
 
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+  // Get all jobs
+  static async getJobs() {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          clients (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return {
+        success: true,
+        jobs: data
+      }
+    } catch (error) {
+      console.error('Get jobs error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get jobs'
+      }
+    }
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
 
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const
+  // Get user's jobs
+  static async getUserJobs() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return {
+        success: true,
+        jobs: data
+      }
+    } catch (error) {
+      console.error('Get user jobs error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get user jobs'
+      }
+    }
+  }
+}
+
+// Bid service
+export class BidService {
+  // Create a bid (freelancers only)
+  static async createBid(bidData: {
+    jobId: string
+    amount: number
+    deliveryTime: string
+    message: string
+  }) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        throw new Error('User must be authenticated to place a bid')
+      }
+
+      // Check if user is a freelancer
+      const { data: freelancer } = await supabase
+        .from('freelancers')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (!freelancer) {
+        throw new Error('Only freelancers can place bids')
+      }
+
+      const { data, error } = await supabase
+        .from('bids')
+        .insert({
+          job_id: bidData.jobId,
+          freelancer_id: user.id,
+          amount: bidData.amount,
+          delivery_time: bidData.deliveryTime,
+          message: bidData.message,
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return {
+        success: true,
+        bid: data
+      }
+    } catch (error) {
+      console.error('Create bid error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create bid'
+      }
+    }
+  }
+
+  // Get bids for a job
+  static async getJobBids(jobId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          freelancers (
+            first_name,
+            last_name,
+            email,
+            bio,
+            skills,
+            hourly_rate
+          )
+        `)
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return {
+        success: true,
+        bids: data
+      }
+    } catch (error) {
+      console.error('Get job bids error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get bids'
+      }
+    }
+  }
+}

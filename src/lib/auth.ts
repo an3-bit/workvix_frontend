@@ -164,3 +164,222 @@ export const getUserRole = async (userId: string): Promise<'client' | 'freelance
     return null;
   }
 };
+// Updated Job service with proper user validation
+export class JobService {
+  // Create a new job with proper user validation
+  static async createJob(jobData: {
+    title: string
+    description: string
+    category: string
+    min_budget: number
+    max_budget: number
+    budget: number
+  }) {
+    try {
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError) {
+        throw new Error(`Session error: ${sessionError.message}`)
+      }
+
+      if (!session || !session.user) {
+        throw new Error('User must be authenticated to post a job')
+      }
+
+      const userId = session.user.id
+
+      // Debug: Log the user ID
+      console.log('Current user ID:', userId)
+
+      // Check if user exists in profiles table (create if doesn't exist)
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single()
+
+      if (profileCheckError && profileCheckError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        console.log('Creating profile for user:', userId)
+        
+        const { data: newProfile, error: createProfileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: session.user.email,
+            first_name: session.user.user_metadata?.first_name || null,
+            last_name: session.user.user_metadata?.last_name || null,
+            user_type: session.user.user_metadata?.user_type || 'client'
+          })
+          .select()
+          .single()
+
+        if (createProfileError) {
+          console.error('Error creating profile:', createProfileError)
+          throw new Error(`Failed to create user profile: ${createProfileError.message}`)
+        }
+
+        console.log('Profile created successfully:', newProfile)
+      } else if (profileCheckError) {
+        console.error('Error checking profile:', profileCheckError)
+        throw new Error(`Profile check failed: ${profileCheckError.message}`)
+      }
+
+      // Now create the job
+      console.log('Creating job with data:', {
+        ...jobData,
+        client_id: userId,
+        status: 'open'
+      })
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert({
+          title: jobData.title,
+          description: jobData.description,
+          category: jobData.category,
+          min_budget: jobData.min_budget,
+          max_budget: jobData.max_budget,
+          budget: jobData.budget,
+          client_id: userId,
+          status: 'open'
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error creating job:', error)
+        throw new Error(`Failed to create job: ${error.message}`)
+      }
+
+      console.log('Job created successfully:', data)
+
+      return {
+        success: true,
+        job: data
+      }
+    } catch (error) {
+      console.error('Create job error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create job'
+      }
+    }
+  }
+
+  // Alternative method: Create job with direct auth check
+  static async createJobDirect(jobData: {
+    title: string
+    description: string
+    category: string
+    min_budget: number
+    max_budget: number
+    budget: number
+  }) {
+    try {
+      // Use the same method as your frontend
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session || !session.user) {
+        throw new Error('Authentication required')
+      }
+
+      // Insert job directly (let foreign key constraint handle validation)
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert([{
+          title: jobData.title,
+          description: jobData.description,
+          min_budget: jobData.min_budget,
+          max_budget: jobData.max_budget,
+          budget: jobData.budget,
+          status: 'open',
+          category: jobData.category,
+          client_id: session.user.id
+        }])
+        .select()
+        .single()
+
+      if (error) {
+        // More specific error handling
+        if (error.code === '23503') { // Foreign key violation
+          throw new Error('User profile not found. Please complete your profile setup.')
+        }
+        throw error
+      }
+
+      return {
+        success: true,
+        job: data
+      }
+    } catch (error) {
+      console.error('Create job direct error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create job'
+      }
+    }
+  }
+
+  // Get all jobs (unchanged)
+  static async getJobs() {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          profiles!jobs_client_id_fkey (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return {
+        success: true,
+        jobs: data
+      }
+    } catch (error) {
+      console.error('Get jobs error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get jobs'
+      }
+    }
+  }
+
+  // Get user's jobs (unchanged)
+  static async getUserJobs() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return {
+        success: true,
+        jobs: data
+      }
+    } catch (error) {
+      console.error('Get user jobs error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get user jobs'
+      }
+    }
+  }
+}
