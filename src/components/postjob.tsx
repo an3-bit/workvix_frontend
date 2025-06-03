@@ -105,16 +105,16 @@ const PostJobForm = () => {
     
     try {
       // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !session.user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'You must be logged in to post a job.',
-          variant: 'destructive',
-        });
-        navigate('/auth');
-        return;
-      }
+      // const { data: { session } } = await supabase.auth.getSession();
+      // if (!session || !session.user) {
+      //   toast({
+      //     title: 'Authentication Required',
+      //     description: 'You must be logged in to post a job.',
+      //     variant: 'destructive',
+      //   });
+      //   navigate('/auth');
+      //   return;
+      // }
 
       // Optionally, check if the user exists in your users table
       // const { data: userData, error: userError } = await supabase
@@ -148,7 +148,7 @@ const PostJobForm = () => {
             budget: averageBudget,
             status: 'open',
             category: formData.category,
-            client_id: session.user.id
+            // client_id: session.user.id
           }
         ])
         .select()

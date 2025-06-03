@@ -52,52 +52,54 @@ const SignIn = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof signInFormSchema>) => {
-    setIsSubmitting(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
+ const onSubmit = async (values: z.infer<typeof signInFormSchema>) => {
+  setIsSubmitting(true);
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    });
 
-      if (error) {
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
+    if (error) throw error;
 
-      if (!data.user) {
-        toast({
-          title: "Sign in failed",
-          description: "Authentication failed - no user data returned",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!data.user) throw new Error("Authentication failed - no user data returned");
 
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
-      });
+    // Get user role from profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', data.user.id)
+      .single();
 
-      // Redirect to dashboard (the Dashboard component will handle role-based routing)
+    if (profileError) throw profileError;
+
+    const userRole = profileData?.user_type || data.user.user_metadata?.role;
+
+    toast({
+      title: "Welcome back!",
+      description: "You have been signed in successfully.",
+    });
+
+    // Redirect based on role
+    if (userRole === 'client') {
+      navigate('/client');
+    } else if (userRole === 'freelancer') {
+      navigate('/freelancer');
+    } else {
       navigate('/dashboard');
-
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast({
-        title: "Something went wrong",
-        description: error.message || "Please try again later",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
     }
-  };
 
+  } catch (error: any) {
+    console.error("Sign in error:", error);
+    toast({
+      title: "Something went wrong",
+      description: error.message || "Please try again later",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen flex flex-col">

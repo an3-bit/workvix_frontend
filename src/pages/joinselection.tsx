@@ -25,27 +25,56 @@ const JoinSelection = () => {
 
   //   checkAuthStatus();
   // }, [navigate]);
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          const { role } = data.session.user.user_metadata;
-          if (role === 'client') {
-            navigate('/client');
-          } else if (role === 'freelancer') {
-            navigate('/freelancer');
-          } else {
-            navigate('/dashboard');
-          }
-        };
-      } catch (error) {
-        console.error("Error checking auth status:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const checkAuthStatus = async () => {
+  //     try {
+  //       const { data } = await supabase.auth.getSession();
+  //       if (data.session) {
+  //         const { role } = data.session.user.user_metadata;
+  //         if (role === 'client') {
+  //           navigate('/client');
+  //         } else if (role === 'freelancer') {
+  //           navigate('/freelancer');
+  //         } else {
+  //           navigate('/dashboard');
+  //         }
+  //       };
+  //     } catch (error) {
+  //       console.error("Error checking auth status:", error);
+  //     }
+  //   };
 
-    checkAuthStatus();
-  }, [navigate]);
+  //   checkAuthStatus();
+  // }, [navigate]);
+  useEffect(() => {
+  const checkAuthStatus = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // Get user role from profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', data.session.user.id)
+          .single();
+
+        const role = profileData?.user_type || data.session.user.user_metadata?.role;
+        
+        if (role === 'client') {
+          navigate('/client');
+        } else if (role === 'freelancer') {
+          navigate('/freelancer');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+    }
+  };
+
+  checkAuthStatus();
+}, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -81,7 +81,7 @@ const Join = () => {
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
-            role: role
+            role: role || 'client', // Default to 'client' if role is not specified
           }
         }
       });
@@ -89,62 +89,73 @@ const Join = () => {
       if (authError) {
         console.error("Auth error:", authError);
         throw authError;
-      }
-
-      if (!authData.user) {
-        throw new Error("User creation failed - no user data returned");
-      }
-
-      console.log("User created successfully:", authData.user.id);
-
-      // Check if user needs email confirmation
-      if (!authData.session) {
+      } else if (authData.user && !authData.session) {
         toast({
-          title: `Welcome to Workvix!`,
-          description: `Your ${role} account has been created successfully. Please check your email to confirm your account.`,
-        });
-        navigate('/signin');
-        return;
-      }
+          title: `Confirm your signup`,
+          description: (
+            <>
+              <p>
+                Please check your email for a confirmation link to complete your registration.
+              </p>
+            </>
+          ),
+      });
 
-      // User is automatically signed in (email confirmation disabled)
-      console.log("User automatically signed in, redirecting to dashboard");
-      
+    if (!authData.user) {
+      throw new Error("User creation failed - no user data returned");
+    }
+
+    console.log("User created successfully:", authData.user.id);
+
+    // Check if user needs email confirmation
+    if (!authData.session) {
       toast({
         title: `Welcome to Workvix!`,
-        description: `Your ${role} account has been created successfully.`,
+        description: `Your ${role} account has been created successfully. Please check your email to confirm your account.`,
       });
-
-      // Wait a moment for the database trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Redirect to the appropriate dashboard
-      navigate(`/${role}`);
-
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      
-      let errorMessage = "Please try again later";
-      
-      if (error.message?.includes("already registered")) {
-        errorMessage = "An account with this email already exists. Please sign in instead.";
-      } else if (error.message?.includes("invalid email")) {
-        errorMessage = "Please enter a valid email address.";
-      } else if (error.message?.includes("password")) {
-        errorMessage = "Password must be at least 8 characters long.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      toast({
-        title: "Registration failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      navigate('/signin');
+      return;
     }
-  };
+
+    // User is automatically signed in (email confirmation disabled)
+    console.log("User automatically signed in, redirecting to dashboard");
+    
+    toast({
+      title: `Welcome to Workvix!`,
+      description: `Your ${role} account has been created successfully.`,
+    });
+
+    // Wait and refetch the session to get updated metadata
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { data: updatedSession } = await supabase.auth.getSession();
+
+    const userRole = updatedSession?.session?.user?.user_metadata?.role || role;
+    navigate(`/${userRole}`);
+  }
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    
+    let errorMessage = "Please try again later";
+    
+    if (error.message?.includes("already registered")) {
+      errorMessage = "An account with this email already exists. Please sign in instead.";
+    } else if (error.message?.includes("invalid email")) {
+      errorMessage = "Please enter a valid email address.";
+    } else if (error.message?.includes("password")) {
+      errorMessage = "Password must be at least 8 characters long.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    toast({
+      title: "Registration failed",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (isCheckingAuth) {
     return (
