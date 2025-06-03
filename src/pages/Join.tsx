@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -98,17 +97,29 @@ const Join = () => {
 
       console.log("User created successfully:", authData.user.id);
 
-      // The database trigger will handle profile and role-specific table creation
-      // We just need to wait a moment for the trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if user needs email confirmation
+      if (!authData.session) {
+        toast({
+          title: `Welcome to Workvix!`,
+          description: `Your ${role} account has been created successfully. Please check your email to confirm your account.`,
+        });
+        navigate('/signin');
+        return;
+      }
 
+      // User is automatically signed in (email confirmation disabled)
+      console.log("User automatically signed in, redirecting to dashboard");
+      
       toast({
         title: `Welcome to Workvix!`,
-        description: `Your ${role} account has been created successfully. You can now sign in.`,
+        description: `Your ${role} account has been created successfully.`,
       });
 
-      // Redirect to sign in page since email confirmation might be required
-      navigate('/signin');
+      // Wait a moment for the database trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Redirect to the appropriate dashboard
+      navigate(`/${role}`);
 
     } catch (error: any) {
       console.error("Registration error:", error);
