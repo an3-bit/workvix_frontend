@@ -28,28 +28,24 @@ const registrationFormSchema = z.object({
 });
 
 const Join = () => {
-  const { role } = useParams<{ role: 'client' | 'freelancer' }>();
-  const { toast } = useToast();
+  const { role } = useParams<{ role: "client" | "freelancer" }>();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(true);
-  const [isClient, setIsClient] = useState(role === 'client');
-  const [isFreelancer, setIsFreelancer] = useState(role === 'freelancer');
-  const [userRole, setUserRole] = useState<"client" | "freelancer" | null>(null);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        if (!role || !["client", "freelancer"].includes(role)) {
+          navigate("/joinselection");
+          return;
+        }
+
         const { data } = await supabase.auth.getSession();
-        if (data.session && role) {
+        if (data.session) {
           navigate(`/${role}`);
-        } else if (!role || !['client', 'freelancer'].includes(role)) {
-          navigate('/joinselection');
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
@@ -73,120 +69,61 @@ const Join = () => {
     },
   });
 
-  // const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
-  //   setIsSubmitting(true);
-  //   try {
-  //     if (isSignUp) {
-  //       const { error } = await supabase.auth.signUp({
-  //         email: values.email,
-  //         password: values.password,
-  //         options: {
-  //           emailRedirectTo: `${window.location.origin}/auth/callback`
-  //         }
-  //       });
-  //       if (error) throw error;
-  //       toast({
-  //         title: "Success",
-  //         description: "Check your email for the confirmation link!",
-  //       });
-  //     } else {
-  //       const { error } = await supabase.auth.signInWithPassword({
-  //         email: values.email,
-  //         password: values.password,
-  //       });
-  //       if (error) throw error;
-  //     }
-  //   } catch (error: any) {
-  //     console.error("Registration error:", error);
-
-  //     let errorMessage = "Please try again later";
-
-  //     if (error.message?.includes("already registered")) {
-  //       errorMessage = "An account with this email already exists. Please sign in instead.";
-  //     } else if (error.message?.includes("invalid email")) {
-  //       errorMessage = "Please enter a valid email address.";
-  //     } else if (error.message?.includes("password")) {
-  //       errorMessage = "Password must be at least 8 characters long.";
-  //     } else if (error.message) {
-  //       errorMessage = error.message;
-  //     }
-
-  //     toast({
-  //       title: "Registration failed",
-  //       description: errorMessage,
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //     setIsSubmitting(false);
-  //   }
-  // };
   const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
-  setIsSubmitting(true);
-  try {
-    if (isSignUp) {
+    setIsSubmitting(true);
+
+    try {
+      if (!role) throw new Error("Role not defined. Please start again.");
+
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
-            role: role // Store the user role
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+            role: role
+          }
         }
       });
 
       if (error) throw error;
 
-      // Check if email confirmation is required
       if (data.user?.identities?.length === 0) {
-        throw new Error('User already registered');
+        throw new Error("User already registered");
       }
 
-      // Check if email was sent
       if (data.user?.confirmation_sent_at) {
         toast({
           title: "Success",
           description: "Check your email for the confirmation link!",
         });
       } else {
-        // This might happen if email confirmations are disabled in your Supabase settings
         navigate(`/${role}`);
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
+    } catch (error: any) {
+      let errorMessage = "Please try again later";
+
+      if (error.message?.includes("already registered")) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+      } else if (error.message?.includes("invalid email")) {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.message?.includes("password")) {
+        errorMessage = "Password must be at least 8 characters long.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "Registration failed",
+        description: errorMessage,
+        variant: "destructive",
       });
-      if (error) throw error;
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error: any) {
-    console.error("Registration error:", error);
-
-    let errorMessage = "Please try again later";
-
-    if (error.message?.includes("already registered")) {
-      errorMessage = "An account with this email already exists. Please sign in instead.";
-    } else if (error.message?.includes("invalid email")) {
-      errorMessage = "Please enter a valid email address.";
-    } else if (error.message?.includes("password")) {
-      errorMessage = "Password must be at least 8 characters long.";
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    toast({
-      title: "Registration failed",
-      description: errorMessage,
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-    setIsSubmitting(false);
-  }
-};
+  };
 
   if (isCheckingAuth) {
     return (
@@ -211,9 +148,7 @@ const Join = () => {
           <div className="container px-4 mx-auto sm:px-6">
             <div className="max-w-md mx-auto">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold">
-                  Join as a {role === 'client' ? 'Client' : 'Freelancer'}
-                </h1>
+                <h1 className="text-3xl font-bold">Join as a {role === "client" ? "Client" : "Freelancer"}</h1>
                 <p className="mt-2 text-sm text-gray-600">
                   Already have an account?{" "}
                   <Link to="/signin" className="font-medium text-blue-600 hover:text-blue-500">
@@ -324,7 +259,9 @@ const Join = () => {
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? "Creating Account..." : `Sign Up as ${role === 'client' ? 'Client' : 'Freelancer'}`}
+                        {isSubmitting
+                          ? "Creating Account..."
+                          : `Sign Up as ${role === "client" ? "Client" : "Freelancer"}`}
                       </Button>
                     </form>
                   </Form>
