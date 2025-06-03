@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -70,10 +71,14 @@ const Join = () => {
     try {
       if (!role) throw new Error("No role specified");
 
+      console.log("Starting registration with role:", role);
+
+      // Sign up the user with metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
@@ -82,45 +87,47 @@ const Join = () => {
         }
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("User creation failed");
-
-      const baseProfileData = {
-        id: authData.user.id,
-        email: values.email,
-        first_name: values.firstName,
-        last_name: values.lastName,
-        created_at: new Date().toISOString()
-      };
-
-      const profileData = role === 'freelancer'
-        ? { ...baseProfileData, skills: [], hourly_rate: null, bio: null, portfolio_links: [] }
-        : baseProfileData;
-
-      const { error: profileError } = await supabase
-        .from(role === 'client' ? 'clients' : 'freelancers')
-        .insert([profileData]);
-
-      if (profileError) {
-        console.error(`${role} profile creation error:`, profileError);
-        toast({
-          title: "Profile Warning",
-          description: "Account created but profile setup incomplete.",
-        });
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
       }
 
+      if (!authData.user) {
+        throw new Error("User creation failed - no user data returned");
+      }
+
+      console.log("User created successfully:", authData.user.id);
+
+      // The database trigger will handle profile and role-specific table creation
+      // We just need to wait a moment for the trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       toast({
-        title: `Welcome to Workvix as a ${role}!`,
-        description: "Account created successfully.",
+        title: `Welcome to Workvix!`,
+        description: `Your ${role} account has been created successfully. You can now sign in.`,
       });
 
-      navigate(`/${role}`);
+      // Redirect to sign in page since email confirmation might be required
+      navigate('/signin');
 
     } catch (error: any) {
       console.error("Registration error:", error);
+      
+      let errorMessage = "Please try again later";
+      
+      if (error.message?.includes("already registered")) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+      } else if (error.message?.includes("invalid email")) {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.message?.includes("password")) {
+        errorMessage = "Password must be at least 8 characters long.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
-        title: "Something went wrong",
-        description: error.message || "Please try again later",
+        title: "Registration failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -133,7 +140,10 @@ const Join = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <p>Loading...</p>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
         </main>
         <Footer />
       </div>
@@ -149,7 +159,7 @@ const Join = () => {
             <div className="max-w-md mx-auto">
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold">
-                  {role === 'client' ? 'Client' : 'Freelancer'} Registration
+                  Join as a {role === 'client' ? 'Client' : 'Freelancer'}
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
                   Already have an account?{" "}
@@ -261,7 +271,7 @@ const Join = () => {
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? "Creating Account..." : `Sign Up as ${role}`}
+                        {isSubmitting ? "Creating Account..." : `Sign Up as ${role === 'client' ? 'Client' : 'Freelancer'}`}
                       </Button>
                     </form>
                   </Form>

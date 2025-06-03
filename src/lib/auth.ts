@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -150,7 +149,18 @@ export async function updateUserProfile(id: string, data: {
 
 export const getUserRole = async (userId: string): Promise<'client' | 'freelancer' | null> => {
   try {
-    // Check both roles in parallel for faster response
+    // First check the profiles table for user_type (most efficient)
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', userId)
+      .single();
+
+    if (profileData?.user_type) {
+      return profileData.user_type as 'client' | 'freelancer';
+    }
+
+    // Fallback: Check both role tables in parallel
     const [clientCheck, freelancerCheck] = await Promise.all([
       supabase.from('clients').select('id').eq('id', userId).single(),
       supabase.from('freelancers').select('id').eq('id', userId).single()
@@ -164,6 +174,7 @@ export const getUserRole = async (userId: string): Promise<'client' | 'freelance
     return null;
   }
 };
+
 // Updated Job service with proper user validation
 export class JobService {
   // Create a new job with proper user validation
