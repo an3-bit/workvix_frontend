@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -369,11 +370,11 @@ const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
  <NavigationMenu>
   <NavigationMenuList>
     <NavigationMenuItem>
-      <NavigationMenuTrigger className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent">
+      <NavigationMenuTrigger className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent z-[60]">
         Explore
       </NavigationMenuTrigger>
 
-      <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md">
+      <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md z-[60]">
         <ul className="flex flex-col space-y-2">
           <li>
             <Link
@@ -465,12 +466,12 @@ const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
       {mainCategories.map((category) => (
         <NavigationMenuItem key={category.name}>
           <NavigationMenuTrigger 
-            className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary"
+            className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary z-[40]"
             onMouseEnter={() => setActiveCategory(category.name)}
           >
             {category.name}
           </NavigationMenuTrigger>
-          <NavigationMenuContent>
+          <NavigationMenuContent className="z-[40]">
             <MegaMenuContent sections={category.sections} />
           </NavigationMenuContent>
         </NavigationMenuItem>
