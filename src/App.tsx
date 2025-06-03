@@ -11,6 +11,7 @@ import ClientDashboard from "./pages/client/clientdashboard";
 import PremiumServices from "./pages/PremiumServices";
 import BecomeSeller from "./pages/BecomeSeller";
 import JobPostedNotification from "./pages/jobspostednotification";
+import ResetPassword from "./pages/reset_password/resetpassword";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const FreelancerPortfolio = lazy(() => import("./pages/freelancer/FreelancerPort
 const FreelancerEarnings = lazy(() => import("./pages/freelancer/FreelancerEarnings"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -73,6 +75,8 @@ const App = () => (
             <Route path="/premium-services" element={<PremiumServices />} />
             <Route path="/become-seller" element={<BecomeSeller />} />
             <Route path="/job-posted-notification" element={<JobPostedNotification />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
           </Routes>
         </Suspense>
       </BrowserRouter>

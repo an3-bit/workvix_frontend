@@ -57,7 +57,7 @@ const JobPostedNotification = () => {
 
   if (!session) {
     // User not logged in
-    navigate('/join');
+    navigate('/signin');
   } else if (job?.id) {
     // User is logged in
     navigate(`/job-bids/${job.id}`);

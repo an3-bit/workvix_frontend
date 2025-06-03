@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -6,7 +5,14 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,13 +31,11 @@ const SignIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Check if user is already authenticated
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
-          // User is already logged in, redirect to dashboard
           navigate('/dashboard');
         }
       } catch (error) {
@@ -40,7 +44,6 @@ const SignIn = () => {
         setIsCheckingAuth(false);
       }
     };
-
     checkAuthStatus();
   }, [navigate]);
 
@@ -52,54 +55,52 @@ const SignIn = () => {
     },
   });
 
- const onSubmit = async (values: z.infer<typeof signInFormSchema>) => {
-  setIsSubmitting(true);
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
+  const onSubmit = async (values: z.infer<typeof signInFormSchema>) => {
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
-    if (error) throw error;
+      if (error) throw error;
+      if (!data.user) throw new Error("Authentication failed - no user data returned");
 
-    if (!data.user) throw new Error("Authentication failed - no user data returned");
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', data.user.id)
+        .single();
 
-    // Get user role from profile
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('user_type')
-      .eq('id', data.user.id)
-      .single();
+      if (profileError) throw profileError;
 
-    if (profileError) throw profileError;
+      const userRole = profileData?.user_type || data.user.user_metadata?.role;
 
-    const userRole = profileData?.user_type || data.user.user_metadata?.role;
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully.",
+      });
 
-    toast({
-      title: "Welcome back!",
-      description: "You have been signed in successfully.",
-    });
+      if (userRole === 'client') {
+        navigate('/client');
+      } else if (userRole === 'freelancer') {
+        navigate('/freelancer');
+      } else {
+        navigate('/dashboard');
+      }
 
-    // Redirect based on role
-    if (userRole === 'client') {
-      navigate('/client');
-    } else if (userRole === 'freelancer') {
-      navigate('/freelancer');
-    } else {
-      navigate('/dashboard');
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      toast({
+        title: "Something went wrong",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-  } catch (error: any) {
-    console.error("Sign in error:", error);
-    toast({
-      title: "Something went wrong",
-      description: error.message || "Please try again later",
-      variant: "destructive",
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -118,7 +119,7 @@ const SignIn = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-md w-full space-y-8">
           <div>
@@ -130,7 +131,7 @@ const SignIn = () => {
               </Link>
             </p>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -172,6 +173,15 @@ const SignIn = () => {
                   )}
                 />
 
+                <div className="text-right text-sm">
+                  <Link
+                    to="/reset-password"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+
                 <Button
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
@@ -184,7 +194,7 @@ const SignIn = () => {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

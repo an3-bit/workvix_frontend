@@ -33,6 +33,14 @@ const Join = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(true);
+  const [isClient, setIsClient] = useState(role === 'client');
+  const [isFreelancer, setIsFreelancer] = useState(role === 'freelancer');
+  const [userRole, setUserRole] = useState<"client" | "freelancer" | null>(null);
+  
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -65,78 +73,100 @@ const Join = () => {
     },
   });
 
+  // const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
+  //   setIsSubmitting(true);
+  //   try {
+  //     if (isSignUp) {
+  //       const { error } = await supabase.auth.signUp({
+  //         email: values.email,
+  //         password: values.password,
+  //         options: {
+  //           emailRedirectTo: `${window.location.origin}/auth/callback`
+  //         }
+  //       });
+  //       if (error) throw error;
+  //       toast({
+  //         title: "Success",
+  //         description: "Check your email for the confirmation link!",
+  //       });
+  //     } else {
+  //       const { error } = await supabase.auth.signInWithPassword({
+  //         email: values.email,
+  //         password: values.password,
+  //       });
+  //       if (error) throw error;
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Registration error:", error);
+
+  //     let errorMessage = "Please try again later";
+
+  //     if (error.message?.includes("already registered")) {
+  //       errorMessage = "An account with this email already exists. Please sign in instead.";
+  //     } else if (error.message?.includes("invalid email")) {
+  //       errorMessage = "Please enter a valid email address.";
+  //     } else if (error.message?.includes("password")) {
+  //       errorMessage = "Password must be at least 8 characters long.";
+  //     } else if (error.message) {
+  //       errorMessage = error.message;
+  //     }
+
+  //     toast({
+  //       title: "Registration failed",
+  //       description: errorMessage,
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //     setIsSubmitting(false);
+  //   }
+  // };
   const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
-    setIsSubmitting(true);
-    try {
-      if (!role) throw new Error("No role specified");
-
-      console.log("Starting registration with role:", role);
-
-      // Sign up the user with metadata
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+  setIsSubmitting(true);
+  try {
+    if (isSignUp) {
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
-            role: role || 'client', // Default to 'client' if role is not specified
-          }
+            role: role // Store the user role
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
-      if (authError) {
-        console.error("Auth error:", authError);
-        throw authError;
-      } else if (authData.user && !authData.session) {
+      if (error) throw error;
+
+      // Check if email confirmation is required
+      if (data.user?.identities?.length === 0) {
+        throw new Error('User already registered');
+      }
+
+      // Check if email was sent
+      if (data.user?.confirmation_sent_at) {
         toast({
-          title: `Confirm your signup`,
-          description: (
-            <>
-              <p>
-                Please check your email for a confirmation link to complete your registration.
-              </p>
-            </>
-          ),
+          title: "Success",
+          description: "Check your email for the confirmation link!",
+        });
+      } else {
+        // This might happen if email confirmations are disabled in your Supabase settings
+        navigate(`/${role}`);
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
       });
-
-    if (!authData.user) {
-      throw new Error("User creation failed - no user data returned");
+      if (error) throw error;
     }
-
-    console.log("User created successfully:", authData.user.id);
-
-    // Check if user needs email confirmation
-    if (!authData.session) {
-      toast({
-        title: `Welcome to Workvix!`,
-        description: `Your ${role} account has been created successfully. Please check your email to confirm your account.`,
-      });
-      navigate('/signin');
-      return;
-    }
-
-    // User is automatically signed in (email confirmation disabled)
-    console.log("User automatically signed in, redirecting to dashboard");
-    
-    toast({
-      title: `Welcome to Workvix!`,
-      description: `Your ${role} account has been created successfully.`,
-    });
-
-    // Wait and refetch the session to get updated metadata
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const { data: updatedSession } = await supabase.auth.getSession();
-
-    const userRole = updatedSession?.session?.user?.user_metadata?.role || role;
-    navigate(`/${userRole}`);
-  }
   } catch (error: any) {
     console.error("Registration error:", error);
-    
+
     let errorMessage = "Please try again later";
-    
+
     if (error.message?.includes("already registered")) {
       errorMessage = "An account with this email already exists. Please sign in instead.";
     } else if (error.message?.includes("invalid email")) {
@@ -153,6 +183,7 @@ const Join = () => {
       variant: "destructive",
     });
   } finally {
+    setLoading(false);
     setIsSubmitting(false);
   }
 };
