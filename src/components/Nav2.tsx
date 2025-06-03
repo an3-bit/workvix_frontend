@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Mail, Heart, ChevronDown, User, LogOut } from 'lucide-react';
+import { Search, Bell, Mail,  ChevronDown, User, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BidNotifications from './BidNotifications';
 
@@ -171,12 +171,12 @@ const Nav2 = () => {
                             <Mail className="h-5 w-5 text-gray-700" />
                         </button>
                         
-                        <Link to="/wishlist">
+                        {/* <Link to="/wishlist">
                             <button>
                                 <Heart className="h-5 w-5 text-gray-700" />
                             </button>
                         </Link>
-                        
+                         */}
                         {/* User dropdown */}
                         <div className="relative">
                             <button 
