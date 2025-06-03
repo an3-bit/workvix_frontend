@@ -121,7 +121,7 @@ const FreelancerBidsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 mt-16">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Available Jobs</h1>
           <p className="text-gray-600 mt-1">Browse and bid on projects that match your skills</p>
