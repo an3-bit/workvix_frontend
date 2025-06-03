@@ -5,26 +5,23 @@ import {
   Briefcase, 
   User, 
   Bell, 
-  Settings, 
-  LogOut, 
   Search, 
   Star, 
-  Clock, 
-  DollarSign,
+  Clock,
   Plus,
   FileText
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
+import Footer from '@/components/Footer';
 
-// Types - Updated to match database response
 interface Job {
   id: string;
   title: string;
   description: string;
   budget: number;
   created_at: string;
-  status: string; // Changed from union type to string
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
   category: string;
 }
 
@@ -33,20 +30,35 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: string; // Changed from union type to string
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
+  freelancer_id: string;
+  job_id: string;
   freelancer: {
     first_name: string;
     last_name: string;
+    avatar_url: string;
   };
   job: {
     title: string;
   };
 }
 
+interface Notification {
+  id: string;
+  type: 'bid_received' | 'bid_accepted' | 'job_started' | 'job_completed';
+  message: string;
+  read: boolean;
+  created_at: string;
+  bid_id?: string;
+  job_id?: string;
+}
+
 const ClientDashboard: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [recentBids, setRecentBids] = useState<Bid[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [stats, setStats] = useState({
     activeJobs: 0,
     totalBids: 0,
@@ -58,6 +70,12 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    setupRealtimeSubscriptions();
+    
+    return () => {
+      // Clean up subscriptions when component unmounts
+      supabase.removeAllSubscriptions();
+    };
   }, []);
 
   const fetchDashboardData = async () => {
@@ -82,21 +100,32 @@ const ClientDashboard: React.FC = () => {
         .from('bids')
         .select(`
           *,
-          freelancer:freelancer_id (first_name, last_name),
+          freelancer:freelancer_id (first_name, last_name, avatar_url),
           job:job_id (title)
         `)
         .in('job_id', jobsData?.map(job => job.id) || [])
         .order('created_at', { ascending: false })
         .limit(5);
 
+      // Fetch notifications
+      const { data: notificationsData } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
       // Calculate stats
       const activeJobs = jobsData?.filter(job => job.status === 'open').length || 0;
       const completedJobs = jobsData?.filter(job => job.status === 'completed').length || 0;
       const inProgress = jobsData?.filter(job => job.status === 'in_progress').length || 0;
       const totalBids = bidsData?.length || 0;
+      const unread = notificationsData?.filter(n => !n.read).length || 0;
 
       setJobs(jobsData || []);
       setRecentBids(bidsData || []);
+      setNotifications(notificationsData || []);
+      setUnreadCount(unread);
       setStats({
         activeJobs,
         totalBids,
@@ -107,6 +136,106 @@ const ClientDashboard: React.FC = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupRealtimeSubscriptions = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Subscription for new bids
+    const bidsSubscription = supabase
+      .channel('bids_changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'bids',
+        filter: `job_id=in.(${jobs.map(j => j.id).join(',')})`
+      }, (payload) => {
+        setRecentBids(prev => [payload.new as Bid, ...prev.slice(0, 4)]);
+        setStats(prev => ({ ...prev, totalBids: prev.totalBids + 1 }));
+        
+        // Add notification
+        const newNotification = {
+          type: 'bid_received',
+          message: `New bid received for ${payload.new.job.title}`,
+          read: false,
+          bid_id: payload.new.id,
+          job_id: payload.new.job_id
+        };
+        setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+        setUnreadCount(prev => prev + 1);
+      })
+      .subscribe();
+
+    // Subscription for job status changes
+    const jobsSubscription = supabase
+      .channel('jobs_changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'jobs',
+        filter: `client_id=eq.${user.id}`
+      }, (payload) => {
+        setJobs(prev => prev.map(job => 
+          job.id === payload.new.id ? payload.new as Job : job
+        ));
+        
+        // Update stats based on status changes
+        if (payload.new.status !== payload.old.status) {
+          setStats(prev => {
+            let newStats = { ...prev };
+            
+            // Decrement old status
+            if (payload.old.status === 'open') newStats.activeJobs -= 1;
+            if (payload.old.status === 'in_progress') newStats.inProgress -= 1;
+            if (payload.old.status === 'completed') newStats.completedJobs -= 1;
+            
+            // Increment new status
+            if (payload.new.status === 'open') newStats.activeJobs += 1;
+            if (payload.new.status === 'in_progress') newStats.inProgress += 1;
+            if (payload.new.status === 'completed') newStats.completedJobs += 1;
+            
+            return newStats;
+          });
+          
+          // Add notification for status change
+          if (payload.new.status === 'in_progress') {
+            const newNotification = {
+              type: 'job_started',
+              message: `Job "${payload.new.title}" has started`,
+              read: false,
+              job_id: payload.new.id
+            };
+            setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+            setUnreadCount(prev => prev + 1);
+          }
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bidsSubscription);
+      supabase.removeChannel(jobsSubscription);
+    };
+  };
+
+  const handleCardClick = (type: string) => {
+    switch(type) {
+      case 'activeJobs':
+        navigate('/client/jobs?status=open');
+        break;
+      case 'totalBids':
+        navigate('/client/bids');
+        break;
+      case 'completedJobs':
+        navigate('/client/jobs?status=completed');
+        break;
+      case 'inProgress':
+        navigate('/client/jobs?status=in_progress');
+        break;
+      default:
+        break;
     }
   };
 
@@ -130,13 +259,26 @@ const ClientDashboard: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
               <p className="text-gray-600">Manage your projects and find talented freelancers</p>
             </div>
-            <button
-              onClick={() => navigate('/post-job')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium"
-            >
-              <Plus className="h-5 w-5" />
-              Post a Job
-            </button>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/notifications')}
+                className="relative p-2 rounded-full hover:bg-gray-100"
+              >
+                <Bell className="h-6 w-6 text-gray-600" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => navigate('/post-job')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium"
+              >
+                <Plus className="h-5 w-5" />
+                Post a Job
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -144,7 +286,10 @@ const ClientDashboard: React.FC = () => {
       {/* Stats Cards */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div 
+            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick('activeJobs')}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Active Jobs</p>
@@ -156,7 +301,10 @@ const ClientDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div 
+            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick('totalBids')}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Total Bids</p>
@@ -168,7 +316,10 @@ const ClientDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div 
+            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick('completedJobs')}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Completed Jobs</p>
@@ -180,7 +331,10 @@ const ClientDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div 
+            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleCardClick('inProgress')}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">In Progress</p>
@@ -260,7 +414,7 @@ const ClientDashboard: React.FC = () => {
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">Recent Bids</h2>
                 <button
-                  onClick={() => navigate('/bids')}
+                  onClick={() => navigate('/client/bids')}
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
                   View All
@@ -280,11 +434,26 @@ const ClientDashboard: React.FC = () => {
                     <div key={bid.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">
-                            {bid.freelancer?.first_name} {bid.freelancer?.last_name}
-                          </h3>
-                          <p className="text-sm text-gray-600">{bid.job?.title}</p>
-                          <p className="text-sm text-gray-600 mt-1">{bid.message}</p>
+                          <div className="flex items-center gap-3">
+                            {bid.freelancer?.avatar_url ? (
+                              <img 
+                                src={bid.freelancer.avatar_url} 
+                                alt={`${bid.freelancer.first_name} ${bid.freelancer.last_name}`}
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <User className="h-5 w-5 text-gray-500" />
+                              </div>
+                            )}
+                            <div>
+                              <h3 className="font-medium text-gray-900">
+                                {bid.freelancer?.first_name} {bid.freelancer?.last_name}
+                              </h3>
+                              <p className="text-sm text-gray-600">{bid.job?.title}</p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-2">{bid.message}</p>
                           <div className="flex items-center gap-4 mt-2">
                             <span className="text-sm font-medium text-green-600">${bid.amount}</span>
                             <span className="text-sm text-gray-500">Delivery: {bid.delivery_time}</span>
@@ -297,6 +466,12 @@ const ClientDashboard: React.FC = () => {
                             </span>
                           </div>
                         </div>
+                        <button
+                          onClick={() => navigate(`/chat/${bid.freelancer_id}?job=${bid.job_id}`)}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium ml-4"
+                        >
+                          Chat
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -319,7 +494,7 @@ const ClientDashboard: React.FC = () => {
             </button>
             
             <button
-              onClick={() => navigate('/bids')}
+              onClick={() => navigate('/client/bids')}
               className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <FileText className="h-8 w-8 text-green-600 mb-2" />
@@ -344,6 +519,7 @@ const ClientDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
