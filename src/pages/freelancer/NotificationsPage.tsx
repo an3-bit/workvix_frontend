@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Briefcase, DollarSign, User, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,7 +53,14 @@ const NotificationsPage: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotifications(notificationsData || []);
+      
+      // Type the data properly
+      const typedNotifications = (notificationsData || []).map(notification => ({
+        ...notification,
+        type: notification.type as 'job_posted' | 'bid_accepted' | 'bid_rejected' | 'payment_received'
+      })) as Notification[];
+      
+      setNotifications(typedNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {

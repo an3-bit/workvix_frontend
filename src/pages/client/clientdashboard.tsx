@@ -1,20 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  MessageSquare, 
-  Briefcase, 
-  User, 
-  Bell, 
-  Search, 
-  Star, 
-  Clock,
-  Plus,
-  FileText
-} from 'lucide-react';
+import { Search, Users, TrendingUp, DollarSign, Star, Bell, Briefcase, Calendar, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
-import Footer from '@/components/Footer';
 
 interface Job {
   id: string;
@@ -54,19 +43,17 @@ interface Notification {
   job_id?: string;
 }
 
-const ClientDashboard: React.FC = () => {
+const ClientDashboard = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [recentBids, setRecentBids] = useState<Bid[]>([]);
+  const [bids, setBids] = useState<Bid[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [stats, setStats] = useState({
     activeJobs: 0,
     totalBids: 0,
     completedJobs: 0,
-    inProgress: 0
+    inProgressJobs: 0
   });
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -89,36 +76,27 @@ const ClientDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         navigate('/signin');
         return;
       }
 
-      // Fetch user's jobs
+      // Fetch jobs
       const { data: jobsData } = await supabase
         .from('jobs')
         .select('*')
         .eq('client_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .order('created_at', { ascending: false });
 
-      // Fetch recent bids for user's jobs
-      let bidsData = [];
-      if (jobsData && jobsData.length > 0) {
-        const jobIds = jobsData.map(job => job.id);
-        const { data: bids } = await supabase
-          .from('bids')
-          .select(`
-            *,
-            freelancer:freelancer_id (first_name, last_name),
-            job:job_id (title)
-          `)
-          .in('job_id', jobIds)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        bidsData = bids || [];
-      }
+      // Fetch bids for client's jobs
+      const { data: bidsData } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          freelancer:freelancer_id (first_name, last_name),
+          job:job_id (title)
+        `)
+        .in('job_id', jobsData?.map(job => job.id) || []);
 
       // Fetch notifications
       const { data: notificationsData } = await supabase
@@ -126,29 +104,37 @@ const ClientDashboard: React.FC = () => {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
+
+      // Type the data properly
+      const typedJobs = (jobsData || []).map(job => ({
+        ...job,
+        status: job.status as 'open' | 'in_progress' | 'completed' | 'cancelled'
+      })) as Job[];
+
+      const typedBids = (bidsData || []).map(bid => ({
+        ...bid,
+        status: bid.status as 'pending' | 'accepted' | 'rejected'
+      })) as Bid[];
+
+      const typedNotifications = (notificationsData || []).map(notification => ({
+        ...notification,
+        type: notification.type as 'bid_received' | 'bid_accepted' | 'job_started' | 'job_completed'
+      })) as Notification[];
+
+      setJobs(typedJobs);
+      setBids(typedBids);
+      setNotifications(typedNotifications);
 
       // Calculate stats
-      const activeJobs = jobsData?.filter(job => job.status === 'open').length || 0;
-      const completedJobs = jobsData?.filter(job => job.status === 'completed').length || 0;
-      const inProgress = jobsData?.filter(job => job.status === 'in_progress').length || 0;
-      const totalBids = bidsData?.length || 0;
-      const unread = notificationsData?.filter(n => !n.read).length || 0;
-
-      setJobs(jobsData || []);
-      setRecentBids(bidsData);
-      setNotifications(notificationsData || []);
-      setUnreadCount(unread);
       setStats({
-        activeJobs,
-        totalBids,
-        completedJobs,
-        inProgress
+        activeJobs: typedJobs.filter(job => job.status === 'open').length,
+        totalBids: typedBids.length,
+        completedJobs: typedJobs.filter(job => job.status === 'completed').length,
+        inProgressJobs: typedJobs.filter(job => job.status === 'in_progress').length
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -156,348 +142,233 @@ const ClientDashboard: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    // Subscription for new jobs created by this user
-    const jobsSubscription = supabase
-      .channel('jobs_changes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'jobs',
-        filter: `client_id=eq.${user.id}`
-      }, () => {
-        fetchDashboardData();
-      })
-      .subscribe();
-
-    // Subscription for new bids on user's jobs
+    // Listen for new bids on client's jobs
     const bidsSubscription = supabase
-      .channel('bids_changes')
+      .channel('new_bids')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'bids'
       }, async (payload) => {
-        // Check if this bid is for one of the user's jobs
-        const { data: jobData } = await supabase
+        // Check if this bid is for one of the client's jobs
+        const { data: jobCheck } = await supabase
           .from('jobs')
           .select('id')
           .eq('id', payload.new.job_id)
-          .eq('client_id', user.id)
-          .single();
+          .eq('client_id', user.id);
 
-        if (jobData) {
-          fetchDashboardData();
-          
-          // Create notification for new bid
+        if (jobCheck && jobCheck.length > 0) {
+          // Create notification for client about new bid
           await supabase
             .from('notifications')
             .insert([{
               user_id: user.id,
               type: 'bid_received',
               message: `New bid received for your job`,
-              job_id: payload.new.job_id,
               bid_id: payload.new.id,
+              job_id: payload.new.job_id,
               read: false
             }]);
+          
+          fetchDashboardData();
         }
       })
       .subscribe();
 
-    return [jobsSubscription, bidsSubscription];
+    return [bidsSubscription];
   };
 
-  const handleCardClick = (type: string) => {
-    switch(type) {
-      case 'activeJobs':
-        navigate('/client/jobs?status=open');
-        break;
-      case 'totalBids':
-        navigate('/client/bids');
-        break;
-      case 'completedJobs':
-        navigate('/client/jobs?status=completed');
-        break;
-      case 'inProgress':
-        navigate('/client/jobs?status=in_progress');
-        break;
-      default:
-        break;
+  const quickActions = [
+    { 
+      icon: <Search className="h-6 w-6" />, 
+      title: "Post New Job", 
+      desc: "Find the right talent",
+      link: "/postjob"
+    },
+    { 
+      icon: <Users className="h-6 w-6" />, 
+      title: "View Bids", 
+      desc: "Review proposals",
+      link: "/bids"
+    },
+    { 
+      icon: <DollarSign className="h-6 w-6" />, 
+      title: "Payments", 
+      desc: "Manage transactions",
+      link: "/payments"
+    },
+    { 
+      icon: <Briefcase className="h-6 w-6" />, 
+      title: "My Projects", 
+      desc: "Track progress",
+      link: "/projects"
     }
-  };
+  ];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const recentJobs = jobs.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
       
-      {/* Welcome Section */}
-      <div className="bg-white shadow-sm border-b pt-16">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
-              <p className="text-gray-600">Manage your projects and find talented freelancers</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/notifications')}
-                className="relative p-2 rounded-full hover:bg-gray-100"
-              >
-                <Bell className="h-6 w-6 text-gray-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/post-job')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium"
-              >
-                <Plus className="h-5 w-5" />
-                Post a Job
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="pt-20 pb-8">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-12 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 z-0"></div>
+          
+          <div className="container mx-auto px-4 relative z-10 text-white">
+            <div className="flex flex-col lg:flex-row items-start justify-between">
+              <div className="max-w-2xl mb-8">
+                <h2 className="text-4xl font-bold mb-4">Welcome back, Client!</h2>
+                <p className="text-lg opacity-90 mb-6">
+                  Manage your projects, review proposals, and find the perfect freelancers for your needs.
+                </p>
+                
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <Briefcase className="h-5 w-5" />
+                      <div>
+                        <p className="text-2xl font-bold">{stats.activeJobs}</p>
+                        <p className="text-sm opacity-80">Active Jobs</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-5 w-5" />
+                      <div>
+                        <p className="text-2xl font-bold">{stats.totalBids}</p>
+                        <p className="text-sm opacity-80">Total Bids</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <TrendingUp className="h-5 w-5" />
+                      <div>
+                        <p className="text-2xl font-bold">{stats.inProgressJobs}</p>
+                        <p className="text-sm opacity-80">In Progress</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <Star className="h-5 w-5" />
+                      <div>
+                        <p className="text-2xl font-bold">{stats.completedJobs}</p>
+                        <p className="text-sm opacity-80">Completed</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-      {/* Stats Cards */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div 
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleCardClick('activeJobs')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Active Jobs</p>
-                <p className="text-2xl font-semibold mt-1">{stats.activeJobs}</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Briefcase size={24} className="text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div 
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleCardClick('totalBids')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Total Bids</p>
-                <p className="text-2xl font-semibold mt-1">{stats.totalBids}</p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <FileText size={24} className="text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div 
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleCardClick('completedJobs')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Completed Jobs</p>
-                <p className="text-2xl font-semibold mt-1">{stats.completedJobs}</p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <Star size={24} className="text-purple-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div 
-            className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleCardClick('inProgress')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">In Progress</p>
-                <p className="text-2xl font-semibold mt-1">{stats.inProgress}</p>
-              </div>
-              <div className="bg-orange-100 p-3 rounded-full">
-                <Clock size={24} className="text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Jobs and Bids */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Jobs */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Recent Jobs</h2>
-                <button
-                  onClick={() => navigate('/client/jobs')}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  View All
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              {jobs.length === 0 ? (
-                <div className="text-center py-8">
-                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No jobs posted yet</p>
-                  <button
-                    onClick={() => navigate('/post-job')}
-                    className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Post your first job
+              <div className="self-start">
+                <Link to="/postjob">
+                  <button className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 rounded-full font-semibold shadow-md">
+                    Post a Job →
                   </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {jobs.map((job) => (
-                    <div key={job.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{job.title}</h3>
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">{job.description}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm text-gray-500">Budget: ${job.budget}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              job.status === 'open' ? 'bg-green-100 text-green-800' :
-                              job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                              job.status === 'completed' ? 'bg-purple-100 text-purple-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {job.status.replace('_', ' ').toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => navigate(`/jobs/${job.id}/bids`)}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium ml-4"
-                        >
-                          View Bids
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Bids */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Recent Bids</h2>
-                <button
-                  onClick={() => navigate('/client/bids')}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  View All
-                </button>
+                </Link>
               </div>
             </div>
-            <div className="p-6">
-              {recentBids.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No bids yet</p>
-                  <p className="text-sm text-gray-400 mt-2">Bids will appear here when freelancers apply to your jobs</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentBids.map((bid) => (
-                    <div key={bid.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <User className="h-5 w-5 text-gray-500" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-gray-900">
-                                {bid.freelancer?.first_name} {bid.freelancer?.last_name}
-                              </h3>
-                              <p className="text-sm text-gray-600">{bid.job?.title}</p>
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-2">{bid.message}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm font-medium text-green-600">${bid.amount}</span>
-                            <span className="text-sm text-gray-500">Delivery: {bid.delivery_time}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              bid.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              bid.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {bid.status.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => navigate(`/chat/${bid.freelancer_id}?job=${bid.job_id}`)}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium ml-4"
-                        >
-                          Chat
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
-        </div>
+        </section>
 
         {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button
-              onClick={() => navigate('/post-job')}
-              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Plus className="h-8 w-8 text-blue-600 mb-2" />
-              <span className="text-sm font-medium">Post Job</span>
-            </button>
-            
-            <button
-              onClick={() => navigate('/client/bids')}
-              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <FileText className="h-8 w-8 text-green-600 mb-2" />
-              <span className="text-sm font-medium">View Bids</span>
-            </button>
-            
-            <button
-              onClick={() => navigate('/chat')}
-              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <MessageSquare className="h-8 w-8 text-purple-600 mb-2" />
-              <span className="text-sm font-medium">Messages</span>
-            </button>
-            
-            <button
-              onClick={() => navigate('/client/profile')}
-              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <User className="h-8 w-8 text-orange-600 mb-2" />
-              <span className="text-sm font-medium">Profile</span>
-            </button>
+        <section className="py-8 bg-white border-b border-gray-200">
+          <div className="container mx-auto px-4">
+            <h3 className="text-lg font-semibold mb-6">Quick Actions</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {quickActions.map((action, index) => (
+                <Link key={index} to={action.link}>
+                  <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                    <span className="text-blue-600">{action.icon}</span>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{action.title}</h4>
+                      <p className="text-sm text-gray-600">{action.desc}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Recent Jobs & Notifications */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Recent Jobs */}
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold">Recent Jobs</h3>
+                  <Link to="/jobs" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View All →
+                  </Link>
+                </div>
+                <div className="space-y-4">
+                  {recentJobs.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No jobs posted yet</p>
+                  ) : (
+                    recentJobs.map((job) => (
+                      <div key={job.id} className="border-l-4 border-blue-500 pl-4 py-2">
+                        <h4 className="font-medium">{job.title}</h4>
+                        <p className="text-sm text-gray-600">${job.budget} • {job.category}</p>
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs mt-1 ${
+                          job.status === 'open' ? 'bg-green-100 text-green-800' :
+                          job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                          job.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {job.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Recent Notifications */}
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center">
+                  <Bell className="h-5 w-5 mr-2" />
+                  Recent Activity
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {notifications.filter(n => !n.read).length}
+                    </span>
+                  )}
+                </h3>
+                <div className="space-y-4">
+                  {notifications.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No recent activity</p>
+                  ) : (
+                    notifications.slice(0, 3).map((notification) => (
+                      <div key={notification.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div className={`w-2 h-2 rounded-full ${!notification.read ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                        <div>
+                          <p className="font-medium">{notification.message}</p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(notification.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <Link to="/notifications" className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-4 inline-block">
+                  View all notifications →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-      <Footer />
     </div>
   );
 };

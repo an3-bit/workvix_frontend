@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Star, Clock, MessageSquare, Check, X } from 'lucide-react';
@@ -89,7 +88,14 @@ const BidsPage: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBids(bidsData || []);
+      
+      // Type assertion to ensure proper typing
+      const typedBids = (bidsData || []).map(bid => ({
+        ...bid,
+        status: bid.status as 'pending' | 'accepted' | 'rejected'
+      })) as Bid[];
+      
+      setBids(typedBids);
     } catch (error) {
       console.error('Error fetching bids:', error);
       toast({

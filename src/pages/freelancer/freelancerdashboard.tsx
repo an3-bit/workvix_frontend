@@ -6,14 +6,29 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
+import { useToast } from '@/hooks/use-toast';
+
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  category: string;
+  created_at: string;
+  client_id: string;
+}
 
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState([]);
   const [newJobsCount, setNewJobsCount] = useState(0);
+  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchNotifications();
+    fetchRecommendedJobs();
     const setupSubscriptions = async () => {
       const subscriptions = await setupRealtimeSubscriptions();
       
@@ -53,6 +68,69 @@ const FreelancerDashboard = () => {
     }
   };
 
+  const fetchRecommendedJobs = async () => {
+    try {
+      const { data: jobsData, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) throw error;
+      setRecommendedJobs(jobsData || []);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBidOnJob = async (jobId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/signin');
+        return;
+      }
+
+      // Get job details for notification
+      const { data: jobData } = await supabase
+        .from('jobs')
+        .select('title, client_id')
+        .eq('id', jobId)
+        .single();
+
+      if (!jobData) return;
+
+      // Create notification for client
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: jobData.client_id,
+          type: 'bid_received',
+          message: `New bid received for "${jobData.title}"`,
+          job_id: jobId,
+          read: false
+        }]);
+
+      // Navigate to bid submission page
+      navigate(`/jobs/${jobId}/bids`);
+      
+      toast({
+        title: 'Ready to bid',
+        description: 'You can now submit your proposal for this job.',
+      });
+    } catch (error) {
+      console.error('Error handling bid:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process bid. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const setupRealtimeSubscriptions = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -79,6 +157,7 @@ const FreelancerDashboard = () => {
           }]);
         
         fetchNotifications();
+        fetchRecommendedJobs();
       })
       .subscribe();
 
@@ -113,39 +192,6 @@ const FreelancerDashboard = () => {
 
     return [jobsSubscription, bidsSubscription];
   };
-
-  const recommendedJobs = [
-    {
-      id: 1,
-      title: "Build a responsive WordPress website",
-      client: "TechStart Inc",
-      budget: "$500-$1000",
-      timePosted: "2 hours ago",
-      description: "Looking for an experienced WordPress developer to build a responsive business website...",
-      skills: ["WordPress", "PHP", "CSS", "JavaScript"],
-      proposals: 12
-    },
-    {
-      id: 2,
-      title: "Logo design for startup company",
-      client: "CreativeCorp",
-      budget: "$100-$300",
-      timePosted: "4 hours ago",
-      description: "Need a modern, professional logo for our tech startup. Must be scalable and work across platforms...",
-      skills: ["Logo Design", "Adobe Illustrator", "Branding"],
-      proposals: 8
-    },
-    {
-      id: 3,
-      title: "Data entry and Excel automation",
-      client: "DataSolutions Ltd",
-      budget: "$200-$400",
-      timePosted: "6 hours ago",
-      description: "Looking for someone to help with data entry and create automated Excel reports...",
-      skills: ["Excel", "Data Entry", "VBA"],
-      proposals: 15
-    }
-  ];
 
   const quickActions = [
     { 
@@ -283,52 +329,69 @@ const FreelancerDashboard = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Recommended Jobs for You</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Available Jobs for You</h2>
               <Link to="/jobs" className="text-blue-600 hover:text-blue-800 font-medium">
                 View All Jobs →
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedJobs.map((job) => (
-                <div key={job.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                      {job.title}
-                    </h3>
-                    <button className="text-gray-400 hover:text-red-500">
-                      <Heart className="h-5 w-5" />
-                    </button>
-                  </div>
-                  
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {job.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {job.skills.slice(0, 3).map((skill) => (
-                      <span key={skill} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                        {skill}
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading jobs...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendedJobs.map((job) => (
+                  <div key={job.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                        {job.title}
+                      </h3>
+                      <button className="text-gray-400 hover:text-red-500">
+                        <Heart className="h-5 w-5" />
+                      </button>
+                    </div>
+                    
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {job.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                        {job.category}
                       </span>
-                    ))}
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-bold text-green-600">{job.budget}</span>
-                    <span className="text-sm text-gray-500">{job.timePosted}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{job.proposals} proposals</span>
-                    <Link to={`/jobs/${job.id}/bids`}>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                        Submit Proposal
+                    </div>
+                    
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-lg font-bold text-green-600">${job.budget}</span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(job.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">New opportunity</span>
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleBidOnJob(job.id)}
+                      >
+                        Start Bid
                       </Button>
-                    </Link>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+            
+            {!loading && recommendedJobs.length === 0 && (
+              <div className="text-center py-12">
+                <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No jobs available</h3>
+                <p className="text-gray-600">Check back later for new opportunities!</p>
+              </div>
+            )}
           </div>
         </section>
 
