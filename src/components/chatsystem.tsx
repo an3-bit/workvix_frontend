@@ -11,7 +11,7 @@ type Message = {
   senderName?: string;
 };
 
-const ChatSystem = ({ jobId, bidId }) => {
+const ChatSystem = ({ jobId, bidId, receiverId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [user, setUser] = useState({
@@ -43,7 +43,7 @@ const ChatSystem = ({ jobId, bidId }) => {
 
   // Load messages from localStorage on component mount
   useEffect(() => {
-    const chatId = `skillforge_chat_${jobId}_${bidId}`;
+    const chatId = `skillforge_chat_${jobId}_${bidId}_${receiverId}`;
     const storedMessages = JSON.parse(localStorage.getItem(chatId) || '[]');
     
     if (storedMessages.length === 0) {
@@ -83,7 +83,7 @@ const ChatSystem = ({ jobId, bidId }) => {
     } else {
       setMessages(storedMessages);
     }
-  }, [jobId, bidId, user.isClient]);
+  }, [jobId, bidId, receiverId, user.isClient]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -111,7 +111,7 @@ const ChatSystem = ({ jobId, bidId }) => {
     setNewMessage('');
     
     // Save to localStorage
-    const chatId = `skillforge_chat_${jobId}_${bidId}`;
+    const chatId = `skillforge_chat_${jobId}_${bidId}_${receiverId}`;
     localStorage.setItem(chatId, JSON.stringify(updatedMessages));
     
     // Simulate response from other user after a delay
@@ -149,7 +149,7 @@ const ChatSystem = ({ jobId, bidId }) => {
       setMessages(updatedMessages);
       
       // Save to localStorage
-      const chatId = `skillforge_chat_${jobId}_${bidId}`;
+      const chatId = `skillforge_chat_${jobId}_${bidId}_${receiverId}`;
       localStorage.setItem(chatId, JSON.stringify(updatedMessages));
     }
   };

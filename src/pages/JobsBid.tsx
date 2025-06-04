@@ -17,7 +17,7 @@ interface Job {
   category: string;
   created_at: string;
   client_id: string;
-  client: {
+  client?: {
     first_name: string;
     last_name: string;
     email: string;
@@ -66,7 +66,14 @@ const JobsBid: React.FC = () => {
         .single();
 
       if (error) throw error;
-      setJob(jobData);
+      
+      // Handle the case where client data might be missing
+      const processedJobData = {
+        ...jobData,
+        client: Array.isArray(jobData.client) ? jobData.client[0] : jobData.client
+      };
+      
+      setJob(processedJobData);
     } catch (error) {
       console.error('Error fetching job details:', error);
       toast({
@@ -233,20 +240,22 @@ const JobsBid: React.FC = () => {
                 <p className="text-gray-600 leading-relaxed">{job.description}</p>
               </div>
 
-              <div className="border-t pt-4 mt-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Client Information</h3>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                    {job.client?.first_name?.charAt(0)}{job.client?.last_name?.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {job.client?.first_name} {job.client?.last_name}
-                    </p>
-                    <p className="text-sm text-gray-600">{job.client?.email}</p>
+              {job.client && (
+                <div className="border-t pt-4 mt-4">
+                  <h3 className="font-semibold text-gray-900 mb-2">Client Information</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                      {job.client?.first_name?.charAt(0)}{job.client?.last_name?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {job.client?.first_name} {job.client?.last_name}
+                      </p>
+                      <p className="text-sm text-gray-600">{job.client?.email}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Existing Bid or Bid Form */}
