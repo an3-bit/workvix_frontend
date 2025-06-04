@@ -56,21 +56,37 @@ const JobsBid: React.FC = () => {
 
   const fetchJobDetails = async () => {
     try {
-      const { data: jobData, error } = await supabase
+      // First fetch the job details
+      const { data: jobData, error: jobError } = await supabase
         .from('jobs')
-        .select(`
-          *,
-          client:client_id (first_name, last_name, email)
-        `)
+        .select('*')
         .eq('id', jobId)
         .single();
 
-      if (error) throw error;
-      
-      // Handle the case where client data might be missing
-      const processedJobData = {
+      if (jobError) throw jobError;
+
+      if (!jobData) {
+        throw new Error('Job not found');
+      }
+
+      // Then fetch the client information separately
+      let clientData = null;
+      if (jobData.client_id) {
+        const { data: clientInfo, error: clientError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', jobData.client_id)
+          .single();
+
+        if (!clientError && clientInfo) {
+          clientData = clientInfo;
+        }
+      }
+
+      // Combine the data
+      const processedJobData: Job = {
         ...jobData,
-        client: Array.isArray(jobData.client) ? jobData.client[0] : jobData.client
+        client: clientData
       };
       
       setJob(processedJobData);
