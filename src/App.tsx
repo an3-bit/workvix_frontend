@@ -35,7 +35,9 @@ const FreelancerPortfolio = lazy(() => import("./pages/freelancer/FreelancerPort
 const FreelancerEarnings = lazy(() => import("./pages/freelancer/FreelancerEarnings"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
-
+const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
+const OrderForm = lazy(() => import("./pages/OrderForm"));
+const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -62,9 +64,9 @@ const App = () => (
             <Route path="/chat/:chatId" element={<ChatPage />} />
             <Route path="/freelancer" element={<FreelancerDashboard />} />
             <Route path="/client" element={<ClientDashboard />} />
-            <Route path="/client/bids" element={lazy(() => import("./pages/client/BidsPage"))} />
-            <Route path="/order/:bidId" element={lazy(() => import("./pages/OrderForm"))} />
-            <Route path="/freelancer/notifications" element={lazy(() => import("./pages/freelancer/NotificationsPage"))} />
+            <Route path="/client/bids" element={<ClientBidsPage />} />
+            <Route path="/order/:bidId" element={<OrderForm />} />
+            <Route path="/freelancer/notifications" element={<FreelancerNotificationsPage />} />
             <Route path="/upgrade" element={<UpgradeToProPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />

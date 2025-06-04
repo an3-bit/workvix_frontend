@@ -1,3 +1,4 @@
+
 // components/ChatInterface.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -25,7 +26,6 @@ interface ChatParticipant {
   id: string;
   first_name: string;
   last_name: string;
-  avatar_url: string;
   online: boolean;
 }
 
@@ -48,10 +48,12 @@ const ChatInterface: React.FC = () => {
 
   useEffect(() => {
     fetchChatData();
-    setupRealtimeSubscription();
+    const subscription = setupRealtimeSubscription();
 
     return () => {
-      supabase.removeAllSubscriptions();
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
     };
   }, [userId, jobId]);
 
@@ -67,11 +69,13 @@ const ChatInterface: React.FC = () => {
       if (userId) {
         const { data: participantData } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, avatar_url, online')
+          .select('id, first_name, last_name, online')
           .eq('id', userId)
           .single();
         
-        setParticipant(participantData);
+        if (participantData) {
+          setParticipant(participantData);
+        }
       }
 
       // Fetch job details if jobId is provided
@@ -115,32 +119,18 @@ const ChatInterface: React.FC = () => {
   };
 
   const setupRealtimeSubscription = () => {
-    const { data: { user } } = supabase.auth.getUser();
-    if (!user) return;
-
     const channel = supabase
       .channel('messages_changes')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'messages',
-        filter: `and(or(sender_id.eq.${user.id},receiver_id.eq.${user.id}),or(sender_id.eq.${userId},receiver_id.eq.${userId}))`
+        table: 'messages'
       }, (payload) => {
         setMessages(prev => [...prev, payload.new as Message]);
-        
-        // Mark as read if it's the current user's message
-        if (payload.new.sender_id === user.id) {
-          supabase
-            .from('messages')
-            .update({ read: true })
-            .eq('id', payload.new.id);
-        }
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   const handleSendMessage = async () => {
@@ -237,17 +227,9 @@ const ChatInterface: React.FC = () => {
             {participant && (
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  {participant.avatar_url ? (
-                    <img 
-                      src={participant.avatar_url} 
-                      alt={`${participant.first_name} ${participant.last_name}`}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <User className="h-5 w-5 text-gray-500" />
-                    </div>
-                  )}
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-5 w-5 text-gray-500" />
+                  </div>
                   <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
                     participant.online ? 'bg-green-500' : 'bg-gray-400'
                   }`}></div>

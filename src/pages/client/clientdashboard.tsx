@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -21,7 +22,7 @@ interface Job {
   description: string;
   budget: number;
   created_at: string;
-  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  status: string;
   category: string;
 }
 
@@ -30,14 +31,13 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string;
   created_at: string;
   freelancer_id: string;
   job_id: string;
   freelancer: {
     first_name: string;
     last_name: string;
-    avatar_url: string;
   };
   job: {
     title: string;
@@ -46,7 +46,7 @@ interface Bid {
 
 interface Notification {
   id: string;
-  type: 'bid_received' | 'bid_accepted' | 'job_started' | 'job_completed';
+  type: string;
   message: string;
   read: boolean;
   created_at: string;
@@ -70,10 +70,12 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    setupRealtimeSubscriptions();
+    const subscription = setupRealtimeSubscriptions();
     
     return () => {
-      supabase.removeAllSubscriptions();
+      if (subscription) {
+        subscription.forEach(channel => supabase.removeChannel(channel));
+      }
     };
   }, []);
 
@@ -95,16 +97,21 @@ const ClientDashboard: React.FC = () => {
         .limit(5);
 
       // Fetch recent bids for user's jobs
-      const { data: bidsData } = await supabase
-        .from('bids')
-        .select(`
-          *,
-          freelancer:freelancer_id (first_name, last_name, avatar_url),
-          job:job_id (title)
-        `)
-        .in('job_id', jobsData?.map(job => job.id) || [])
-        .order('created_at', { ascending: false })
-        .limit(5);
+      let bidsData = [];
+      if (jobsData && jobsData.length > 0) {
+        const jobIds = jobsData.map(job => job.id);
+        const { data: bids } = await supabase
+          .from('bids')
+          .select(`
+            *,
+            freelancer:freelancer_id (first_name, last_name),
+            job:job_id (title)
+          `)
+          .in('job_id', jobIds)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        bidsData = bids || [];
+      }
 
       // Fetch notifications
       const { data: notificationsData } = await supabase
@@ -122,7 +129,7 @@ const ClientDashboard: React.FC = () => {
       const unread = notificationsData?.filter(n => !n.read).length || 0;
 
       setJobs(jobsData || []);
-      setRecentBids(bidsData || []);
+      setRecentBids(bidsData);
       setNotifications(notificationsData || []);
       setUnreadCount(unread);
       setStats({
@@ -140,7 +147,7 @@ const ClientDashboard: React.FC = () => {
 
   const setupRealtimeSubscriptions = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return [];
 
     // Subscription for new jobs created by this user
     const jobsSubscription = supabase
@@ -189,10 +196,7 @@ const ClientDashboard: React.FC = () => {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(jobsSubscription);
-      supabase.removeChannel(bidsSubscription);
-    };
+    return [jobsSubscription, bidsSubscription];
   };
 
   const handleCardClick = (type: string) => {
@@ -410,17 +414,9 @@ const ClientDashboard: React.FC = () => {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            {bid.freelancer?.avatar_url ? (
-                              <img 
-                                src={bid.freelancer.avatar_url} 
-                                alt={`${bid.freelancer.first_name} ${bid.freelancer.last_name}`}
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <User className="h-5 w-5 text-gray-500" />
-                              </div>
-                            )}
+                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <User className="h-5 w-5 text-gray-500" />
+                            </div>
                             <div>
                               <h3 className="font-medium text-gray-900">
                                 {bid.freelancer?.first_name} {bid.freelancer?.last_name}

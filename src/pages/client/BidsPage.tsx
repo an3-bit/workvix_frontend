@@ -13,7 +13,7 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string;
   created_at: string;
   freelancer_id: string;
   job_id: string;
@@ -40,10 +40,12 @@ const BidsPage: React.FC = () => {
 
   useEffect(() => {
     fetchBids();
-    setupRealtimeSubscription();
+    const subscription = setupRealtimeSubscription();
     
     return () => {
-      supabase.removeAllSubscriptions();
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
     };
   }, []);
 
@@ -55,6 +57,20 @@ const BidsPage: React.FC = () => {
         return;
       }
 
+      // First get all job IDs for this client
+      const { data: jobsData } = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('client_id', user.id);
+
+      if (!jobsData || jobsData.length === 0) {
+        setBids([]);
+        setLoading(false);
+        return;
+      }
+
+      const jobIds = jobsData.map(job => job.id);
+
       const { data: bidsData, error } = await supabase
         .from('bids')
         .select(`
@@ -62,12 +78,7 @@ const BidsPage: React.FC = () => {
           freelancer:freelancer_id (first_name, last_name, email, bio, skills),
           job:job_id (title, description, budget)
         `)
-        .in('job_id', 
-          supabase
-            .from('jobs')
-            .select('id')
-            .eq('client_id', user.id)
-        )
+        .in('job_id', jobIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -99,9 +110,7 @@ const BidsPage: React.FC = () => {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   const handleBidAction = async (bidId: string, action: 'accept' | 'reject') => {

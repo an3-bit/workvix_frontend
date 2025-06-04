@@ -14,10 +14,16 @@ const FreelancerDashboard = () => {
 
   useEffect(() => {
     fetchNotifications();
-    setupRealtimeSubscriptions();
+    const subscriptions = setupRealtimeSubscriptions();
     
     return () => {
-      supabase.removeAllSubscriptions();
+      if (subscriptions) {
+        subscriptions.forEach(subscription => {
+          if (subscription) {
+            supabase.removeChannel(subscription);
+          }
+        });
+      }
     };
   }, []);
 
@@ -42,7 +48,7 @@ const FreelancerDashboard = () => {
 
   const setupRealtimeSubscriptions = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return [];
 
     // Listen for new jobs being posted
     const jobsSubscription = supabase
@@ -98,10 +104,7 @@ const FreelancerDashboard = () => {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(jobsSubscription);
-      supabase.removeChannel(bidsSubscription);
-    };
+    return [jobsSubscription, bidsSubscription];
   };
 
   const recommendedJobs = [

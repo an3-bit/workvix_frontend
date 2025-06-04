@@ -18,57 +18,59 @@ const JobBidsPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchJobAndBids = async () => {
-      if (!jobId) {
-        setError('Job ID not provided.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Fetch job details
-        const { data: jobData, error: jobError } = await supabase
-          .from('jobs')
-          .select('*')
-          .eq('id', jobId)
-          .single();
-
-        if (jobError) throw jobError;
-        setJob(jobData);
-
-        // Fetch bids for this job with freelancer details
-        const { data: bidsData, error: bidsError } = await supabase
-          .from('bids')
-          .select(`
-            *,
-            freelancers (
-              first_name,
-              last_name,
-              email,
-              bio,
-              skills
-            )
-          `)
-          .eq('job_id', jobId)
-          .order('created_at', { ascending: false });
-
-        if (bidsError) throw bidsError;
-        setBids(bidsData || []);
-      } catch (err) {
-        console.error('Failed to fetch job and bids:', err.message);
-        setError('Could not load job details. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchJobAndBids();
-    setupRealtimeSubscription();
+    const subscription = setupRealtimeSubscription();
     
     return () => {
-      supabase.removeAllSubscriptions();
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
     };
   }, [jobId]);
+
+  const fetchJobAndBids = async () => {
+    if (!jobId) {
+      setError('Job ID not provided.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch job details
+      const { data: jobData, error: jobError } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', jobId)
+        .single();
+
+      if (jobError) throw jobError;
+      setJob(jobData);
+
+      // Fetch bids for this job with freelancer details
+      const { data: bidsData, error: bidsError } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          freelancers (
+            first_name,
+            last_name,
+            email,
+            bio,
+            skills
+          )
+        `)
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false });
+
+      if (bidsError) throw bidsError;
+      setBids(bidsData || []);
+    } catch (err) {
+      console.error('Failed to fetch job and bids:', err.message);
+      setError('Could not load job details. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const setupRealtimeSubscription = () => {
     const channel = supabase
@@ -84,9 +86,7 @@ const JobBidsPage = () => {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   const handleSelectBidder = async (bidId, freelancerId) => {

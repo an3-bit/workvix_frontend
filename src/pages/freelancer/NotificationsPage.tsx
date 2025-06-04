@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
-  type: 'job_posted' | 'bid_accepted' | 'bid_rejected' | 'payment_received';
+  type: string;
   message: string;
   read: boolean;
   created_at: string;
@@ -23,10 +23,12 @@ const NotificationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-    setupRealtimeSubscription();
+    const subscription = setupRealtimeSubscription();
     
     return () => {
-      supabase.removeAllSubscriptions();
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
     };
   }, []);
 
@@ -69,9 +71,7 @@ const NotificationsPage: React.FC = () => {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   const markAsRead = async (notificationId: string) => {
