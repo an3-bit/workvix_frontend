@@ -485,3 +485,52 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+export interface Chat {
+  id: string;
+  job_id: string;
+  client_id: string;
+  freelancer_id: string;
+  created_at: string;
+  updated_at: string;
+  job?: Job;
+  client?: Profile;
+  freelancer?: Profile;
+}
+
+export interface Profile {
+  id: string;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  created_at: string;
+  updated_at: string;
+  online?: boolean | null;
+  phone?: string | null;
+  user_type?: string | null;
+}
+
+export interface Job {
+  id: string;
+  budget: number;
+  category: string;
+  client_id: string | null;
+  created_at: string;
+  description: string;
+  max_budget: number | null;
+  min_budget: number | null;
+  status: string | null;
+  title: string;
+  updated_at: string;
+}
+
+export interface Message {
+  id: string;
+  chat_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  read: boolean;
+  sender?: Profile;
+}
+

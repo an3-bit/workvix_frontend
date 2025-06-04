@@ -193,11 +193,10 @@ const JobsBid: React.FC = () => {
     }
   };
 
-  const handleStartChat = () => {
-    if (job?.client_id) {
-      navigate(`/chat/${job.client_id}?job=${jobId}`);
-    }
-  };
+ const handleStartChat = () => {
+  navigate(`/chat?job=${jobId}`); 
+  // Your chat component should handle job-based chats
+};
 
   if (loading) {
     return (
