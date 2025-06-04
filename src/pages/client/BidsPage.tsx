@@ -13,7 +13,7 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: string;
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   freelancer_id: string;
   job_id: string;
@@ -40,12 +40,19 @@ const BidsPage: React.FC = () => {
 
   useEffect(() => {
     fetchBids();
-    const subscription = setupRealtimeSubscription();
+    const setupSubscription = async () => {
+      const subscription = await setupRealtimeSubscription();
+      
+      return () => {
+        if (subscription) {
+          supabase.removeChannel(subscription);
+        }
+      };
+    };
     
+    const cleanup = setupSubscription();
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
+      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
   }, []);
 
@@ -97,7 +104,7 @@ const BidsPage: React.FC = () => {
 
   const setupRealtimeSubscription = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return null;
 
     const channel = supabase
       .channel('bids_changes')

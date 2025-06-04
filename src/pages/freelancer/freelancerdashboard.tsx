@@ -14,16 +14,23 @@ const FreelancerDashboard = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const subscriptions = setupRealtimeSubscriptions();
+    const setupSubscriptions = async () => {
+      const subscriptions = await setupRealtimeSubscriptions();
+      
+      return () => {
+        if (subscriptions) {
+          subscriptions.forEach(subscription => {
+            if (subscription) {
+              supabase.removeChannel(subscription);
+            }
+          });
+        }
+      };
+    };
     
+    const cleanup = setupSubscriptions();
     return () => {
-      if (subscriptions) {
-        subscriptions.forEach(subscription => {
-          if (subscription) {
-            supabase.removeChannel(subscription);
-          }
-        });
-      }
+      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
   }, []);
 

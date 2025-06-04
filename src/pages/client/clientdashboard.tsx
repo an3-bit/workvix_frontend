@@ -22,7 +22,7 @@ interface Job {
   description: string;
   budget: number;
   created_at: string;
-  status: string;
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
   category: string;
 }
 
@@ -31,7 +31,7 @@ interface Bid {
   amount: number;
   message: string;
   delivery_time: string;
-  status: string;
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   freelancer_id: string;
   job_id: string;
@@ -46,7 +46,7 @@ interface Bid {
 
 interface Notification {
   id: string;
-  type: string;
+  type: 'bid_received' | 'bid_accepted' | 'job_started' | 'job_completed';
   message: string;
   read: boolean;
   created_at: string;
@@ -70,12 +70,19 @@ const ClientDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    const subscription = setupRealtimeSubscriptions();
+    const setupSubscriptions = async () => {
+      const subscriptions = await setupRealtimeSubscriptions();
+      
+      return () => {
+        if (subscriptions) {
+          subscriptions.forEach(channel => supabase.removeChannel(channel));
+        }
+      };
+    };
     
+    const cleanup = setupSubscriptions();
     return () => {
-      if (subscription) {
-        subscription.forEach(channel => supabase.removeChannel(channel));
-      }
+      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
   }, []);
 
