@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Search, Star, Heart, Play, Bookmark, DollarSign, TrendingUp, Calendar, Users, Briefcase, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,13 @@ interface Job {
   client_id: string;
 }
 
+interface FreelancerStats {
+  totalEarnings: number;
+  activeBids: number;
+  completedJobs: number;
+  rating: number;
+}
+
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,10 +33,18 @@ const FreelancerDashboard = () => {
   const [newJobsCount, setNewJobsCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<FreelancerStats>({
+    totalEarnings: 0,
+    activeBids: 0,
+    completedJobs: 0,
+    rating: 0
+  });
 
   useEffect(() => {
     fetchNotifications();
     fetchRecommendedJobs();
+    fetchFreelancerStats();
+    
     const setupSubscriptions = async () => {
       const subscriptions = await setupRealtimeSubscriptions();
       
@@ -48,6 +64,40 @@ const FreelancerDashboard = () => {
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
   }, []);
+
+  const fetchFreelancerStats = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch active bids count
+      const { data: bidsData } = await supabase
+        .from('bids')
+        .select('id, status, amount')
+        .eq('freelancer_id', user.id);
+
+      const activeBids = (bidsData || []).filter(bid => bid.status === 'pending').length;
+
+      // Fetch completed jobs (accepted bids)
+      const completedBids = (bidsData || []).filter(bid => bid.status === 'accepted');
+      const completedJobs = completedBids.length;
+
+      // Calculate total earnings from completed jobs
+      const totalEarnings = completedBids.reduce((sum, bid) => sum + Number(bid.amount), 0);
+
+      // For now, set a default rating (you can implement a proper rating system later)
+      const rating = completedJobs > 0 ? 4.5 : 0;
+
+      setStats({
+        totalEarnings,
+        activeBids,
+        completedJobs,
+        rating
+      });
+    } catch (error) {
+      console.error('Error fetching freelancer stats:', error);
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -94,27 +144,7 @@ const FreelancerDashboard = () => {
         return;
       }
 
-      // Get job details for notification
-      const { data: jobData } = await supabase
-        .from('jobs')
-        .select('title, client_id')
-        .eq('id', jobId)
-        .single();
-
-      if (!jobData) return;
-
-      // Create notification for client
-      await supabase
-        .from('notifications')
-        .insert([{
-          user_id: jobData.client_id,
-          type: 'bid_received',
-          message: `New bid received for "${jobData.title}"`,
-          job_id: jobId,
-          read: false
-        }]);
-
-      // Navigate to bid submission page
+      // Navigate to bid submission page with job ID
       navigate(`/jobs/${jobId}/bids`);
       
       toast({
@@ -186,6 +216,7 @@ const FreelancerDashboard = () => {
             }]);
           
           fetchNotifications();
+          fetchFreelancerStats(); // Refresh stats when bid status changes
         }
       })
       .subscribe();
@@ -220,13 +251,6 @@ const FreelancerDashboard = () => {
     }
   ];
 
-  const statsData = {
-    totalEarnings: 2847.50,
-    activeProposals: 6,
-    completedJobs: 23,
-    clientRating: 4.8
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
@@ -250,7 +274,7 @@ const FreelancerDashboard = () => {
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-5 w-5" />
                       <div>
-                        <p className="text-2xl font-bold">${statsData.totalEarnings}</p>
+                        <p className="text-2xl font-bold">${stats.totalEarnings.toFixed(2)}</p>
                         <p className="text-sm opacity-80">Total Earned</p>
                       </div>
                     </div>
@@ -260,7 +284,7 @@ const FreelancerDashboard = () => {
                     <div className="flex items-center space-x-2">
                       <TrendingUp className="h-5 w-5" />
                       <div>
-                        <p className="text-2xl font-bold">{statsData.activeProposals}</p>
+                        <p className="text-2xl font-bold">{stats.activeBids}</p>
                         <p className="text-sm opacity-80">Active Bids</p>
                       </div>
                     </div>
@@ -270,7 +294,7 @@ const FreelancerDashboard = () => {
                     <div className="flex items-center space-x-2">
                       <Briefcase className="h-5 w-5" />
                       <div>
-                        <p className="text-2xl font-bold">{statsData.completedJobs}</p>
+                        <p className="text-2xl font-bold">{stats.completedJobs}</p>
                         <p className="text-sm opacity-80">Completed</p>
                       </div>
                     </div>
@@ -280,7 +304,7 @@ const FreelancerDashboard = () => {
                     <div className="flex items-center space-x-2">
                       <Star className="h-5 w-5" />
                       <div>
-                        <p className="text-2xl font-bold">{statsData.clientRating}</p>
+                        <p className="text-2xl font-bold">{stats.rating.toFixed(1)}</p>
                         <p className="text-sm opacity-80">Rating</p>
                       </div>
                     </div>

@@ -1,142 +1,199 @@
-
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Clock, User, Briefcase, DollarSign } from 'lucide-react';
+import { Clock, DollarSign, User, MessageSquare, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import Nav2 from '@/components/Nav2';
+import Footer from '@/components/Footer';
+import { useToast } from '@/hooks/use-toast';
 
-const JobBidsPage = () => {
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  category: string;
+  created_at: string;
+  client_id: string;
+  client: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+interface Bid {
+  id: string;
+  amount: number;
+  message: string;
+  delivery_time: string;
+  status: string;
+  created_at: string;
+}
+
+const JobsBid: React.FC = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const [job, setJob] = useState(null);
-  const [bids, setBids] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const { toast } = useToast();
+  const [job, setJob] = useState<Job | null>(null);
+  const [existingBid, setExistingBid] = useState<Bid | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [bidData, setBidData] = useState({
+    amount: '',
+    message: '',
+    delivery_time: ''
+  });
 
   useEffect(() => {
-    fetchJobAndBids();
-    const subscription = setupRealtimeSubscription();
-    
-    return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
-    };
+    if (jobId) {
+      fetchJobDetails();
+      checkExistingBid();
+    }
   }, [jobId]);
 
-  const fetchJobAndBids = async () => {
-    if (!jobId) {
-      setError('Job ID not provided.');
-      setLoading(false);
-      return;
-    }
-
+  const fetchJobDetails = async () => {
     try {
-      // Fetch job details
-      const { data: jobData, error: jobError } = await supabase
+      const { data: jobData, error } = await supabase
         .from('jobs')
-        .select('*')
+        .select(`
+          *,
+          client:client_id (first_name, last_name, email)
+        `)
         .eq('id', jobId)
         .single();
 
-      if (jobError) throw jobError;
+      if (error) throw error;
       setJob(jobData);
-
-      // Fetch bids for this job with freelancer details
-      const { data: bidsData, error: bidsError } = await supabase
-        .from('bids')
-        .select(`
-          *,
-          freelancers (
-            first_name,
-            last_name,
-            email,
-            bio,
-            skills
-          )
-        `)
-        .eq('job_id', jobId)
-        .order('created_at', { ascending: false });
-
-      if (bidsError) throw bidsError;
-      setBids(bidsData || []);
-    } catch (err) {
-      console.error('Failed to fetch job and bids:', err.message);
-      setError('Could not load job details. Please try again later.');
+    } catch (error) {
+      console.error('Error fetching job details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch job details.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const setupRealtimeSubscription = () => {
-    const channel = supabase
-      .channel('job_bids_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'bids',
-        filter: `job_id=eq.${jobId}`
-      }, () => {
-        // Refetch bids when changes occur
-        fetchJobAndBids();
-      })
-      .subscribe();
+  const checkExistingBid = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    return channel;
+      const { data: bidData } = await supabase
+        .from('bids')
+        .select('*')
+        .eq('job_id', jobId)
+        .eq('freelancer_id', user.id)
+        .single();
+
+      if (bidData) {
+        setExistingBid(bidData);
+      }
+    } catch (error) {
+      // No existing bid found, which is fine
+      console.log('No existing bid found');
+    }
   };
 
-  const handleSelectBidder = async (bidId, freelancerId) => {
+  const handleInputChange = (field: string, value: string) => {
+    setBidData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitBid = async () => {
+    if (!bidData.amount || !bidData.message || !bidData.delivery_time) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      // Update bid status to accepted
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/signin');
+        return;
+      }
+
+      const { data: bidResult, error } = await supabase
         .from('bids')
-        .update({ status: 'accepted' })
-        .eq('id', bidId);
+        .insert([{
+          job_id: jobId,
+          freelancer_id: user.id,
+          amount: parseFloat(bidData.amount),
+          message: bidData.message,
+          delivery_time: bidData.delivery_time,
+          status: 'pending'
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Create notification for client
+      if (job?.client_id) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: job.client_id,
+            type: 'bid_received',
+            message: `New bid received for "${job.title}" - $${bidData.amount}`,
+            job_id: jobId,
+            bid_id: bidResult.id,
+            read: false
+          }]);
+      }
+
       toast({
-        title: 'Bid Accepted',
-        description: 'Redirecting to order form...',
+        title: 'Bid Submitted',
+        description: 'Your bid has been submitted successfully. The client will be notified.',
       });
 
-      // Navigate to order form instead of direct checkout
-      navigate(`/order/${bidId}`);
+      setExistingBid(bidResult);
+      setBidData({ amount: '', message: '', delivery_time: '' });
     } catch (error) {
-      console.error('Error selecting bidder:', error);
+      console.error('Error submitting bid:', error);
       toast({
         title: 'Error',
-        description: 'Failed to select bidder. Please try again.',
+        description: 'Failed to submit bid. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStartChat = () => {
+    if (job?.client_id) {
+      navigate(`/chat/${job.client_id}?job=${jobId}`);
     }
   };
 
   if (loading) {
     return (
-      <div className="bg-gray-50 min-h-screen">
-        <Navbar />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-lg">Loading job details...</p>
-        </div>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  if (error || !job) {
+  if (!job) {
     return (
-      <div className="bg-gray-50 min-h-screen">
-        <Navbar />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h2 className="text-xl font-bold mb-4 text-red-600">{error}</h2>
-          <Button onClick={() => navigate('/dashboard')} className="bg-blue-600 hover:bg-blue-700">
-            Back to Dashboard
-          </Button>
+      <div className="min-h-screen bg-gray-50">
+        <Nav2 />
+        <div className="pt-20 pb-8">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h1>
+            <p className="text-gray-600 mb-8">The job you're looking for doesn't exist or has been removed.</p>
+            <Button onClick={() => navigate('/jobs')}>Browse Other Jobs</Button>
+          </div>
         </div>
         <Footer />
       </div>
@@ -144,118 +201,157 @@ const JobBidsPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <Navbar />
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-            <div className="bg-blue-600 p-6">
-              <h1 className="text-2xl font-bold text-white">{job.title}</h1>
-              <div className="flex flex-wrap gap-4 mt-2 text-gray-200">
-                <span className="flex items-center">
-                  <Briefcase className="h-4 w-4 mr-1" />
-                  {job.category || 'Uncategorized'}
-                </span>
-                <span className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  ${job.budget || 0}
-                </span>
-              </div>
-            </div>
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-2">Description</h2>
-              <p className="text-gray-700">{job.description || 'No description provided.'}</p>
-            </div>
-          </div>
-
-          <h2 className="text-xl font-bold mb-4">Bids ({bids.length})</h2>
-          
-          {bids.length > 0 ? (
-            <div className="space-y-6">
-              {bids.map((bid) => (
-                <div key={bid.id} className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                    <div className="flex items-center mb-4 md:mb-0">
-                      <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold mr-4">
-                        {bid.freelancers?.first_name?.charAt(0) || 'F'}
-                        {bid.freelancers?.last_name?.charAt(0) || 'L'}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {bid.freelancers?.first_name} {bid.freelancers?.last_name}
-                        </h3>
-                        <div className="flex items-center mt-1 text-sm text-gray-600">
-                          <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
-                          New Freelancer
-                        </div>
-                        {bid.freelancers?.skills && bid.freelancers.skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {bid.freelancers.skills.slice(0, 3).map((skill, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-blue-600">${bid.amount}</div>
-                      <div className="text-sm text-gray-500 flex items-center justify-end mt-1">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {bid.delivery_time}
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 mb-4">{bid.message}</p>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <User className="h-4 w-4 mr-1" />
-                      Submitted {new Date(bid.created_at).toLocaleDateString()}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                        onClick={() => navigate(`/chat/${bid.freelancer_id}?job=${jobId}`)}
-                      >
-                        Message
-                      </Button>
-                      {bid.status === 'pending' && (
-                        <Button
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700"
-                          onClick={() => handleSelectBidder(bid.id, bid.freelancer_id)}
-                        >
-                          Select & Send Order
-                        </Button>
-                      )}
-                      {bid.status === 'accepted' && (
-                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm">
-                          Accepted
-                        </span>
-                      )}
-                    </div>
+    <div className="min-h-screen bg-gray-50">
+      <Nav2 />
+      
+      <div className="pt-20 pb-8">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            {/* Job Details */}
+            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{job.title}</h1>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                    <span className="flex items-center">
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      ${job.budget}
+                    </span>
+                    <span className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Posted {new Date(job.created_at).toLocaleDateString()}
+                    </span>
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      {job.category}
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-gray-900 mb-2">Job Description</h3>
+                <p className="text-gray-600 leading-relaxed">{job.description}</p>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-semibold text-gray-900 mb-2">Client Information</h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                    {job.client?.first_name?.charAt(0)}{job.client?.last_name?.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {job.client?.first_name} {job.client?.last_name}
+                    </p>
+                    <p className="text-sm text-gray-600">{job.client?.email}</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No bids yet</h3>
-              <p className="text-gray-600">
-                Freelancers haven't started bidding on this job yet. Check back later!
-              </p>
-            </div>
-          )}
+
+            {/* Existing Bid or Bid Form */}
+            {existingBid ? (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Bid</h2>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <p className="text-green-800 font-medium mb-2">Bid Submitted Successfully!</p>
+                  <div className="text-sm text-green-700">
+                    <p><strong>Amount:</strong> ${existingBid.amount}</p>
+                    <p><strong>Delivery Time:</strong> {existingBid.delivery_time}</p>
+                    <p><strong>Status:</strong> {existingBid.status.charAt(0).toUpperCase() + existingBid.status.slice(1)}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-800 font-medium mb-2">Your Proposal</p>
+                  <p className="text-blue-700">{existingBid.message}</p>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    onClick={handleStartChat}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Start Chat with Client
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/bids')}
+                  >
+                    View All My Bids
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Submit Your Bid</h2>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bid Amount ($)
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Enter your bid amount"
+                      value={bidData.amount}
+                      onChange={(e) => handleInputChange('amount', e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Delivery Time
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g., 3 days, 1 week, 2 weeks"
+                      value={bidData.delivery_time}
+                      onChange={(e) => handleInputChange('delivery_time', e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cover Letter / Proposal
+                    </label>
+                    <Textarea
+                      placeholder="Describe why you're the best fit for this job..."
+                      value={bidData.message}
+                      onChange={(e) => handleInputChange('message', e.target.value)}
+                      className="w-full h-32"
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button
+                      onClick={handleSubmitBid}
+                      disabled={submitting}
+                      className="flex items-center gap-2"
+                    >
+                      <Send className="h-4 w-4" />
+                      {submitting ? 'Submitting...' : 'Submit Bid'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate('/jobs')}
+                    >
+                      Back to Jobs
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+      
       <Footer />
     </div>
   );
 };
 
-export default JobBidsPage;
+export default JobsBid;
