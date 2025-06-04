@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Search, Star, Heart, Play, Bookmark, DollarSign, TrendingUp, Calendar, Users, Briefcase, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,100 @@ import Nav2 from '@/components/Nav2';
 
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+  const [newJobsCount, setNewJobsCount] = useState(0);
+
+  useEffect(() => {
+    fetchNotifications();
+    setupRealtimeSubscriptions();
+    
+    return () => {
+      supabase.removeAllSubscriptions();
+    };
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: notificationsData } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      setNotifications(notificationsData || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const setupRealtimeSubscriptions = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Listen for new jobs being posted
+    const jobsSubscription = supabase
+      .channel('new_jobs')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'jobs'
+      }, async (payload) => {
+        setNewJobsCount(prev => prev + 1);
+        
+        // Create notification for freelancer about new job
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: user.id,
+            type: 'job_posted',
+            message: `New job posted: ${payload.new.title}`,
+            job_id: payload.new.id,
+            read: false
+          }]);
+        
+        fetchNotifications();
+      })
+      .subscribe();
+
+    // Listen for bid status changes
+    const bidsSubscription = supabase
+      .channel('bid_updates')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'bids',
+        filter: `freelancer_id=eq.${user.id}`
+      }, async (payload) => {
+        if (payload.new.status !== payload.old.status) {
+          const message = payload.new.status === 'accepted' 
+            ? 'Your bid has been accepted!' 
+            : 'Your bid has been rejected.';
+          
+          await supabase
+            .from('notifications')
+            .insert([{
+              user_id: user.id,
+              type: `bid_${payload.new.status}`,
+              message,
+              bid_id: payload.new.id,
+              read: false
+            }]);
+          
+          fetchNotifications();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(jobsSubscription);
+      supabase.removeChannel(bidsSubscription);
+    };
+  };
 
   const recommendedJobs = [
     {
@@ -141,8 +234,14 @@ const FreelancerDashboard = () => {
 
               <div className="self-start">
                 <Link to="/jobs">
-                  <button className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 rounded-full font-semibold shadow-md">
-                    Browse Jobs →
+                  <button className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 rounded-full font-semibold shadow-md relative">
+                    Browse Jobs 
+                    {newJobsCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {newJobsCount}
+                      </span>
+                    )}
+                    →
                   </button>
                 </Link>
               </div>
@@ -229,29 +328,31 @@ const FreelancerDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Activity */}
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
+                <h3 className="text-xl font-semibold mb-4 flex items-center">
+                  <Bell className="h-5 w-5 mr-2" />
+                  Recent Notifications
+                  {notifications.length > 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
+                </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div>
-                      <p className="font-medium">Proposal accepted for "Logo Design"</p>
-                      <p className="text-sm text-gray-600">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div>
-                      <p className="font-medium">New message from TechStart Inc</p>
-                      <p className="text-sm text-gray-600">4 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <div>
-                      <p className="font-medium">Payment received - $150</p>
-                      <p className="text-sm text-gray-600">1 day ago</p>
-                    </div>
-                  </div>
+                  {notifications.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No new notifications</p>
+                  ) : (
+                    notifications.slice(0, 3).map((notification, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{notification.message}</p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(notification.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <Link to="/freelancer/notifications" className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-4 inline-block">
                   View all notifications →

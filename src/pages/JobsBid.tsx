@@ -44,7 +44,9 @@ const JobBidsPage = () => {
             freelancers (
               first_name,
               last_name,
-              email
+              email,
+              bio,
+              skills
             )
           `)
           .eq('job_id', jobId)
@@ -61,7 +63,31 @@ const JobBidsPage = () => {
     };
 
     fetchJobAndBids();
+    setupRealtimeSubscription();
+    
+    return () => {
+      supabase.removeAllSubscriptions();
+    };
   }, [jobId]);
+
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('job_bids_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'bids',
+        filter: `job_id=eq.${jobId}`
+      }, () => {
+        // Refetch bids when changes occur
+        fetchJobAndBids();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const handleSelectBidder = async (bidId, freelancerId) => {
     try {
@@ -75,10 +101,11 @@ const JobBidsPage = () => {
 
       toast({
         title: 'Bid Accepted',
-        description: 'You have successfully selected this freelancer.',
+        description: 'Redirecting to order form...',
       });
 
-      navigate(`/checkout/${bidId}`);
+      // Navigate to order form instead of direct checkout
+      navigate(`/order/${bidId}`);
     } catch (error) {
       console.error('Error selecting bidder:', error);
       toast({
@@ -161,6 +188,15 @@ const JobBidsPage = () => {
                           <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
                           New Freelancer
                         </div>
+                        {bid.freelancers?.skills && bid.freelancers.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {bid.freelancers.skills.slice(0, 3).map((skill, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
@@ -184,7 +220,7 @@ const JobBidsPage = () => {
                         variant="outline"
                         size="sm"
                         className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                        onClick={() => navigate(`/chat/${bid.freelancer_id}`)}
+                        onClick={() => navigate(`/chat/${bid.freelancer_id}?job=${jobId}`)}
                       >
                         Message
                       </Button>
@@ -194,7 +230,7 @@ const JobBidsPage = () => {
                           className="bg-blue-600 hover:bg-blue-700"
                           onClick={() => handleSelectBidder(bid.id, bid.freelancer_id)}
                         >
-                          Select & Proceed
+                          Select & Send Order
                         </Button>
                       )}
                       {bid.status === 'accepted' && (

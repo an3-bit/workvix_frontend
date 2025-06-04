@@ -135,7 +135,7 @@ const Nav2 = () => {
                 <div className="flex items-center space-x-6">
                     {/* Conditional navigation based on user role */}
                     {userRole === 'client' && (
-                        <Link to="/bids" className="text-sm font-medium hidden md:block">
+                        <Link to="/client/bids" className="text-sm font-medium hidden md:block">
                             Bids
                         </Link>
                     )}
@@ -160,6 +160,12 @@ const Nav2 = () => {
                         {/* Use BidNotifications component for clients */}
                         {userRole === 'client' ? (
                             <BidNotifications />
+                        ) : userRole === 'freelancer' ? (
+                            <Link to="/freelancer/notifications">
+                                <button className="relative">
+                                    <Bell className="h-5 w-5 text-gray-700" />
+                                </button>
+                            </Link>
                         ) : (
                             <button className="relative">
                                 <Bell className="h-5 w-5 text-gray-700" />
@@ -171,12 +177,6 @@ const Nav2 = () => {
                             <Mail className="h-5 w-5 text-gray-700" />
                         </button>
                         
-                        {/* <Link to="/wishlist">
-                            <button>
-                                <Heart className="h-5 w-5 text-gray-700" />
-                            </button>
-                        </Link>
-                         */}
                         {/* User dropdown */}
                         <div className="relative">
                             <button 

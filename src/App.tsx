@@ -62,12 +62,14 @@ const App = () => (
             <Route path="/chat/:chatId" element={<ChatPage />} />
             <Route path="/freelancer" element={<FreelancerDashboard />} />
             <Route path="/client" element={<ClientDashboard />} />
+            <Route path="/client/bids" element={lazy(() => import("./pages/client/BidsPage"))} />
+            <Route path="/order/:bidId" element={lazy(() => import("./pages/OrderForm"))} />
+            <Route path="/freelancer/notifications" element={lazy(() => import("./pages/freelancer/NotificationsPage"))} />
             <Route path="/upgrade" element={<UpgradeToProPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/post-job" element={<PostJobForm />} />
-            <Route path="/freelancer/notifications" element={<FreelancerNotifications />} />
             <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
             <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
             <Route path="/blog" element={<Blog />} />
@@ -76,7 +78,6 @@ const App = () => (
             <Route path="/become-seller" element={<BecomeSeller />} />
             <Route path="/job-posted-notification" element={<JobPostedNotification />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-
           </Routes>
         </Suspense>
       </BrowserRouter>

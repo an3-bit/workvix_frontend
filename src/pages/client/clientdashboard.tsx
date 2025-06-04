@@ -73,7 +73,6 @@ const ClientDashboard: React.FC = () => {
     setupRealtimeSubscriptions();
     
     return () => {
-      // Clean up subscriptions when component unmounts
       supabase.removeAllSubscriptions();
     };
   }, []);
@@ -143,80 +142,56 @@ const ClientDashboard: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Subscription for new bids
+    // Subscription for new jobs created by this user
+    const jobsSubscription = supabase
+      .channel('jobs_changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'jobs',
+        filter: `client_id=eq.${user.id}`
+      }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    // Subscription for new bids on user's jobs
     const bidsSubscription = supabase
       .channel('bids_changes')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'bids',
-        filter: `job_id=in.(${jobs.map(j => j.id).join(',')})`
-      }, (payload) => {
-        setRecentBids(prev => [payload.new as Bid, ...prev.slice(0, 4)]);
-        setStats(prev => ({ ...prev, totalBids: prev.totalBids + 1 }));
-        
-        // Add notification
-        const newNotification = {
-          type: 'bid_received',
-          message: `New bid received for ${payload.new.job.title}`,
-          read: false,
-          bid_id: payload.new.id,
-          job_id: payload.new.job_id
-        };
-        setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-        setUnreadCount(prev => prev + 1);
-      })
-      .subscribe();
+        table: 'bids'
+      }, async (payload) => {
+        // Check if this bid is for one of the user's jobs
+        const { data: jobData } = await supabase
+          .from('jobs')
+          .select('id')
+          .eq('id', payload.new.job_id)
+          .eq('client_id', user.id)
+          .single();
 
-    // Subscription for job status changes
-    const jobsSubscription = supabase
-      .channel('jobs_changes')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'jobs',
-        filter: `client_id=eq.${user.id}`
-      }, (payload) => {
-        setJobs(prev => prev.map(job => 
-          job.id === payload.new.id ? payload.new as Job : job
-        ));
-        
-        // Update stats based on status changes
-        if (payload.new.status !== payload.old.status) {
-          setStats(prev => {
-            let newStats = { ...prev };
-            
-            // Decrement old status
-            if (payload.old.status === 'open') newStats.activeJobs -= 1;
-            if (payload.old.status === 'in_progress') newStats.inProgress -= 1;
-            if (payload.old.status === 'completed') newStats.completedJobs -= 1;
-            
-            // Increment new status
-            if (payload.new.status === 'open') newStats.activeJobs += 1;
-            if (payload.new.status === 'in_progress') newStats.inProgress += 1;
-            if (payload.new.status === 'completed') newStats.completedJobs += 1;
-            
-            return newStats;
-          });
+        if (jobData) {
+          fetchDashboardData();
           
-          // Add notification for status change
-          if (payload.new.status === 'in_progress') {
-            const newNotification = {
-              type: 'job_started',
-              message: `Job "${payload.new.title}" has started`,
-              read: false,
-              job_id: payload.new.id
-            };
-            setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-            setUnreadCount(prev => prev + 1);
-          }
+          // Create notification for new bid
+          await supabase
+            .from('notifications')
+            .insert([{
+              user_id: user.id,
+              type: 'bid_received',
+              message: `New bid received for your job`,
+              job_id: payload.new.job_id,
+              bid_id: payload.new.id,
+              read: false
+            }]);
         }
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(bidsSubscription);
       supabase.removeChannel(jobsSubscription);
+      supabase.removeChannel(bidsSubscription);
     };
   };
 
