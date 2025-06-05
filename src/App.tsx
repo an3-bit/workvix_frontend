@@ -14,8 +14,6 @@ import JobPostedNotification from "./pages/jobspostednotification";
 import ResetPassword from "./pages/reset_password/resetpassword";
 import ChatPage from "./pages/ChatPage";
 import ClientChatPage from "./pages/client/ClientChatPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import PostJobForm from "./components/postjob";
 
 const queryClient = new QueryClient();
 
