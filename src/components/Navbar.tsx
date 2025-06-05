@@ -341,8 +341,8 @@ const Navbar = () => {
                 }}
                 onMouseLeave={() => {
                   
-                  setTimeout(() => setIsExploreOpen(false), 200);
-                  setTimeout(() => setHideSecondaryMenu(false), 200);
+                  setTimeout(() => setIsExploreOpen(false), 1000);
+                  setTimeout(() => setHideSecondaryMenu(false), 1000);
                 }}
               >
                 <button 
