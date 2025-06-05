@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import Nav2 from '@/components/Nav2';
 
 const CheckoutPage = () => {
   const { bidId } = useParams();
@@ -20,53 +21,153 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [availableBids, setAvailableBids] = useState([]);
+  const [selectedBidId, setSelectedBidId] = useState(bidId || '');
   const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const fetchBidDetails = async () => {
-      try {
-        // Fetch bid details with related job and freelancer data
-        const { data: bidData, error: bidError } = await supabase
-          .from('bids')
-          .select(`
-            *,
-            jobs (
-              id,
-              title,
-              category
-            ),
-            freelancers (
-              first_name,
-              last_name,
-              email
-            )
-          `)
-          .eq('id', bidId)
-          .single();
-
-        if (bidError) throw bidError;
-        
-        setBid(bidData);
-        setJob(bidData.jobs);
-      } catch (error) {
-        console.error('Error fetching bid details:', error);
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
         toast({
-          title: 'Error',
-          description: 'Failed to load checkout details',
-          variant: 'destructive',
+          title: "Authentication Required",
+          description: "Please sign in to access the checkout page",
+          variant: "destructive"
         });
-        navigate('/dashboard');
-      } finally {
-        setLoading(false);
+        navigate('/signin');
+        return;
+      }
+      
+      setCurrentUser(user);
+      
+      if (bidId) {
+        fetchBidDetails(bidId);
+      } else {
+        fetchAvailableBids(user.id);
       }
     };
-
-    if (bidId) {
-      fetchBidDetails();
-    }
+    
+    checkAuth();
   }, [bidId, navigate, toast]);
 
+  const fetchAvailableBids = async (userId) => {
+    try {
+      setLoading(true);
+      // Get all jobs by this client
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('client_id', userId);
+      
+      if (jobsError) throw jobsError;
+      
+      if (jobsData && jobsData.length > 0) {
+        // Get all accepted bids for these jobs
+        const { data: bidsData, error: bidsError } = await supabase
+          .from('bids')
+          .select(`
+            id,
+            amount,
+            status,
+            job_id,
+            freelancer_id,
+            jobs (title),
+            freelancers (first_name, last_name)
+          `)
+          .in('job_id', jobsData.map(job => job.id))
+          .eq('status', 'accepted');
+        
+        if (bidsError) throw bidsError;
+        
+        setAvailableBids(bidsData || []);
+        
+        if (bidsData && bidsData.length > 0 && !bidId) {
+          setSelectedBidId(bidsData[0].id);
+          setBid(bidsData[0]);
+          setJob({
+            id: bidsData[0].job_id,
+            title: bidsData[0].jobs?.title || 'Unknown Job',
+            category: 'N/A'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching available bids:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load checkout options',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBidDetails = async (id) => {
+    try {
+      setLoading(true);
+      // Fetch bid details with related job and freelancer data
+      const { data: bidData, error: bidError } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          jobs (
+            id,
+            title,
+            category
+          ),
+          freelancers (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (bidError) throw bidError;
+      
+      setBid(bidData);
+      setJob(bidData.jobs);
+      setSelectedBidId(id);
+    } catch (error) {
+      console.error('Error fetching bid details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load checkout details',
+        variant: 'destructive',
+      });
+      navigate('/client');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBidSelect = (bidId) => {
+    setSelectedBidId(bidId);
+    const selectedBid = availableBids.find(b => b.id === bidId);
+    if (selectedBid) {
+      setBid(selectedBid);
+      setJob({
+        id: selectedBid.job_id,
+        title: selectedBid.jobs?.title || 'Unknown Job',
+        category: 'N/A'
+      });
+    }
+  };
+
   const handlePayment = async () => {
+    if (!selectedBidId || !bid) {
+      toast({
+        title: 'No Bid Selected',
+        description: 'Please select a bid to proceed with payment',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setProcessing(true);
     try {
       // Create order record
@@ -74,7 +175,7 @@ const CheckoutPage = () => {
         .from('orders')
         .insert([
           {
-            bid_id: bidId,
+            bid_id: selectedBidId,
             amount: bid.amount * 1.05, // Including 5% service fee
             status: 'paid',
             payment_method: paymentMethod
@@ -87,7 +188,7 @@ const CheckoutPage = () => {
       const { error: bidError } = await supabase
         .from('bids')
         .update({ status: 'paid' })
-        .eq('id', bidId);
+        .eq('id', selectedBidId);
 
       if (bidError) throw bidError;
 
@@ -96,7 +197,7 @@ const CheckoutPage = () => {
         description: 'Your payment has been processed successfully!',
       });
 
-      navigate('/dashboard');
+      navigate('/orders');
     } catch (error) {
       console.error('Error processing payment:', error);
       toast({
@@ -112,22 +213,23 @@ const CheckoutPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        {currentUser?.user_metadata?.role === 'client' ? <Nav2 /> : <Navbar />}
         <div className="container mx-auto px-4 py-12 text-center">
-          <p>Loading checkout details...</p>
+          <p className="pt-20">Loading checkout details...</p>
         </div>
         <Footer />
       </div>
     );
   }
 
-  if (!bid || !job) {
+  if (!bid && availableBids.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h2 className="text-xl font-bold mb-4 text-red-600">Checkout details not found</h2>
-          <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        {currentUser?.user_metadata?.role === 'client' ? <Nav2 /> : <Navbar />}
+        <div className="container mx-auto px-4 py-12 text-center pt-24">
+          <h2 className="text-xl font-bold mb-4 text-red-600">No accepted bids found</h2>
+          <p className="mb-6">You don't have any accepted bids to pay for yet.</p>
+          <Button onClick={() => navigate('/client/bids')}>View My Bids</Button>
         </div>
         <Footer />
       </div>
@@ -136,10 +238,28 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="container mx-auto px-4 py-12">
+      {currentUser?.user_metadata?.role === 'client' ? <Nav2 /> : <Navbar />}
+      <div className="container mx-auto px-4 py-12 pt-24">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-center mb-8">Checkout</h1>
+          
+          {!bidId && availableBids.length > 0 && (
+            <div className="mb-8">
+              <Label htmlFor="bid-select" className="font-semibold mb-2 block">Select a project to pay for:</Label>
+              <Select value={selectedBidId} onValueChange={handleBidSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableBids.map((bid) => (
+                    <SelectItem key={bid.id} value={bid.id}>
+                      {bid.jobs?.title} - {bid.freelancers?.first_name} {bid.freelancers?.last_name} (${bid.amount})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Order Summary */}
@@ -149,28 +269,28 @@ const CheckoutPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{job.title}</h3>
-                  <p className="text-gray-600">{job.category}</p>
+                  <h3 className="font-semibold text-lg">{job?.title}</h3>
+                  <p className="text-gray-600">{job?.category}</p>
                 </div>
                 
                 <div className="border-t pt-4">
                   <h4 className="font-semibold mb-2">Freelancer</h4>
-                  <p>{bid.freelancers?.first_name} {bid.freelancers?.last_name}</p>
-                  <p className="text-sm text-gray-600">{bid.freelancers?.email}</p>
+                  <p>{bid?.freelancers?.first_name} {bid?.freelancers?.last_name}</p>
+                  <p className="text-sm text-gray-600">{bid?.freelancers?.email}</p>
                 </div>
 
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
                     <span>Project Amount</span>
-                    <span className="font-semibold">${bid.amount}</span>
+                    <span className="font-semibold">${bid?.amount}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Service Fee (5%)</span>
-                    <span className="font-semibold">${(bid.amount * 0.05).toFixed(2)}</span>
+                    <span className="font-semibold">${(bid?.amount * 0.05).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-bold border-t pt-2 mt-2">
                     <span>Total</span>
-                    <span>${(bid.amount * 1.05).toFixed(2)}</span>
+                    <span>${(bid?.amount * 1.05).toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -242,7 +362,7 @@ const CheckoutPage = () => {
 
                 <Button
                   onClick={handlePayment}
-                  disabled={processing}
+                  disabled={processing || !bid}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3"
                 >
                   {processing ? (
@@ -250,7 +370,7 @@ const CheckoutPage = () => {
                   ) : (
                     <>
                       <CreditCard className="h-5 w-5 mr-2" />
-                      Pay ${(bid.amount * 1.05).toFixed(2)}
+                      Pay ${bid ? (bid.amount * 1.05).toFixed(2) : '0.00'}
                     </>
                   )}
                 </Button>

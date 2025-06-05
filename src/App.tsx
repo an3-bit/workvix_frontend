@@ -14,6 +14,8 @@ import JobPostedNotification from "./pages/jobspostednotification";
 import ResetPassword from "./pages/reset_password/resetpassword";
 import ChatPage from "./pages/ChatPage";
 import ClientChatPage from "./pages/client/ClientChatPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import PostJobForm from "./components/postjob";
 
 const queryClient = new QueryClient();
 
@@ -61,7 +63,8 @@ const App = () => (
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/bids" element={<FreelancerBidsPage />} />
             <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
-            <Route path="/checkout/:bidId" element={<CheckoutPage />} />
+            <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/freelancer" element={<FreelancerDashboard />} />
             <Route path="/client" element={<ClientDashboard />} />
             <Route path="/client/bids" element={<ClientBidsPage />} />

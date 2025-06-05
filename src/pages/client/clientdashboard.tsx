@@ -183,25 +183,25 @@ const ClientDashboard = () => {
       icon: <Search className="h-6 w-6" />, 
       title: "Post New Job", 
       desc: "Find the right talent",
-      link: "/postjob"
+      link: "/post-job"
     },
     { 
       icon: <Users className="h-6 w-6" />, 
       title: "View Bids", 
       desc: "Review proposals",
-      link: "/bids"
+      link: "/client/bids"
     },
     { 
       icon: <DollarSign className="h-6 w-6" />, 
       title: "Payments", 
       desc: "Manage transactions",
-      link: "/payments"
+      link: "/checkout"
     },
     { 
       icon: <Briefcase className="h-6 w-6" />, 
       title: "My Projects", 
       desc: "Track progress",
-      link: "/projects"
+      link: "/orders"
     }
   ];
 
@@ -269,7 +269,7 @@ const ClientDashboard = () => {
               </div>
 
               <div className="self-start">
-                <Link to="/postjob">
+                <Link to="/post-job">
                   <button className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 rounded-full font-semibold shadow-md">
                     Post a Job →
                   </button>
@@ -299,40 +299,10 @@ const ClientDashboard = () => {
           </div>
         </section>
 
-        {/* Recent Jobs & Notifications */}
+        {/* Notifications */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Recent Jobs */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold">Recent Jobs</h3>
-                  <Link to="/jobs" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    View All →
-                  </Link>
-                </div>
-                <div className="space-y-4">
-                  {recentJobs.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">No jobs posted yet</p>
-                  ) : (
-                    recentJobs.map((job) => (
-                      <div key={job.id} className="border-l-4 border-blue-500 pl-4 py-2">
-                        <h4 className="font-medium">{job.title}</h4>
-                        <p className="text-sm text-gray-600">${job.budget} • {job.category}</p>
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs mt-1 ${
-                          job.status === 'open' ? 'bg-green-100 text-green-800' :
-                          job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                          job.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {job.status.replace('_', ' ').toUpperCase()}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
               {/* Recent Notifications */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-xl font-semibold mb-4 flex items-center">
@@ -348,7 +318,7 @@ const ClientDashboard = () => {
                   {notifications.length === 0 ? (
                     <p className="text-gray-500 text-center py-4">No recent activity</p>
                   ) : (
-                    notifications.slice(0, 3).map((notification) => (
+                    notifications.slice(0, 5).map((notification) => (
                       <div key={notification.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                         <div className={`w-2 h-2 rounded-full ${!notification.read ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
                         <div>
