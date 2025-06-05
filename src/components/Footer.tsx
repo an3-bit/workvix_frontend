@@ -111,7 +111,7 @@ const Footer = () => {
         </div>
         <div className="text-center mt-8">
           <p className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} workvix. All rights reserved developed by <a href="#" className="text-skillforge-primary hover:underline">Youvilab Technologies</a>.
+            &copy; {new Date().getFullYear()} workvix. All rights reserved developed by <a href="https://personal-portfolio-react-master-eight.vercel.app/" className="text-skillforge-primary hover:underline">Andrew Omwenga</a>.
           </p>
         </div>
     </footer>
