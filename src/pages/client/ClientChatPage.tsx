@@ -20,12 +20,12 @@ interface Chat {
     title: string;
     budget: number;
     category: string;
-  };
+  } | null;
   freelancer: {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
   messages: Message[];
   unread_count: number;
 }
@@ -49,7 +49,7 @@ interface Order {
     job: {
       title: string;
     };
-  };
+  } | null;
 }
 
 const ClientChatPage: React.FC = () => {
@@ -92,19 +92,36 @@ const ClientChatPage: React.FC = () => {
 
   const fetchChats = async (userId: string) => {
     try {
-      const { data: chatsData } = await supabase
+      // First get the chats
+      const { data: chatsData, error: chatsError } = await supabase
         .from('chats')
-        .select(`
-          *,
-          job:jobs(title, budget, category),
-          freelancer:freelancers(first_name, last_name, email)
-        `)
+        .select('*')
         .eq('client_id', userId)
         .order('updated_at', { ascending: false });
 
+      if (chatsError) {
+        console.error('Error fetching chats:', chatsError);
+        return;
+      }
+
       if (chatsData) {
-        const chatsWithMessages = await Promise.all(
+        const chatsWithDetails = await Promise.all(
           chatsData.map(async (chat) => {
+            // Fetch job details
+            const { data: jobData } = await supabase
+              .from('jobs')
+              .select('title, budget, category')
+              .eq('id', chat.job_id)
+              .single();
+
+            // Fetch freelancer details
+            const { data: freelancerData } = await supabase
+              .from('freelancers')
+              .select('first_name, last_name, email')
+              .eq('id', chat.freelancer_id)
+              .single();
+
+            // Fetch messages
             const { data: messages } = await supabase
               .from('messages')
               .select('*')
@@ -118,18 +135,20 @@ const ClientChatPage: React.FC = () => {
 
             return {
               ...chat,
+              job: jobData,
+              freelancer: freelancerData,
               messages: messages || [],
               unread_count: unreadCount
             };
           })
         );
 
-        setChats(chatsWithMessages);
+        setChats(chatsWithDetails);
         
         // Auto-select first chat if available
-        if (chatsWithMessages.length > 0 && !selectedChat) {
-          setSelectedChat(chatsWithMessages[0]);
-          await markMessagesAsRead(chatsWithMessages[0].id, userId);
+        if (chatsWithDetails.length > 0 && !selectedChat) {
+          setSelectedChat(chatsWithDetails[0]);
+          await markMessagesAsRead(chatsWithDetails[0].id, userId);
         }
       }
     } catch (error) {
@@ -238,7 +257,6 @@ const ClientChatPage: React.FC = () => {
             user_id: selectedChat.freelancer_id,
             type: 'new_message',
             message: `New message from client`,
-            chat_id: selectedChat.id,
             read: false
           }]);
       }
@@ -293,12 +311,12 @@ const ClientChatPage: React.FC = () => {
                       >
                         <div className="flex items-start space-x-3">
                           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-                            {chat.freelancer?.first_name?.charAt(0)}{chat.freelancer?.last_name?.charAt(0)}
+                            {chat.freelancer?.first_name?.charAt(0) || 'F'}{chat.freelancer?.last_name?.charAt(0) || 'L'}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <h3 className="font-medium text-gray-900 truncate">
-                                {chat.freelancer?.first_name} {chat.freelancer?.last_name}
+                                {chat.freelancer?.first_name || 'Unknown'} {chat.freelancer?.last_name || 'Freelancer'}
                               </h3>
                               {chat.unread_count > 0 && (
                                 <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -307,7 +325,7 @@ const ClientChatPage: React.FC = () => {
                               )}
                             </div>
                             <p className="text-sm text-gray-600 truncate">
-                              {chat.job?.title}
+                              {chat.job?.title || 'No job title'}
                             </p>
                             <p className="text-xs text-gray-500">
                               {chat.messages.length > 0 
@@ -331,18 +349,18 @@ const ClientChatPage: React.FC = () => {
                     <div className="border-b border-gray-200 p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                          {selectedChat.freelancer?.first_name?.charAt(0)}{selectedChat.freelancer?.last_name?.charAt(0)}
+                          {selectedChat.freelancer?.first_name?.charAt(0) || 'F'}{selectedChat.freelancer?.last_name?.charAt(0) || 'L'}
                         </div>
                         <div>
                           <h2 className="font-semibold text-gray-900">
-                            {selectedChat.freelancer?.first_name} {selectedChat.freelancer?.last_name}
+                            {selectedChat.freelancer?.first_name || 'Unknown'} {selectedChat.freelancer?.last_name || 'Freelancer'}
                           </h2>
-                          <p className="text-sm text-gray-600">{selectedChat.job?.title}</p>
+                          <p className="text-sm text-gray-600">{selectedChat.job?.title || 'No job title'}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">${selectedChat.job?.budget}</p>
-                        <p className="text-xs text-gray-500">{selectedChat.job?.category}</p>
+                        <p className="text-sm font-medium text-gray-900">${selectedChat.job?.budget || 0}</p>
+                        <p className="text-xs text-gray-500">{selectedChat.job?.category || 'No category'}</p>
                       </div>
                     </div>
 
