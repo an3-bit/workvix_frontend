@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Mail,  ChevronDown, User, LogOut } from 'lucide-react';
+import { Search, Bell, Mail, ChevronDown, User, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BidNotifications from './BidNotifications';
 
@@ -10,6 +9,7 @@ const Nav2 = () => {
     const [user, setUser] = useState<any>(null);
     const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [unreadMessages, setUnreadMessages] = useState(0);
 
     useEffect(() => {
         const fetchUserRole = async () => {
@@ -27,6 +27,7 @@ const Nav2 = () => {
 
             if (clientData) {
                 setUserRole('client');
+                fetchUnreadMessages(user.id);
                 return;
             }
 
@@ -39,6 +40,7 @@ const Nav2 = () => {
 
             if (freelancerData) {
                 setUserRole('freelancer');
+                fetchUnreadMessages(user.id);
             }
         };
 
@@ -57,6 +59,7 @@ const Nav2 = () => {
 
                     if (clientData) {
                         setUserRole('client');
+                        fetchUnreadMessages(session.user.id);
                         return;
                     }
 
@@ -68,6 +71,7 @@ const Nav2 = () => {
 
                     if (freelancerData) {
                         setUserRole('freelancer');
+                        fetchUnreadMessages(session.user.id);
                     }
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null);
@@ -79,8 +83,66 @@ const Nav2 = () => {
         return () => subscription.unsubscribe();
     }, []);
 
+    const fetchUnreadMessages = async (userId: string) => {
+        try {
+            // Get all chats where user is involved
+            const { data: chats } = await supabase
+                .from('chats')
+                .select('id')
+                .or(`client_id.eq.${userId},freelancer_id.eq.${userId}`);
+
+            if (!chats || chats.length === 0) {
+                setUnreadMessages(0);
+                return;
+            }
+
+            const chatIds = chats.map(chat => chat.id);
+
+            // Count unread messages in these chats where sender is not the current user
+            const { count } = await supabase
+                .from('messages')
+                .select('*', { count: 'exact', head: true })
+                .in('chat_id', chatIds)
+                .neq('sender_id', userId)
+                .eq('read', false);
+
+            setUnreadMessages(count || 0);
+
+            // Set up realtime subscription for new messages
+            const channel = supabase
+                .channel('message-notifications')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'messages'
+                    },
+                    (payload) => {
+                        // If the message is not from current user and is in one of their chats
+                        if (payload.new.sender_id !== userId && chatIds.includes(payload.new.chat_id)) {
+                            setUnreadMessages(prev => prev + 1);
+                        }
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        } catch (error) {
+            console.error('Error fetching unread messages:', error);
+        }
+    };
+
     const handleChat = () => {
-        navigate("/chat/:chatId");
+        if (userRole === 'client') {
+            navigate("/client/chat");
+        } else {
+            navigate("/chat");
+        }
+        // Reset unread count when navigating to chat
+        setUnreadMessages(0);
     };
 
     const handleLogout = async () => {
@@ -175,6 +237,11 @@ const Nav2 = () => {
                         
                         <button className="relative" onClick={handleChat}>
                             <Mail className="h-5 w-5 text-gray-700" />
+                            {unreadMessages > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                    {unreadMessages > 9 ? '9+' : unreadMessages}
+                                </span>
+                            )}
                         </button>
                         
                         {/* User dropdown */}
