@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Send } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Send, User, DollarSign, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,26 +9,51 @@ import Nav2 from '@/components/Nav2';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 
+interface Chat {
+  id: string;
+  job_id: string;
+  client_id: string;
+  freelancer_id: string;
+  created_at: string;
+  updated_at: string;
+  job: {
+    title: string;
+    budget: number;
+    category: string;
+  } | null;
+  client: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  } | null;
+  messages: Message[];
+  unread_count: number;
+}
+
+interface Message {
+  id: string;
+  chat_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  read: boolean;
+}
+
 const ChatPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const jobId = searchParams.get('job');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [chat, setChat] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [otherUser, setOtherUser] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
-    if (jobId) {
-      initializeChat();
-    }
-  }, [jobId]);
+    initializeData();
+  }, []);
 
-  const initializeChat = async () => {
+  const initializeData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -37,49 +62,12 @@ const ChatPage: React.FC = () => {
       }
 
       setCurrentUser(user);
-
-      // Check if chat already exists for this job
-      const { data: existingChat } = await supabase
-        .from('chats')
-        .select('*')
-        .eq('job_id', jobId)
-        .single();
-
-      let chatData;
-      if (existingChat) {
-        chatData = existingChat;
-      } else {
-        // Get job details to create new chat
-        const { data: jobData } = await supabase
-          .from('jobs')
-          .select('client_id')
-          .eq('id', jobId)
-          .single();
-
-        if (!jobData) throw new Error('Job not found');
-
-        // Create new chat
-        const { data: newChat } = await supabase
-          .from('chats')
-          .insert([{
-            job_id: jobId,
-            client_id: jobData.client_id,
-            freelancer_id: user.id
-          }])
-          .select()
-          .single();
-
-        chatData = newChat;
-      }
-
-      setChat(chatData);
-      await fetchMessages(chatData.id);
-      await fetchOtherUser(chatData, user.id);
+      await fetchChats(user.id);
     } catch (error) {
-      console.error('Error initializing chat:', error);
+      console.error('Error initializing data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to initialize chat.',
+        description: 'Failed to load chat data.',
         variant: 'destructive',
       });
     } finally {
@@ -87,47 +75,113 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const fetchMessages = async (chatId: string) => {
+  const fetchChats = async (userId: string) => {
     try {
-      const { data } = await supabase
-        .from('messages')
+      // Get chats where current user is the freelancer
+      const { data: chatsData, error: chatsError } = await supabase
+        .from('chats')
         .select('*')
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
+        .eq('freelancer_id', userId)
+        .order('updated_at', { ascending: false });
 
-      if (data) {
-        setMessages(data);
+      if (chatsError) {
+        console.error('Error fetching chats:', chatsError);
+        return;
+      }
+
+      if (chatsData) {
+        const chatsWithDetails = await Promise.all(
+          chatsData.map(async (chat) => {
+            // Fetch job details
+            const { data: jobData } = await supabase
+              .from('jobs')
+              .select('title, budget, category')
+              .eq('id', chat.job_id)
+              .single();
+
+            // Fetch client details
+            const { data: clientData } = await supabase
+              .from('clients')
+              .select('first_name, last_name, email')
+              .eq('id', chat.client_id)
+              .single();
+
+            // Fetch messages
+            const { data: messages } = await supabase
+              .from('messages')
+              .select('*')
+              .eq('chat_id', chat.id)
+              .order('created_at', { ascending: true });
+
+            // Count unread messages from client
+            const unreadCount = messages?.filter(
+              m => m.sender_id !== userId && !m.read
+            ).length || 0;
+
+            return {
+              ...chat,
+              job: jobData,
+              client: clientData,
+              messages: messages || [],
+              unread_count: unreadCount
+            };
+          })
+        );
+
+        setChats(chatsWithDetails);
+        
+        // Auto-select first chat if available
+        if (chatsWithDetails.length > 0 && !selectedChat) {
+          setSelectedChat(chatsWithDetails[0]);
+          await markMessagesAsRead(chatsWithDetails[0].id, userId);
+        }
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error('Error fetching chats:', error);
     }
   };
 
-  const fetchOtherUser = async (chatData: any, currentUserId: string) => {
-    const otherUserId = chatData.client_id === currentUserId 
-      ? chatData.freelancer_id 
-      : chatData.client_id;
+  const markMessagesAsRead = async (chatId: string, userId: string) => {
+    try {
+      await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('chat_id', chatId)
+        .neq('sender_id', userId);
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', otherUserId)
-      .single();
+      // Update local state
+      setChats(prev => prev.map(chat => 
+        chat.id === chatId 
+          ? { 
+              ...chat, 
+              unread_count: 0,
+              messages: chat.messages.map(msg => 
+                msg.sender_id !== userId ? { ...msg, read: true } : msg
+              )
+            }
+          : chat
+      ));
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  };
 
-    if (data) {
-      setOtherUser(data);
+  const handleChatSelect = async (chat: Chat) => {
+    setSelectedChat(chat);
+    if (currentUser) {
+      await markMessagesAsRead(chat.id, currentUser.id);
     }
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !chat || !currentUser) return;
+    if (!newMessage.trim() || !selectedChat || !currentUser) return;
 
     setSending(true);
     try {
       const { data: message } = await supabase
         .from('messages')
         .insert([{
-          chat_id: chat.id,
+          chat_id: selectedChat.id,
           sender_id: currentUser.id,
           content: newMessage
         }])
@@ -135,27 +189,36 @@ const ChatPage: React.FC = () => {
         .single();
 
       if (message) {
-        setMessages(prev => [...prev, message]);
+        // Update selected chat messages
+        setSelectedChat(prev => prev ? {
+          ...prev,
+          messages: [...prev.messages, message]
+        } : null);
+
+        // Update chats list
+        setChats(prev => prev.map(chat => 
+          chat.id === selectedChat.id 
+            ? { ...chat, messages: [...chat.messages, message] }
+            : chat
+        ));
+
         setNewMessage('');
 
         // Update chat's updated_at
         await supabase
           .from('chats')
           .update({ updated_at: new Date().toISOString() })
-          .eq('id', chat.id);
+          .eq('id', selectedChat.id);
 
-        // Create notification for the other user only if otherUser exists
-        if (otherUser?.id) {
-          await supabase
-            .from('notifications')
-            .insert([{
-              user_id: otherUser.id,
-              type: 'new_message',
-              message: `New message in your chat`,
-              chat_id: chat.id,
-              read: false
-            }]);
-        }
+        // Create notification for client
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: selectedChat.client_id,
+            type: 'new_message',
+            message: `New message from freelancer`,
+            read: false
+          }]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -183,67 +246,153 @@ const ChatPage: React.FC = () => {
       
       <div className="pt-20 pb-8">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border">
-            {/* Chat header */}
-            <div className="border-b p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                {otherUser?.first_name?.charAt(0)}{otherUser?.last_name?.charAt(0)}
-              </div>
-              <div>
-                <h2 className="font-semibold text-gray-900">
-                  {otherUser?.first_name} {otherUser?.last_name}
-                </h2>
-                <p className="text-sm text-gray-600">Chat about job</p>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="h-[500px] overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  No messages yet. Start the conversation!
+          <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-sm border">
+            <div className="flex h-[600px]">
+              {/* Chat List Sidebar */}
+              <div className="w-1/3 border-r border-gray-200 flex flex-col">
+                <div className="p-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+                  <p className="text-sm text-gray-600">{chats.length} conversations</p>
                 </div>
-              ) : (
-                messages.map((message) => (
-                  <div 
-                    key={message.id} 
-                    className={`flex ${message.sender_id === currentUser?.id ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.sender_id === currentUser?.id ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
-                    >
-                      <p>{message.content}</p>
-                      <p className={`text-xs mt-1 ${message.sender_id === currentUser?.id ? 'text-blue-100' : 'text-gray-500'}`}>
-                        {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                
+                <div className="flex-1 overflow-y-auto">
+                  {chats.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      No messages yet
+                    </div>
+                  ) : (
+                    chats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        onClick={() => handleChatSelect(chat)}
+                        className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                          selectedChat?.id === chat.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                            {chat.client?.first_name?.charAt(0) || 'C'}{chat.client?.last_name?.charAt(0) || 'L'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium text-gray-900 truncate">
+                                {chat.client?.first_name || 'Unknown'} {chat.client?.last_name || 'Client'}
+                              </h3>
+                              {chat.unread_count > 0 && (
+                                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                  {chat.unread_count}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 truncate">
+                              {chat.job?.title || 'No job title'}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {chat.messages.length > 0 
+                                ? chat.messages[chat.messages.length - 1].content.substring(0, 30) + '...'
+                                : 'No messages yet'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Chat Area */}
+              <div className="w-2/3 flex flex-col">
+                {selectedChat ? (
+                  <>
+                    {/* Chat Header */}
+                    <div className="border-b border-gray-200 p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
+                          {selectedChat.client?.first_name?.charAt(0) || 'C'}{selectedChat.client?.last_name?.charAt(0) || 'L'}
+                        </div>
+                        <div>
+                          <h2 className="font-semibold text-gray-900">
+                            {selectedChat.client?.first_name || 'Unknown'} {selectedChat.client?.last_name || 'Client'}
+                          </h2>
+                          <p className="text-sm text-gray-600">{selectedChat.job?.title || 'No job title'}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">${selectedChat.job?.budget || 0}</p>
+                        <p className="text-xs text-gray-500">{selectedChat.job?.category || 'No category'}</p>
+                      </div>
+                    </div>
+
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {selectedChat.messages.length === 0 ? (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                          No messages yet. Start the conversation!
+                        </div>
+                      ) : (
+                        selectedChat.messages.map((message) => (
+                          <div 
+                            key={message.id} 
+                            className={`flex ${message.sender_id === currentUser?.id ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div 
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                message.sender_id === currentUser?.id 
+                                  ? 'bg-blue-600 text-white' 
+                                  : 'bg-gray-100'
+                              }`}
+                            >
+                              <p>{message.content}</p>
+                              <p className={`text-xs mt-1 ${
+                                message.sender_id === currentUser?.id 
+                                  ? 'text-blue-100' 
+                                  : 'text-gray-500'
+                              }`}>
+                                {new Date(message.created_at).toLocaleTimeString([], { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Message Input */}
+                    <div className="border-t border-gray-200 p-4">
+                      <div className="flex gap-2">
+                        <Textarea
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder="Type your message here..."
+                          className="flex-1 min-h-[60px]"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                        />
+                        <Button 
+                          onClick={handleSendMessage}
+                          disabled={sending || !newMessage.trim()}
+                          className="h-[60px]"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>Select a conversation to start messaging</p>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* Message input */}
-            <div className="border-t p-4">
-              <div className="flex gap-2">
-                <Textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message here..."
-                  className="flex-1 min-h-[60px]"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                />
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={sending || !newMessage.trim()}
-                  className="h-[60px]"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+                )}
               </div>
             </div>
           </div>
