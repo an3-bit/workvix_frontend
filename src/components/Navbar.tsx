@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,9 +11,6 @@ import {
 } from "@/components/ui/navigation-menu";
 import { MegaMenuContent } from './MegaMenuContent';
 
-// Enhanced MegaMenu component
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
@@ -22,11 +18,13 @@ const Navbar = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
   const secondaryNavRef = useRef<HTMLDivElement | null>(null);
+  const exploreMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Enhanced MegaMenu component
   const scrollSecondaryNav = (direction: 'left' | 'right') => {
-    const scrollAmount = 200; // Adjust scroll amount as needed
+    const scrollAmount = 200;
     if (secondaryNavRef.current) {
       const container = secondaryNavRef.current;
       container.scrollBy({
@@ -40,32 +38,42 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Handle click outside to close mobile menu
   useEffect(() => {
-  let lastScrollY = window.scrollY;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exploreMenuRef.current && !exploreMenuRef.current.contains(event.target as Node)) {
+        setIsExploreOpen(false);
+      }
+    };
 
-  const handleScroll = () => {
-    const currentScrollY = window.scrollY;
-    setScrollPosition(currentScrollY);
-    setShowSearchBar(currentScrollY > 100);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-    // Show secondary nav when scrolling UP, hide when scrolling DOWN
-    if (currentScrollY < lastScrollY) {
-      setShowSecondaryNav(true);
-    } else if (currentScrollY > lastScrollY) {
-      setShowSecondaryNav(false);
-    }
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
 
-    lastScrollY = currentScrollY;
-  };
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setScrollPosition(currentScrollY);
+      setShowSearchBar(currentScrollY > 100);
 
-  window.addEventListener('scroll', handleScroll);
+      if (currentScrollY < lastScrollY) {
+        setShowSecondaryNav(true);
+      } else if (currentScrollY > lastScrollY) {
+        setShowSecondaryNav(false);
+      }
 
-  return () => {
-    window.removeEventListener('scroll', handleScroll);
-  };
-}, []);
+      lastScrollY = currentScrollY;
+    };
 
-const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Main navigation categories data
   const mainCategories = [
@@ -77,82 +85,94 @@ const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
           items: ["Logo Design", "Brand Style Guides", "Business Cards & Stationery", "Fonts & Typography", "Logo Maker Tool"]
         },
         {
-          title: "Art & Illustration",
-          items: ["Illustration", "AI Artists", "AI Avatar Design", "Portraits & Caricatures", "Cartoons & Comics"]
+          title: "Digital Marketing",
+          items: ["Social Media Ads", "Email Marketing", "Website Analytics", "SEO Optimization", "Affiliate Marketing"]
         },
         {
-          title: "Web & App Design",
-          items: ["Website Design", "App Design", "UX Design", "Landing Page Design", "Icon Design"]
+          title: "Writing & Translation",
+          items: ["Content Writing", "Copywriting", "Translation Services", "Proofreading & Editing", "Grammar & Spelling"]
         },
         {
-          title: "Product & Gaming",
-          items: ["Industrial & Product Design", "Character Modeling", "Game Art", "Graphics for Streamers"]
+          title: "Video & Animation",
+          items: ["Video Editing", "2D Animation", "3D Animation", "Motion Graphics", "Animated GIFs"]
         },
         {
-          title: "Visual Design",
-          items: ["Image Editing", "Presentation Design", "Background Removal", "Infographic Design", "Vector Tracing"]
+          title: "Music & Audio",
+          items: ["Songwriting", "Music Production", "Audio Editing", "Sound Effects", "Music Licensing"]
         },
-        {
-          title: "Print Design",
-          items: ["Flyer Design", "Brochure Design", "Poster Design", "Catalog Design", "Menu Design"]
-        }
       ]
     },
     {
-      name: "Programming & Tech",
+      name: "Data & Analytics",
       sections: [
         {
-          title: "Website Development",
-          items: ["WordPress", "Shopify", "Wix", "Custom Websites", "E-commerce Development"]
+          title: "Data Analysis",
+          items: ["Data Visualization", "Statistical Analysis", "Predictive Analytics", "Data Mining", "Business Intelligence"]
         },
         {
-          title: "Web Programming",
-          items: ["JavaScript", "PHP", "Python", "Ruby", "Java"]
+          title: "Market Research",
+          items: ["Surveys & Polls", "Competitor Analysis", "Consumer Insights", "Market Trends", "Industry Reports"]
         },
         {
-          title: "Application Development",
-          items: ["Mobile Apps", "Desktop Applications", "Web Applications", "Game Development", "API Development"]
+          title: "Database Management",
+          items: ["Database Design", "SQL Development", "Data Warehousing", "ETL Processes", "NoSQL Databases"]
         },
         {
-          title: "E-Commerce",
-          items: ["Shopify", "WooCommerce", "BigCommerce", "Magento", "OpenCart"]
+          title: "Web Analytics",
+          items: ["Google Analytics", "Conversion Rate Optimization", "User Behavior Tracking", "A/B Testing", "Web Performance"]
         },
         {
-          title: "Data & Analytics",
-          items: ["Data Analysis", "Data Visualization", "Database Design", "Big Data", "Machine Learning"]
-        },
-        {
-          title: "Technical Services",
-          items: ["DevOps", "Support & IT", "Cybersecurity", "Blockchain & Cryptocurrency", "QA Testing"]
+          title: "AI & Machine Learning",
+          items: ["Machine Learning Models", "Natural Language Processing", "Computer Vision", "AI Chatbots", "Deep Learning"]
         }
       ]
     },
-    {
-      name: "Digital Marketing",
+    { name: "Business ",
       sections: [
         {
-          title: "Search",
-          items: ["Search Engine Optimization (SEO)", "Local SEO", "E-Commerce SEO", "Video SEO", "SEO Audit"]
+          title: "Business Consulting",
+          items: ["Business Planning", "Strategic Planning", "Market Research", "Financial Analysis", "Business Strategy"]
         },
         {
-          title: "Social Media",
-          items: ["Social Media Marketing", "Facebook Ads", "Instagram Marketing", "TikTok Shop", "LinkedIn Marketing"]
+          title: "Sales & Marketing",
+          items: ["Email Marketing", "Social Media Marketing", "SEO Optimization", "Content Marketing", "Lead Generation"]
         },
         {
-          title: "Paid Advertising",
-          items: ["Google Ads", "Display Advertising", "PPC Management", "Retargeting", "Social Media Advertising"]
+          title: "Customer Support",
+          items: ["Customer Service", "Customer Feedback", "Customer Satisfaction", "Customer Retention", "Customer Acquisition"]
         },
         {
-          title: "Marketing Strategy",
-          items: ["Marketing Strategy", "Marketing Plans", "Brand Strategy", "Content Strategy", "Growth Marketing"]
+          title: "Financial Planning",
+          items: ["Budgeting", "Financial Planning", "Tax Planning", "Retirement Planning", "Investment Planning"]
         },
         {
-          title: "Email & Automation",
-          items: ["Email Marketing", "Marketing Automation", "Drip Campaigns", "Email Templates", "Lead Generation"]
+          title: "Legal Services",
+          items: ["Contract Writing", "Legal Consulting", "Legal Research", "Legal Documentation", "Legal Compliance"]
+        },
+      ]
+        },
+    {
+      name: "Finance",
+      sections: [
+        {
+          title: "Accounting Services",
+          items: ["Bookkeeping", "Financial Statements", "Tax Preparation", "Payroll Services", "Accounts Payable/Receivable"]
         },
         {
-          title: "Analytics & Optimization",
-          items: ["Web Analytics", "Conversion Rate Optimization", "A/B Testing", "User Testing", "Marketing Analytics"]
+          title: "Financial Analysis",
+          items: ["Financial Modeling", "Budgeting & Forecasting", "Variance Analysis", "Cash Flow Management", "Cost Analysis"]
+        },
+        {
+          title: "Investment Consulting",
+          items: ["Portfolio Management", "Investment Strategy", "Risk Assessment", "Market Research", "Retirement Planning"]
+        },
+        {
+          title: "Tax Consulting",
+          items: ["Tax Planning", "Tax Compliance", "International Taxation", "Sales Tax Consulting", "IRS Representation"]
+        },
+        {
+          title: "Business Valuation",
+          items: ["Business Appraisal", "Mergers & Acquisitions", "Due Diligence", "Valuation Reports", "Exit Strategy"]
         }
       ]
     },
@@ -161,176 +181,121 @@ const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
       sections: [
         {
           title: "Video Production",
-          items: ["Video Editing", "Video Production", "Short Video Ads", "Video Trailers", "Explainer Videos"]
+          items: ["Video Editing", "Cinematography", "Scriptwriting", "Storyboarding", "Post-Production"]
         },
         {
           title: "Animation",
-          items: ["Character Animation", "Logo Animation", "3D Animation", "Motion Graphics", "Animated GIFs"]
+          items: ["2D Animation", "3D Animation", "Motion Graphics", "Character Animation", "Stop Motion"]
         },
         {
-          title: "Streaming & Audio",
-          items: ["Live Action Explainers", "Unboxing Videos", "Product Photography", "Screencasting", "eLearning Videos"]
+          title: "Live Streaming",
+          items: ["Live Event Streaming", "Webinars", "Virtual Events", "Live Q&A Sessions", "Interactive Streaming"]
         },
         {
-          title: "Special Effects",
-          items: ["Visual Effects", "VFX", "Special Effects", "3D Modeling", "Rigging"]
+          title: "Video Marketing",
+          items: ["Video SEO", "YouTube Marketing", "Social Media Video Ads", "Video Content Strategy", "Video Analytics"]
         },
         {
-          title: "Production Elements",
-          items: ["Intros & Outros", "Visual Effects", "Subtitles & Captions", "Sound Effects", "Voice Over"]
+          title: "Voice Over",
+          items: ["Narration", "Character Voices", "Commercial Voice Overs", "Podcast Voice Overs", "Audiobook Narration"]
+        }
+      ]
+    },
+    {
+      name: "Programming & Tech",
+      sections: [
+        {          title: "Software Development",
+          items: ["Custom Software", "Web Applications", "Mobile Apps", "Desktop Applications", "API Development"]
+        },
+        {          title: "Data Science",
+          items: ["Data Analysis", "Machine Learning", "Data Visualization", "Big Data", "AI Development"]
         },
         {
-          title: "Social & Marketing Videos",
-          items: ["Social Media Videos", "Instagram Videos", "YouTube Videos", "TikTok Videos", "Facebook Videos"]
+          title: "Cybersecurity",
+          items: ["Penetration Testing", "Network Security", "Application Security", "Incident Response", "Security Audits"]
+        },
+        {
+          title: "Cloud Computing",
+          items: ["AWS", "Azure", "Google Cloud", "Cloud Migration", "Cloud Security"]
+        },
+        {
+          title: "Blockchain",
+          items: ["Smart Contracts", "DApps", "Blockchain Development", "Cryptocurrency Consulting", "NFT Development"]
+        }
+      ]
+    },
+    {
+      name: "Digital Marketing",
+      sections: [
+        {          title: "SEO & SEM",
+          items: ["Search Engine Optimization", "Pay-Per-Click Advertising", "Keyword Research", "Link Building", "Local SEO"]
+        },
+        {          title: "Social Media Marketing",
+          items: ["Social Media Management", "Content Creation", "Influencer Marketing", "Social Media Advertising", "Analytics"]
+        },
+        {
+          title: "Content Marketing",
+          items: ["Blog Writing", "Content Strategy", "Copywriting", "Content Distribution", "Content Optimization"]
+        },
+        {
+          title: "Email Marketing",
+          items: ["Email Campaigns", "Newsletter Design", "List Building", "Email Automation", "Analytics"]
+        },
+        {
+          title: "Affiliate Marketing",
+          items: ["Affiliate Program Setup", "Affiliate Management", "Affiliate Analytics", "Affiliate Training", "Affiliate Tools"]
         }
       ]
     },
     {
       name: "Writing & Translation",
       sections: [
-        {
-          title: "Content Writing",
-          items: ["Articles & Blog Posts", "Website Content", "Creative Writing", "Product Descriptions", "SEO Writing"]
+        {          title: "Writing Services",
+          items: ["Content Writing", "Blog Writing", "Article Writing", "Press Release Writing", "Editorial Writing"]
         },
-        {
-          title: "Books & eBooks",
-          items: ["Book Design", "Book Covers", "Book Layout Design & Typesetting", "Children's Book Illustration"]
-        },
-        {
-          title: "Translation",
-          items: ["General Translation", "Legal Translation", "Technical Translation", "Medical Translation", "Marketing Translation"]
-        },
-        {
-          title: "Business Writing",
-          items: ["Business Plans", "Grant Writing", "Technical Writing", "Case Studies", "White Papers"]
+        {          title: "Translation Services",
+          items: ["English to Spanish", "Spanish to English", "French to English", "German to English", "Portuguese to English"]
         },
         {
           title: "Editing & Proofreading",
-          items: ["Proofreading", "Editing", "Content Reviews", "Fact Checking", "Grammar Checks"]
+          items: ["Grammar Checking", "Spelling Checking", "Punctuation Checking", "Style Checking", "Formatting"]
         },
         {
-          title: "UX Writing",
-          items: ["Microcopy", "User Guides", "App Content", "Product Descriptions", "Landing Page Copy"]
-        }
-      ]
-    },
-    {
-      name: "Music & Audio",
-      sections: [
-        {
-          title: "Music",
-          items: ["Music Production", "Vocals & Singers", "Mixing & Mastering", "Session Musicians", "Songwriting"]
+          title: "Transcription Services",
+          items: ["Audio to Text", "Video to Text", "Document to Text", "Text to Audio", "Text to Video"]
         },
         {
-          title: "Audio Services",
-          items: ["Voice Over", "Podcast Production", "Audio Editing", "Sound Effects", "Audio Ads"]
-        },
-        {
-          title: "Music Lessons",
-          items: ["Guitar Lessons", "Piano Lessons", "Vocal Lessons", "DJ Lessons", "Composition"]
-        },
-        {
-          title: "Production",
-          items: ["Producers & Composers", "Beats", "Jingles & Intros", "Audio Logo", "Audio Mixing"]
-        },
-        {
-          title: "Streaming & Podcasts",
-          items: ["Podcast Editing", "Podcast Marketing", "Streaming Production", "Audiobook Production", "Sound Design"]
-        },
-        {
-          title: "Music Promotion",
-          items: ["Music Promotion", "Music Marketing", "Spotify Promotion", "SoundCloud Promotion", "YouTube Music Promotion"]
-        }
-      ]
-    },
-    {
-      name: "Business",
-      sections: [
-        {
-          title: "Business Planning",
-          items: ["Business Plans", "Market Research", "Business Consulting", "Financial Consulting", "Legal Consulting"]
-        },
-        {
-          title: "Business Operations",
-          items: ["Virtual Assistant", "Data Entry", "Customer Service", "E-Commerce Management", "Project Management"]
-        },
-        {
-          title: "Sales & Marketing",
-          items: ["Lead Generation", "Sales Funnel", "CRM Management", "Sales Copywriting", "Email Marketing"]
-        },
-        {
-          title: "Administrative Support",
-          items: ["Administrative Support", "Data Entry", "Customer Service", "Technical Support", "Office Management"]
-        },
-        {
-          title: "Career Development",
-          items: ["Resume Writing", "Cover Letters", "LinkedIn Profiles", "Job Search", "Career Counseling"]
-        },
-        {
-          title: "Financial Services",
-          items: ["Accounting", "Tax Preparation", "Financial Analysis", "Bookkeeping", "Financial Planning"]
-        }
-      ]
-    },
-    {
-      name: "Finance",
-      sections: [
-        {
-          title: "Accounting & Bookkeeping",
-          items: ["Bookkeeping", "Financial Statements", "Tax Preparation", "Payroll", "QuickBooks"]
-        },
-        {
-          title: "Financial Analysis",
-          items: ["Financial Modeling", "Valuation", "Investment Analysis", "Risk Management", "Portfolio Management"]
-        },
-        {
-          title: "Business Consulting",
-          items: ["Business Plans", "Market Research", "Financial Consulting", "Legal Consulting", "Management Consulting"]
-        },
-        {
-          title: "Investment & Trading",
-          items: ["Stock Trading", "Forex Trading", "Cryptocurrency Trading", "Options Trading", "Investment Strategies"]
-        },
-        {
-          title: "Tax Services",
-          items: ["Tax Preparation", "Tax Planning", "IRS Representation", "State Taxes", "International Taxes"]
-        },
-        {
-          title: "Insurance Services",
-          items: ["Life Insurance", "Health Insurance", "Auto Insurance", "Home Insurance", "Business Insurance"]
-        }
+          title: "Creative Writing",
+          items: ["Fiction Writing", "Non-Fiction Writing", "Poetry Writing", "Script Writing", "Storytelling"] 
+        } 
       ]
     },
     {
       name: "AI Services",
       sections: [
         {
-          title: "AI Content Generation",
-          items: ["AI Writing", "AI Art Generation", "AI Music Generation", "AI Video Generation", "AI Voice Generation"]
-        },
-        { 
-          title: "AI Writing",
-          items: ["AI Writing", "AI Content Writing", "AI Blog Writing", "AI Product Writing", "AI Technical Writing"]
+          title: "AI Development",
+          items: ["Custom AI Solutions", "Machine Learning Models", "Natural Language Processing", "Computer Vision", "AI Chatbots"]
         },
         {
-          title: "AI Art Generation",
-          items: ["AI Art Generation", "AI Portrait Generation", "AI Landscape Generation", "AI Animal Generation", "AI Portrait Generation"]
+          title: "AI Content Creation",
+          items: ["AI-Generated Text", "AI Art Generation", "AI Music Composition", "AI Video Creation", "AI-Powered SEO"]
         },
         {
-          title: "AI Music Generation",
-          items: ["AI Music Generation", "AI Songwriting", "AI Music Composition", "AI Music Production", "AI Music Mixing"]
+          title: "AI Consulting",
+          items: ["AI Strategy", "AI Implementation", "AI Training", "AI Ethics Consulting", "AI Performance Optimization"]
         },
         {
-          title: "AI Video Generation",
-          items: ["AI Video Generation", "AI Animation", "AI Video Editing", "AI Video Production", "AI Video Marketing"]
+          title: "AI Tools & Resources",
+          items: ["AI APIs", "AI Frameworks", "AI Datasets", "AI Libraries", "AI Tutorials"]
         },
         {
-          title: "AI Voice Generation",
-          items: ["AI Voice Generation", "AI Voice Over", "AI Voice Cloning", "AI Voice Synthesis", "AI Voice Recognition"]
+          title: "AI Research",
+          items: ["AI Trends Analysis", "AI Market Research", "AI Whitepapers", "AI Case Studies", "AI Conferences"]
         }
       ]
-    },
-    
+    }
+
   ];
 
   // For the mobile menu, we'll use a simplified version of categories
@@ -366,167 +331,173 @@ const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
             </div>
 
             {/* Desktop Navigation */}
-           <div className="hidden md:flex items-center space-x-6">
- <NavigationMenu>
-  <NavigationMenuList>
-    <NavigationMenuItem>
-      <NavigationMenuTrigger className="text-gray-600 hover:text-skillforge-primary transition-colors bg-transparent z-[60]">
-        Explore
-      </NavigationMenuTrigger>
+            <div className="hidden md:flex items-center space-x-6">
+              <div 
+                className="relative"
+                ref={exploreMenuRef}
+                onMouseEnter={() => {
+                  setIsExploreOpen(true);
+                  setHideSecondaryMenu(true);
+                }}
+                onMouseLeave={() => {
+                  setIsExploreOpen(false);
+                  setHideSecondaryMenu(false);
+                }}
+              >
+                <button 
+                  className="text-gray-600 hover:text-skillforge-primary transition-colors"
+                  onClick={() => {
+                    setIsExploreOpen(!isExploreOpen);
+                    setHideSecondaryMenu(!isExploreOpen);
+                  }}
+                >
+                  Explore
+                </button>
+                
+                {isExploreOpen && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <Link
+                      to="/blog"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-skillforge-primary"
+                    >
+                      Blog
+                    </Link>
+                    <Link
+                      to="/explore-skills"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-skillforge-primary"
+                    >
+                      Explore Skills
+                    </Link>
+                  </div>
+                )}
+              </div>
 
-      <NavigationMenuContent className="p-4 bg-white shadow-md rounded-md z-[60]">
-        <ul className="flex flex-col space-y-2">
-          <li>
-            <Link
-              to="/blog"
-              onClick={() => setHideSecondaryMenu(true)}
-              className="text-sm text-gray-700 hover:text-skillforge-primary"
-            >
-              Blog
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/explore-skills"
-              onClick={() => setHideSecondaryMenu(true)}
-              className="text-sm text-gray-700 hover:text-skillforge-primary"
-            >
-              Explore Skills
-            </Link>
-          </li>
-        </ul>
-      </NavigationMenuContent>
-    </NavigationMenuItem>
-  </NavigationMenuList>
-</NavigationMenu>
-
-
-  <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-    <span className="text-2xl  text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span> Pro
-  </Link>
-  <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-    Become a Seller
-  </Link>
-  <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-    Sign In
-  </Link>
-  <Link to="/join">
-    <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
-  </Link>
-</div>
+              <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                <span className="text-2xl  text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span> Pro
+              </Link>
+              <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                Become a Seller
+              </Link>
+              <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                Sign In
+              </Link>
+              <Link to="/join">
+                <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+              </Link>
+            </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden  w-full flex items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
-  <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary ">
-    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-  </button>
-
-  {isMenuOpen && (
-    <div className="mt-4 space-y-4 bg-white shadow-lg p-4 rounded-md">
-      {/* Explore Dropdown Items */}
-      <div>
-        <span className="block text-gray-600 font-medium">Explore</span>
-        <div className="pl-4 mt-2 space-y-2">
-          <Link to="/blog" className="block text-sm text-gray-700 hover:text-skillforge-primary">
-            Blog
-          </Link>
-          <Link to="/explore-skills" className="block text-sm text-gray-700 hover:text-skillforge-primary">
-            Explore Skills
-          </Link>
-        </div>
-      </div>
-
-      <Link to="/premium-services" className="block text-gray-600 hover:text-skillforge-primary">
-        WorkVix Premium
-      </Link>
-
-      <Link to="/become-seller" className="block text-gray-600 hover:text-skillforge-primary">
-        Become a Seller
-      </Link>
-
-      <Link to="/signin" className="block text-gray-600 hover:text-skillforge-primary">
-        Sign In
-      </Link>
-
-      <Link to="/join">
-        <Button className="w-full bg-skillforge-primary hover:bg-skillforge-primary/90 mt-2">
-          Join
-        </Button>
-      </Link>
-    </div>
-  )}
-</div>
+            <div className="md:hidden flex items-center">
+              <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
+                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
 
-          {/* Categories Navigation (Desktop) - Fiverr-like style */}
-          <div className="hidden md:block border-t">
-            {!hideSecondaryMenu && (
-  <NavigationMenu className="w-full">
-    <NavigationMenuList className="flex justify-between py-2">
-      {mainCategories.map((category) => (
-        <NavigationMenuItem key={category.name}>
-          <NavigationMenuTrigger 
-            className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary z-[40]"
-            onMouseEnter={() => setActiveCategory(category.name)}
-          >
-            {category.name}
-          </NavigationMenuTrigger>
-          <NavigationMenuContent className="z-[40]">
-            <MegaMenuContent sections={category.sections} />
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-      ))}
-    </NavigationMenuList>
-  </NavigationMenu>
-)}
-
-          </div>
-
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation Menu */}
           {isMenuOpen && (
-            <div className="md:hidden mt-4 py-2 animate-fade-in">
-              <nav className="flex flex-col space-y-4">
-                <div className="px-2 py-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="search"
-                      placeholder="What service are you looking for today?"
-                      className="h-10 w-full rounded-md border border-input pl-10 pr-3 focus:outline-none focus:ring-1 focus:ring-skillforge-primary"
-                    />
-                  </div>
+            <div className="md:hidden mt-2 py-2 bg-white shadow-lg rounded-md animate-fade-in">
+              <div className="px-4 py-2">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="search"
+                    placeholder="Search services..."
+                    className="h-10 w-full rounded-md border border-input pl-10 pr-3 focus:outline-none focus:ring-1 focus:ring-skillforge-primary"
+                  />
                 </div>
-                
-                <Link to="/blog" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Blog</Link>
-                
-                {mobileCategories.map((category) => (
-                  <div key={category.name} className="px-2 py-1">
-                    <div className="font-medium text-gray-600">{category.name}</div>
-                    <div className="ml-4 mt-1 flex flex-col space-y-1">
-                      {category.subcategories.slice(0, 4).map((subcat) => (
-                        <a key={subcat} href="#" className="text-sm text-gray-500 hover:text-skillforge-primary">
-                          {subcat}
-                        </a>
-                      ))}
-                      <a href="#" className="text-xs text-skillforge-primary hover:underline">See all...</a>
+
+                {/* Explore Dropdown */}
+                <div className="mb-4">
+                  <button 
+                    onClick={() => setIsExploreOpen(!isExploreOpen)}
+                    className="flex items-center justify-between w-full py-2 text-gray-600 hover:text-skillforge-primary"
+                  >
+                    <span>Explore</span>
+                    {isExploreOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                  </button>
+                  
+                  {isExploreOpen && (
+                    <div className="pl-4 mt-2 space-y-2">
+                      <Link 
+                        to="/blog" 
+                        className="block py-1 text-sm text-gray-700 hover:text-skillforge-primary"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Blog
+                      </Link>
+                      <Link 
+                        to="/explore-skills" 
+                        className="block py-1 text-sm text-gray-700 hover:text-skillforge-primary"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Explore Skills
+                      </Link>
                     </div>
-                  </div>
-                ))}
-                
-                <hr className="my-2" />
-                <Link to="/become-seller" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Become a Seller</Link>
-                <Link to="/signin" className="px-2 py-1 text-gray-600 hover:text-skillforge-primary">Sign In</Link>
-                <Link to="/join">
-                  <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 w-full">Join</Button>
+                  )}
+                </div>
+
+                <Link 
+                  to="/premium-services" 
+                  className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  WorkVix Premium
                 </Link>
-              </nav>
+                <Link 
+                  to="/become-seller" 
+                  className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Become a Seller
+                </Link>
+                <Link 
+                  to="/signin" 
+                  className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  to="/join" 
+                  className="block"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Button className="w-full bg-skillforge-primary hover:bg-skillforge-primary/90 mt-2">
+                    Join
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
+
+          {/* Categories Navigation (Desktop) */}
+          <div className="hidden md:block border-t">
+            {!hideSecondaryMenu && (
+              <NavigationMenu className="w-full">
+                <NavigationMenuList className="flex justify-between py-2">
+                  {mainCategories.map((category) => (
+                    <NavigationMenuItem key={category.name}>
+                      <NavigationMenuTrigger 
+                        className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary z-[40]"
+                        onMouseEnter={() => setActiveCategory(category.name)}
+                      >
+                        {category.name}
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent className="z-[40]">
+                        <MegaMenuContent sections={category.sections} />
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Fixed secondary navigation that can appear on scroll */}
-     {showSecondaryNav && (
+      {showSecondaryNav && !hideSecondaryMenu && (
         <div 
           ref={secondaryNavRef}
           className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
