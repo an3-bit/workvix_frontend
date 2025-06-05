@@ -60,6 +60,55 @@ export type Database = {
           },
         ]
       }
+      chats: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          freelancer_id: string | null
+          id: string
+          job_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          freelancer_id?: string | null
+          id?: string
+          job_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          freelancer_id?: string | null
+          id?: string
+          job_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
@@ -180,45 +229,35 @@ export type Database = {
       }
       messages: {
         Row: {
+          chat_id: string | null
           content: string
-          created_at: string
+          created_at: string | null
           id: string
-          job_id: string | null
           read: boolean | null
-          receiver_id: string
-          sender_id: string
+          sender_id: string | null
         }
         Insert: {
+          chat_id?: string | null
           content: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          job_id?: string | null
           read?: boolean | null
-          receiver_id: string
-          sender_id: string
+          sender_id?: string | null
         }
         Update: {
+          chat_id?: string | null
           content?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          job_id?: string | null
           read?: boolean | null
-          receiver_id?: string
-          sender_id?: string
+          sender_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "messages_job_id_fkey"
-            columns: ["job_id"]
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
             isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_receiver_id_fkey"
-            columns: ["receiver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "chats"
             referencedColumns: ["id"]
           },
           {
@@ -485,52 +524,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-export interface Chat {
-  id: string;
-  job_id: string;
-  client_id: string;
-  freelancer_id: string;
-  created_at: string;
-  updated_at: string;
-  job?: Job;
-  client?: Profile;
-  freelancer?: Profile;
-}
-
-export interface Profile {
-  id: string;
-  email: string;
-  first_name?: string | null;
-  last_name?: string | null;
-  created_at: string;
-  updated_at: string;
-  online?: boolean | null;
-  phone?: string | null;
-  user_type?: string | null;
-}
-
-export interface Job {
-  id: string;
-  budget: number;
-  category: string;
-  client_id: string | null;
-  created_at: string;
-  description: string;
-  max_budget: number | null;
-  min_budget: number | null;
-  status: string | null;
-  title: string;
-  updated_at: string;
-}
-
-export interface Message {
-  id: string;
-  chat_id: string;
-  sender_id: string;
-  content: string;
-  created_at: string;
-  read: boolean;
-  sender?: Profile;
-}
-

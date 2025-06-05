@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Send } from 'lucide-react';
@@ -7,8 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
-
-
 
 const ChatPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -21,6 +20,7 @@ const ChatPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     if (jobId) {
@@ -36,16 +36,12 @@ const ChatPage: React.FC = () => {
         return;
       }
 
+      setCurrentUser(user);
+
       // Check if chat already exists for this job
       const { data: existingChat } = await supabase
         .from('chats')
-        .select<{
-          id: string;
-          job_id: string;
-          client_id: string;
-          freelancer_id: string;
-          updated_at?: string;
-        }>()
+        .select('*')
         .eq('job_id', jobId)
         .single();
 
@@ -124,18 +120,15 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !chat) return;
+    if (!newMessage.trim() || !chat || !currentUser) return;
 
     setSending(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: message } = await supabase
         .from('messages')
         .insert([{
           chat_id: chat.id,
-          sender_id: user.id,
+          sender_id: currentUser.id,
           content: newMessage
         }])
         .select()
@@ -151,16 +144,18 @@ const ChatPage: React.FC = () => {
           .update({ updated_at: new Date().toISOString() })
           .eq('id', chat.id);
 
-        // Create notification for the other user
-        await supabase
-          .from('notifications')
-          .insert([{
-            user_id: otherUser.id,
-            type: 'new_message',
-            message: `New message in your chat`,
-            chat_id: chat.id,
-            read: false
-          }]);
+        // Create notification for the other user only if otherUser exists
+        if (otherUser?.id) {
+          await supabase
+            .from('notifications')
+            .insert([{
+              user_id: otherUser.id,
+              type: 'new_message',
+              message: `New message in your chat`,
+              chat_id: chat.id,
+              read: false
+            }]);
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -212,13 +207,13 @@ const ChatPage: React.FC = () => {
                 messages.map((message) => (
                   <div 
                     key={message.id} 
-                    className={`flex ${message.sender_id === otherUser?.id ? 'justify-start' : 'justify-end'}`}
+                    className={`flex ${message.sender_id === currentUser?.id ? 'justify-end' : 'justify-start'}`}
                   >
                     <div 
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.sender_id === otherUser?.id ? 'bg-gray-100' : 'bg-blue-600 text-white'}`}
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.sender_id === currentUser?.id ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
                     >
                       <p>{message.content}</p>
-                      <p className={`text-xs mt-1 ${message.sender_id === otherUser?.id ? 'text-gray-500' : 'text-blue-100'}`}>
+                      <p className={`text-xs mt-1 ${message.sender_id === currentUser?.id ? 'text-blue-100' : 'text-gray-500'}`}>
                         {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>

@@ -13,6 +13,7 @@ import BecomeSeller from "./pages/BecomeSeller";
 import JobPostedNotification from "./pages/jobspostednotification";
 import ResetPassword from "./pages/reset_password/resetpassword";
 import ChatPage from "./pages/ChatPage";
+import ClientChatPage from "./pages/client/ClientChatPage";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +26,6 @@ const JobsPage = lazy(() => import("./pages/JobsPage"));
 const FreelancerBidsPage = lazy(() => import("./pages/FreelancerBidsPage"));
 const JobsBid = lazy(() => import("./pages/JobsBid"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
-// const ChatPage = lazy(() => import("./pages/ChatPage"));
 const UpgradeToProPage = lazy(() => import("./pages/UpgradeToProPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const WorkVixGoPage = lazy(() => import("./pages/WorkVixGoPage"));
@@ -62,7 +62,6 @@ const App = () => (
             <Route path="/bids" element={<FreelancerBidsPage />} />
             <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
             <Route path="/checkout/:bidId" element={<CheckoutPage />} />
-            {/* <Route path="/chat/:chatId" element={<ChatPage />} /> */}
             <Route path="/freelancer" element={<FreelancerDashboard />} />
             <Route path="/client" element={<ClientDashboard />} />
             <Route path="/client/bids" element={<ClientBidsPage />} />
@@ -82,7 +81,7 @@ const App = () => (
             <Route path="/job-posted-notification" element={<JobPostedNotification />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/chat" element={<ChatPage />} />
-
+            <Route path="/client/chat" element={<ClientChatPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
