@@ -1,10 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Star, Clock, MessageSquare, Check, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { DollarSign, Calendar, User, MessageSquare, Clock, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Nav2 from '@/components/Nav2';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface Bid {
@@ -20,20 +23,19 @@ interface Bid {
     first_name: string;
     last_name: string;
     email: string;
-    bio?: string;
     skills?: string[];
+    hourly_rate?: number;
   };
   job: {
     title: string;
-    description: string;
     budget: number;
+    category: string;
   };
 }
 
-const BidsPage: React.FC = () => {
+const ClientBidsPage: React.FC = () => {
   const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -63,44 +65,56 @@ const BidsPage: React.FC = () => {
         return;
       }
 
-      // First get all job IDs for this client
-      const { data: jobsData } = await supabase
+      // Get client's jobs first
+      const { data: jobsData, error: jobsError } = await supabase
         .from('jobs')
         .select('id')
         .eq('client_id', user.id);
 
+      if (jobsError) throw jobsError;
+
       if (!jobsData || jobsData.length === 0) {
-        setBids([]);
         setLoading(false);
         return;
       }
 
       const jobIds = jobsData.map(job => job.id);
 
-      const { data: bidsData, error } = await supabase
+      // Fetch bids for client's jobs
+      const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
         .select(`
           *,
-          freelancer:freelancer_id (first_name, last_name, email, bio, skills),
-          job:job_id (title, description, budget)
+          freelancer:freelancer_id (
+            first_name,
+            last_name,
+            email,
+            skills,
+            hourly_rate
+          ),
+          job:job_id (
+            title,
+            budget,
+            category
+          )
         `)
         .in('job_id', jobIds)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      // Type assertion to ensure proper typing
+      if (bidsError) throw bidsError;
+
+      // Type the data properly
       const typedBids = (bidsData || []).map(bid => ({
         ...bid,
         status: bid.status as 'pending' | 'accepted' | 'rejected'
       })) as Bid[];
-      
+
       setBids(typedBids);
     } catch (error) {
       console.error('Error fetching bids:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch bids. Please try again.',
+        description: 'Failed to fetch bids',
         variant: 'destructive',
       });
     } finally {
@@ -115,7 +129,7 @@ const BidsPage: React.FC = () => {
     const channel = supabase
       .channel('bids_changes')
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'bids'
       }, () => {
@@ -126,38 +140,139 @@ const BidsPage: React.FC = () => {
     return channel;
   };
 
-  const handleBidAction = async (bidId: string, action: 'accept' | 'reject') => {
+  const handleAcceptBid = async (bid: Bid) => {
     try {
-      const status = action === 'accept' ? 'accepted' : 'rejected';
-      
-      const { error } = await supabase
+      // Update bid status to accepted
+      const { error: bidError } = await supabase
         .from('bids')
-        .update({ status })
-        .eq('id', bidId);
+        .update({ status: 'accepted' })
+        .eq('id', bid.id);
 
-      if (error) throw error;
+      if (bidError) throw bidError;
+
+      // Update job status to in_progress
+      const { error: jobError } = await supabase
+        .from('jobs')
+        .update({ status: 'in_progress' })
+        .eq('id', bid.job_id);
+
+      if (jobError) throw jobError;
+
+      // Create notification for freelancer
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: bid.freelancer_id,
+          type: 'bid_accepted',
+          message: `Your bid for "${bid.job.title}" has been accepted! You can now start chatting with the client.`,
+          bid_id: bid.id,
+          job_id: bid.job_id,
+          read: false
+        }]);
+
+      // Create chat room
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .insert([{
+          job_id: bid.job_id,
+          client_id: (await supabase.auth.getUser()).data.user?.id,
+          freelancer_id: bid.freelancer_id
+        }])
+        .select()
+        .single();
+
+      if (chatError) throw chatError;
 
       toast({
-        title: `Bid ${action}ed`,
-        description: `You have successfully ${action}ed this bid.`,
+        title: 'Bid Accepted',
+        description: 'The freelancer has been notified and you can now start chatting.',
       });
 
-      if (action === 'accept') {
-        navigate(`/checkout/${bidId}`);
-      }
+      fetchBids();
     } catch (error) {
-      console.error(`Error ${action}ing bid:`, error);
+      console.error('Error accepting bid:', error);
       toast({
         title: 'Error',
-        description: `Failed to ${action} bid. Please try again.`,
+        description: 'Failed to accept bid',
         variant: 'destructive',
       });
     }
   };
 
-  const filteredBids = bids.filter(bid => 
-    filter === 'all' || bid.status === filter
-  );
+  const handleRejectBid = async (bid: Bid) => {
+    try {
+      // Update bid status to rejected
+      const { error } = await supabase
+        .from('bids')
+        .update({ status: 'rejected' })
+        .eq('id', bid.id);
+
+      if (error) throw error;
+
+      // Create notification for freelancer
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: bid.freelancer_id,
+          type: 'bid_rejected',
+          message: `Your bid for "${bid.job.title}" was not selected.`,
+          bid_id: bid.id,
+          job_id: bid.job_id,
+          read: false
+        }]);
+
+      toast({
+        title: 'Bid Rejected',
+        description: 'The freelancer has been notified.',
+      });
+
+      fetchBids();
+    } catch (error) {
+      console.error('Error rejecting bid:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reject bid',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleStartChat = async (bid: Bid) => {
+    try {
+      // Check if chat already exists
+      const { data: existingChat } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('job_id', bid.job_id)
+        .eq('freelancer_id', bid.freelancer_id)
+        .single();
+
+      if (existingChat) {
+        navigate(`/client/chat?chat=${existingChat.id}`);
+      } else {
+        // Create new chat
+        const { data: chatData, error } = await supabase
+          .from('chats')
+          .insert([{
+            job_id: bid.job_id,
+            client_id: (await supabase.auth.getUser()).data.user?.id,
+            freelancer_id: bid.freelancer_id
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        navigate(`/client/chat?chat=${chatData.id}`);
+      }
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start chat',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -173,136 +288,146 @@ const BidsPage: React.FC = () => {
       
       <div className="pt-20 pb-8">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Bids Received</h1>
-            <p className="text-gray-600 mt-2">Manage proposals from freelancers</p>
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="bg-white rounded-lg shadow-sm border mb-6">
-            <div className="flex border-b">
-              {['all', 'pending', 'accepted', 'rejected'].map((filterOption) => (
-                <button
-                  key={filterOption}
-                  onClick={() => setFilter(filterOption as any)}
-                  className={`px-6 py-3 font-medium capitalize ${
-                    filter === filterOption
-                      ? 'border-b-2 border-blue-600 text-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {filterOption} ({bids.filter(b => filterOption === 'all' || b.status === filterOption).length})
-                </button>
-              ))}
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Bids Received</h1>
+              <p className="text-gray-600 mt-2">Review proposals from talented freelancers</p>
             </div>
-          </div>
 
-          {/* Bids List */}
-          {filteredBids.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <div className="max-w-md mx-auto">
-                <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 mb-2">No bids yet</h3>
-                <p className="text-gray-600">
-                  {filter === 'all' 
-                    ? 'Bids from freelancers will appear here when they apply to your jobs.'
-                    : `No ${filter} bids found.`
-                  }
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {filteredBids.map((bid) => (
-                <div key={bid.id} className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {bid.job?.title}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {bid.delivery_time}
-                        </span>
-                        <span className="font-medium text-green-600">${bid.amount}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          bid.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          bid.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {bid.status.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                        {bid.freelancer?.first_name?.charAt(0)}{bid.freelancer?.last_name?.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              {bid.freelancer?.first_name} {bid.freelancer?.last_name}
-                            </h4>
-                            <div className="flex items-center mt-1">
-                              <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
-                              <span className="text-sm text-gray-600">New Freelancer</span>
-                            </div>
-                            {bid.freelancer?.skills && bid.freelancer.skills.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {bid.freelancer.skills.slice(0, 3).map((skill, index) => (
-                                  <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                    {skill}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/chat/${bid.freelancer_id}?job=${bid.job_id}`)}
-                              className="flex items-center gap-1"
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                              Chat
-                            </Button>
-                            {bid.status === 'pending' && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleBidAction(bid.id, 'reject')}
-                                  className="flex items-center gap-1 text-red-600 border-red-300 hover:bg-red-50"
-                                >
-                                  <X className="h-4 w-4" />
-                                  Reject
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleBidAction(bid.id, 'accept')}
-                                  className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
-                                >
-                                  <Check className="h-4 w-4" />
-                                  Accept
-                                </Button>
-                              </>
-                            )}
+            {bids.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">No bids yet</h3>
+                  <p className="text-gray-600">
+                    Once freelancers start bidding on your jobs, they'll appear here.
+                  </p>
+                  <Button className="mt-4" onClick={() => navigate('/post-job')}>
+                    Post a New Job
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {bids.map((bid) => (
+                  <Card key={bid.id} className="shadow-md hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl mb-2">{bid.job.title}</CardTitle>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                            <Badge variant="outline">{bid.job.category}</Badge>
+                            <span className="flex items-center">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Budget: ${bid.job.budget}
+                            </span>
                           </div>
                         </div>
-                        <p className="text-gray-600 mt-3">{bid.message}</p>
+                        <Badge 
+                          variant={
+                            bid.status === 'accepted' ? 'default' :
+                            bid.status === 'rejected' ? 'destructive' : 'secondary'
+                          }
+                        >
+                          {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                        </Badge>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Freelancer Info */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                              {bid.freelancer.first_name.charAt(0)}{bid.freelancer.last_name.charAt(0)}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">
+                                {bid.freelancer.first_name} {bid.freelancer.last_name}
+                              </h4>
+                              <p className="text-sm text-gray-600">{bid.freelancer.email}</p>
+                              {bid.freelancer.hourly_rate && (
+                                <p className="text-sm text-gray-600">
+                                  ${bid.freelancer.hourly_rate}/hour
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {bid.freelancer.skills && bid.freelancer.skills.length > 0 && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-2">Skills</h5>
+                              <div className="flex flex-wrap gap-2">
+                                {bid.freelancer.skills.slice(0, 5).map((skill, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Bid Details */}
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Bid Amount</h5>
+                              <p className="text-2xl font-bold text-green-600">${bid.amount}</p>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Delivery Time</h5>
+                              <p className="text-gray-600">{bid.delivery_time}</p>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h5 className="font-medium text-gray-900 mb-2">Proposal</h5>
+                            <p className="text-gray-600 text-sm leading-relaxed">{bid.message}</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Clock className="h-4 w-4" />
+                            Submitted {new Date(bid.created_at).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 mt-6 pt-4 border-t">
+                        {bid.status === 'pending' && (
+                          <>
+                            <Button
+                              onClick={() => handleAcceptBid(bid)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Accept Bid
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleRejectBid(bid)}
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        {bid.status === 'accepted' && (
+                          <Button
+                            onClick={() => handleStartChat(bid)}
+                            className="flex items-center gap-2"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            Start Chat
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       
@@ -311,4 +436,4 @@ const BidsPage: React.FC = () => {
   );
 };
 
-export default BidsPage;
+export default ClientBidsPage;

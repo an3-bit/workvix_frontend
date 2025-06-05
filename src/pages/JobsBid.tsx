@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, DollarSign, User, MessageSquare, Send } from 'lucide-react';
@@ -160,6 +161,17 @@ const JobsBid: React.FC = () => {
 
       if (error) throw error;
 
+      // Get freelancer info for notification
+      const { data: freelancerData } = await supabase
+        .from('freelancers')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single();
+
+      const freelancerName = freelancerData 
+        ? `${freelancerData.first_name} ${freelancerData.last_name}`
+        : 'A freelancer';
+
       // Create notification for client
       if (job?.client_id) {
         await supabase
@@ -167,7 +179,7 @@ const JobsBid: React.FC = () => {
           .insert([{
             user_id: job.client_id,
             type: 'bid_received',
-            message: `New bid received for "${job.title}" - $${bidData.amount}`,
+            message: `${freelancerName} submitted a bid for "${job.title}" - $${bidData.amount}`,
             job_id: jobId,
             bid_id: bidResult.id,
             read: false
@@ -193,10 +205,9 @@ const JobsBid: React.FC = () => {
     }
   };
 
- const handleStartChat = () => {
-  navigate(`/chat?job=${jobId}`); 
-  // Your chat component should handle job-based chats
-};
+  const handleStartChat = () => {
+    navigate(`/chat?job=${jobId}`); 
+  };
 
   if (loading) {
     return (

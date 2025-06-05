@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, Briefcase, DollarSign, User, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,10 +121,16 @@ const NotificationsPage: React.FC = () => {
       markAsRead(notification.id);
     }
 
+    // Navigate based on notification type
     if (notification.type === 'job_posted' && notification.job_id) {
+      // Navigate to the specific job to place a bid
       navigate(`/jobs/${notification.job_id}/bids`);
     } else if (notification.type === 'bid_accepted' && notification.bid_id) {
+      // Navigate to chat or orders page
       navigate('/orders');
+    } else if (notification.type === 'bid_rejected' && notification.job_id) {
+      // Navigate back to job details
+      navigate(`/jobs/${notification.job_id}/bids`);
     }
   };
 
@@ -162,7 +169,7 @@ const NotificationsPage: React.FC = () => {
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      !notification.read ? 'border-l-4 border-l-blue-600' : ''
+                      !notification.read ? 'border-l-4 border-l-blue-600 bg-blue-50' : ''
                     }`}
                   >
                     <div className="flex items-start gap-4">
@@ -177,6 +184,13 @@ const NotificationsPage: React.FC = () => {
                           <Clock className="h-4 w-4" />
                           {new Date(notification.created_at).toLocaleString()}
                         </div>
+                        {notification.type === 'job_posted' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Click to view job and place bid
+                            </span>
+                          </div>
+                        )}
                       </div>
                       {!notification.read && (
                         <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></div>
