@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Menu, X, Bell } from 'lucide-react';
+import { Search, Menu, X, Bell, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const Nav2 = () => {
@@ -98,27 +98,23 @@ const Nav2 = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {user && (
-              <Link 
-                to="/freelancer/notifications" 
-                className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
-              >
-                <Bell className="h-6 w-6" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link 
+                  to="/freelancer/notifications" 
+                  className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
+                >
+                  <Bell className="h-6 w-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/chat" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                  <MessageCircle className="h-6 w-6" />
+                </Link>
+              </>
             )}
-            
-            <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-              <span className="text-xl font-bold text-skillforge-primary">
-                work<span className="text-orange-500">vix</span>
-              </span> Pro
-            </Link>
-            <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-              Become a Seller
-            </Link>
             
             {user ? (
               <div className="flex items-center space-x-4">
@@ -150,17 +146,22 @@ const Nav2 = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
             {user && (
-              <Link 
-                to="/freelancer/notifications" 
-                className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
-              >
-                <Bell className="h-6 w-6" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link 
+                  to="/freelancer/notifications" 
+                  className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
+                >
+                  <Bell className="h-6 w-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/chat" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                  <MessageCircle className="h-6 w-6" />
+                </Link>
+              </>
             )}
             <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -180,21 +181,6 @@ const Nav2 = () => {
                   className="h-10 w-full rounded-md border border-input pl-10 pr-3 focus:outline-none focus:ring-1 focus:ring-skillforge-primary"
                 />
               </div>
-
-              <Link 
-                to="/premium-services" 
-                className="block py-2 text-gray-600 hover:text-skillforge-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                WorkVix Premium
-              </Link>
-              <Link 
-                to="/become-seller" 
-                className="block py-2 text-gray-600 hover:text-skillforge-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Become a Seller
-              </Link>
               
               {user ? (
                 <>
