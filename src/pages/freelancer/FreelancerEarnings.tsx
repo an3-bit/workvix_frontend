@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Calendar, Download, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,12 +72,27 @@ const FreelancerEarnings = () => {
         return;
       }
 
-      const validOrders = (ordersData || []).filter(order => order.bids);
-      setEarnings(validOrders);
+      // Transform the data to match EarningRecord interface
+      const transformedEarnings = (ordersData || [])
+        .filter(order => order.bids)
+        .map(order => ({
+          id: order.id,
+          amount: order.amount,
+          status: order.status,
+          created_at: order.created_at,
+          bid: {
+            id: order.bids.id,
+            job_id: order.bids.job_id,
+            amount: order.bids.amount,
+            jobs: order.bids.jobs
+          }
+        })) as EarningRecord[];
+
+      setEarnings(transformedEarnings);
 
       // Calculate earnings statistics
-      const completedEarnings = validOrders.filter(order => order.status === 'completed');
-      const pendingEarnings = validOrders.filter(order => order.status === 'pending');
+      const completedEarnings = transformedEarnings.filter(order => order.status === 'completed');
+      const pendingEarnings = transformedEarnings.filter(order => order.status === 'pending');
 
       const totalEarnings = completedEarnings.reduce((sum, order) => sum + Number(order.amount), 0);
       const pendingAmount = pendingEarnings.reduce((sum, order) => sum + Number(order.amount), 0);
