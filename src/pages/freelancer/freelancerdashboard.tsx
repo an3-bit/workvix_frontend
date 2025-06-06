@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, Star, Heart, Play, Bookmark, DollarSign, TrendingUp, Calendar, Users, Briefcase, Bell } from 'lucide-react';
+import { Search, Star, Heart, Play, Bookmark, DollarSign, TrendingUp, Calendar, Users, Briefcase, Bell, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,15 @@ interface FreelancerStats {
   rating: number;
 }
 
+interface FreelancerProfile {
+  id: string;
+  bio?: string;
+  skills?: string[];
+  hourly_rate?: number;
+  portfolio_links?: string[];
+  profile_completed: boolean;
+}
+
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -33,6 +42,9 @@ const FreelancerDashboard = () => {
   const [newJobsCount, setNewJobsCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<FreelancerProfile | null>(null);
+  const [userBids, setUserBids] = useState<string[]>([]);
+  const [showProfileReminder, setShowProfileReminder] = useState(false);
   const [stats, setStats] = useState<FreelancerStats>({
     totalEarnings: 0,
     activeBids: 0,
@@ -41,6 +53,8 @@ const FreelancerDashboard = () => {
   });
 
   useEffect(() => {
+    fetchFreelancerProfile();
+    fetchUserBids();
     fetchNotifications();
     fetchRecommendedJobs();
     fetchFreelancerStats();
@@ -65,27 +79,107 @@ const FreelancerDashboard = () => {
     };
   }, []);
 
+  // Profile completion reminder timer
+  useEffect(() => {
+    if (profile && !profile.profile_completed) {
+      const timer = setInterval(() => {
+        setShowProfileReminder(true);
+        toast({
+          title: 'Complete Your Profile',
+          description: 'Complete your profile to get better job recommendations!',
+          variant: 'default',
+        });
+      }, 60 * 60 * 1000); // 1 hour
+
+      return () => clearInterval(timer);
+    }
+  }, [profile, toast]);
+
+  const fetchFreelancerProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profileData } = await supabase
+        .from('freelancers')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileData) {
+        const profileCompleted = !!(
+          profileData.bio && 
+          profileData.skills && 
+          profileData.skills.length > 0 && 
+          profileData.hourly_rate
+        );
+
+        setProfile({
+          ...profileData,
+          profile_completed: profileCompleted
+        });
+
+        if (!profileCompleted) {
+          setShowProfileReminder(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching freelancer profile:', error);
+    }
+  };
+
+  const fetchUserBids = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: bidsData } = await supabase
+        .from('bids')
+        .select('job_id')
+        .eq('freelancer_id', user.id);
+
+      if (bidsData) {
+        setUserBids(bidsData.map(bid => bid.job_id));
+      }
+    } catch (error) {
+      console.error('Error fetching user bids:', error);
+    }
+  };
+
   const fetchFreelancerStats = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch active bids count
+      // Fetch bids with associated orders for earnings calculation
       const { data: bidsData } = await supabase
         .from('bids')
-        .select('id, status, amount')
+        .select(`
+          id, 
+          status, 
+          amount,
+          orders (
+            id,
+            status,
+            amount
+          )
+        `)
         .eq('freelancer_id', user.id);
 
       const activeBids = (bidsData || []).filter(bid => bid.status === 'pending').length;
 
-      // Fetch completed jobs (accepted bids)
-      const completedBids = (bidsData || []).filter(bid => bid.status === 'accepted');
+      // Calculate completed jobs (bids with completed orders)
+      const completedBids = (bidsData || []).filter(bid => 
+        bid.orders && bid.orders.some(order => order.status === 'completed')
+      );
       const completedJobs = completedBids.length;
 
-      // Calculate total earnings from completed jobs
-      const totalEarnings = completedBids.reduce((sum, bid) => sum + Number(bid.amount), 0);
+      // Calculate total earnings from completed orders
+      const totalEarnings = completedBids.reduce((sum, bid) => {
+        const completedOrders = bid.orders?.filter(order => order.status === 'completed') || [];
+        return sum + completedOrders.reduce((orderSum, order) => orderSum + Number(order.amount), 0);
+      }, 0);
 
-      // For now, set a default rating (you can implement a proper rating system later)
       const rating = completedJobs > 0 ? 4.5 : 0;
 
       setStats({
@@ -125,10 +219,36 @@ const FreelancerDashboard = () => {
         .select('*')
         .eq('status', 'open')
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(20);
 
       if (error) throw error;
-      setRecommendedJobs(jobsData || []);
+
+      // Filter out jobs the user has already bid on
+      const availableJobs = (jobsData || []).filter(job => !userBids.includes(job.id));
+
+      // If profile is completed, recommend based on skills
+      if (profile?.profile_completed && profile.skills) {
+        const matchingJobs = availableJobs.filter(job => 
+          profile.skills?.some(skill => 
+            job.title.toLowerCase().includes(skill.toLowerCase()) ||
+            job.description.toLowerCase().includes(skill.toLowerCase()) ||
+            job.category.toLowerCase().includes(skill.toLowerCase())
+          )
+        );
+        
+        // Show matching jobs first, then others
+        const otherJobs = availableJobs.filter(job => 
+          !profile.skills?.some(skill => 
+            job.title.toLowerCase().includes(skill.toLowerCase()) ||
+            job.description.toLowerCase().includes(skill.toLowerCase()) ||
+            job.category.toLowerCase().includes(skill.toLowerCase())
+          )
+        );
+        
+        setRecommendedJobs([...matchingJobs.slice(0, 4), ...otherJobs.slice(0, 2)]);
+      } else {
+        setRecommendedJobs(availableJobs.slice(0, 6));
+      }
     } catch (error) {
       console.error('Error fetching jobs:', error);
     } finally {
@@ -144,7 +264,6 @@ const FreelancerDashboard = () => {
         return;
       }
 
-      // Navigate to bid submission page with job ID
       navigate(`/jobs/${jobId}/bids`);
       
       toast({
@@ -216,7 +335,7 @@ const FreelancerDashboard = () => {
             }]);
           
           fetchNotifications();
-          fetchFreelancerStats(); // Refresh stats when bid status changes
+          fetchFreelancerStats();
         }
       })
       .subscribe();
@@ -256,6 +375,39 @@ const FreelancerDashboard = () => {
       <Nav2 />
       
       <div className="pt-20 pb-8">
+        {/* Profile Completion Banner */}
+        {showProfileReminder && profile && !profile.profile_completed && (
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-6 mx-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-orange-400 mr-3" />
+                <div>
+                  <p className="text-sm font-medium text-orange-800">
+                    Complete your profile to get better job recommendations!
+                  </p>
+                  <p className="text-sm text-orange-700">
+                    Add your bio, skills, and hourly rate to attract more clients.
+                  </p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Link to="/freelancer/profile">
+                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
+                    Complete Profile
+                  </Button>
+                </Link>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setShowProfileReminder(false)}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-12 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 z-0"></div>
@@ -263,9 +415,17 @@ const FreelancerDashboard = () => {
           <div className="container mx-auto px-4 relative z-10 text-white">
             <div className="flex flex-col lg:flex-row items-start justify-between">
               <div className="max-w-2xl mb-8">
-                <h2 className="text-4xl font-bold mb-4">Welcome back, Freelancer!</h2>
+                <div className="flex items-center mb-4">
+                  <h2 className="text-4xl font-bold">Welcome back, Freelancer!</h2>
+                  {profile?.profile_completed && (
+                    <CheckCircle className="h-6 w-6 text-green-400 ml-3" />
+                  )}
+                </div>
                 <p className="text-lg opacity-90 mb-6">
-                  Ready to take on new challenges? Browse the latest opportunities and grow your business.
+                  {profile?.profile_completed 
+                    ? "Your profile is complete! Browse personalized job recommendations below."
+                    : "Ready to take on new challenges? Complete your profile for better job matches."
+                  }
                 </p>
                 
                 {/* Stats Cards */}
@@ -353,7 +513,16 @@ const FreelancerDashboard = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Available Jobs for You</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {profile?.profile_completed ? 'Recommended Jobs for You' : 'Available Jobs'}
+                </h2>
+                {profile?.profile_completed && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Based on your skills: {profile.skills?.join(', ')}
+                  </p>
+                )}
+              </div>
               <Link to="/jobs" className="text-blue-600 hover:text-blue-800 font-medium">
                 View All Jobs →
               </Link>
@@ -385,6 +554,15 @@ const FreelancerDashboard = () => {
                       <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                         {job.category}
                       </span>
+                      {profile?.profile_completed && profile.skills?.some(skill => 
+                        job.title.toLowerCase().includes(skill.toLowerCase()) ||
+                        job.description.toLowerCase().includes(skill.toLowerCase()) ||
+                        job.category.toLowerCase().includes(skill.toLowerCase())
+                      ) && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                          ✓ Skill Match
+                        </span>
+                      )}
                     </div>
                     
                     <div className="flex justify-between items-center mb-4">
@@ -412,8 +590,8 @@ const FreelancerDashboard = () => {
             {!loading && recommendedJobs.length === 0 && (
               <div className="text-center py-12">
                 <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 mb-2">No jobs available</h3>
-                <p className="text-gray-600">Check back later for new opportunities!</p>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No new jobs available</h3>
+                <p className="text-gray-600">You've viewed or bid on all available jobs. Check back later for new opportunities!</p>
               </div>
             )}
           </div>
@@ -460,6 +638,12 @@ const FreelancerDashboard = () => {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
                 <div className="space-y-3">
+                  <Link to="/freelancer/profile" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <span className="font-medium">
+                      {profile?.profile_completed ? 'Update Profile' : 'Complete Profile'}
+                    </span>
+                    <User className="h-5 w-5 text-gray-400" />
+                  </Link>
                   <Link to="/freelancer/portfolio" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <span className="font-medium">Manage Portfolio</span>
                     <Briefcase className="h-5 w-5 text-gray-400" />
@@ -467,10 +651,6 @@ const FreelancerDashboard = () => {
                   <Link to="/freelancer/earnings" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <span className="font-medium">View Earnings</span>
                     <DollarSign className="h-5 w-5 text-gray-400" />
-                  </Link>
-                  <Link to="/profile" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <span className="font-medium">Update Profile</span>
-                    <Users className="h-5 w-5 text-gray-400" />
                   </Link>
                   <Link to="/upgrade" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <span className="font-medium">Upgrade to Pro</span>

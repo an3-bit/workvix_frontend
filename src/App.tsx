@@ -34,6 +34,7 @@ const PostJobForm = lazy(() => import("./components/postjob"));
 const FreelancerNotifications = lazy(() => import("./pages/freelancer/FreelancerNotifications"));
 const FreelancerPortfolio = lazy(() => import("./pages/freelancer/FreelancerPortfolio"));
 const FreelancerEarnings = lazy(() => import("./pages/freelancer/FreelancerEarnings"));
+const FreelancerProfile = lazy(() => import("./pages/freelancer/FreelancerProfile"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/freelancer" element={<FreelancerDashboard />} />
+            <Route path="/freelancer/profile" element={<FreelancerProfile />} />
             <Route path="/client" element={<ClientDashboard />} />
             <Route path="/client/bids" element={<ClientBidsPage />} />
             <Route path="/order/:bidId" element={<OrderForm />} />

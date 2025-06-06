@@ -1,292 +1,247 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Mail, ChevronDown, User, LogOut } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Search, Menu, X, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import BidNotifications from './BidNotifications';
 
 const Nav2 = () => {
-    const navigate = useNavigate();
-    const [user, setUser] = useState<any>(null);
-    const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [unreadMessages, setUnreadMessages] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-    useEffect(() => {
-        const fetchUserRole = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+  useEffect(() => {
+    checkUser();
+    if (user) {
+      fetchUnreadNotifications();
+      setupNotificationSubscription();
+    }
+  }, [user]);
 
-            setUser(user);
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
 
-            // Check if user exists in clients table
-            const { data: clientData } = await supabase
-                .from('clients')
-                .select('id')
-                .eq('id', user.id)
-                .single();
+  const fetchUnreadNotifications = async () => {
+    if (!user) return;
 
-            if (clientData) {
-                setUserRole('client');
-                fetchUnreadMessages(user.id);
-                return;
-            }
+    try {
+      const { data } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('read', false);
 
-            // Check if user exists in freelancers table
-            const { data: freelancerData } = await supabase
-                .from('freelancers')
-                .select('id')
-                .eq('id', user.id)
-                .single();
+      setUnreadCount(data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
 
-            if (freelancerData) {
-                setUserRole('freelancer');
-                fetchUnreadMessages(user.id);
-            }
-        };
+  const setupNotificationSubscription = () => {
+    if (!user) return;
 
-        fetchUserRole();
+    const subscription = supabase
+      .channel('notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        fetchUnreadNotifications();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        fetchUnreadNotifications();
+      })
+      .subscribe();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (event === 'SIGNED_IN' && session?.user) {
-                    setUser(session.user);
-
-                    const { data: clientData } = await supabase
-                        .from('clients')
-                        .select('id')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (clientData) {
-                        setUserRole('client');
-                        fetchUnreadMessages(session.user.id);
-                        return;
-                    }
-
-                    const { data: freelancerData } = await supabase
-                        .from('freelancers')
-                        .select('id')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (freelancerData) {
-                        setUserRole('freelancer');
-                        fetchUnreadMessages(session.user.id);
-                    }
-                } else if (event === 'SIGNED_OUT') {
-                    setUser(null);
-                    setUserRole(null);
-                }
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    const fetchUnreadMessages = async (userId: string) => {
-        try {
-            // Get all chats where user is involved
-            const { data: chats } = await supabase
-                .from('chats')
-                .select('id')
-                .or(`client_id.eq.${userId},freelancer_id.eq.${userId}`);
-
-            if (!chats || chats.length === 0) {
-                setUnreadMessages(0);
-                return;
-            }
-
-            const chatIds = chats.map(chat => chat.id);
-
-            // Count unread messages in these chats where sender is not the current user
-            const { count } = await supabase
-                .from('messages')
-                .select('*', { count: 'exact', head: true })
-                .in('chat_id', chatIds)
-                .neq('sender_id', userId)
-                .eq('read', false);
-
-            setUnreadMessages(count || 0);
-
-            // Set up realtime subscription for new messages
-            const channel = supabase
-                .channel('message-notifications')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'messages'
-                    },
-                    (payload) => {
-                        // If the message is not from current user and is in one of their chats
-                        if (payload.new.sender_id !== userId && chatIds.includes(payload.new.chat_id)) {
-                            setUnreadMessages(prev => prev + 1);
-                        }
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        } catch (error) {
-            console.error('Error fetching unread messages:', error);
-        }
+    return () => {
+      supabase.removeChannel(subscription);
     };
+  };
 
-    const handleChat = () => {
-        if (userRole === 'client') {
-            navigate("/client/chat");
-        } else {
-            navigate("/chat");
-        }
-        // Reset unread count when navigating to chat
-        setUnreadMessages(0);
-    };
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        navigate("/");
-    };
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          <div className="flex items-center">
+            {/* Logo */}
+            <Link to="/" className="flex items-center mr-10">
+              <span className="text-2xl font-bold text-skillforge-primary">
+                work<span className="text-orange-500">vix</span>
+              </span>
+            </Link>
 
-    const getUserInitial = () => {
-        if (!user) return 'U';
-        const email = user.email || '';
-        return email.charAt(0).toUpperCase();
-    };
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (isDropdownOpen && !(event.target as Element).closest('.relative')) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isDropdownOpen]);
-
-    return (
-        <div className="border-b shadow-sm bg-white fixed top-0 left-0 right-0 z-50">
-            <div className="container mx-auto flex items-center justify-between h-16 px-4">
-                {/* Logo */}
-                <div className="flex items-center">
-                    <Link to="/dashboard" className="text-2xl font-bold text-gray-900">
-                        <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
-                    </Link>
-                </div>
-                
-                {/* Search bar */}
-                <div className="hidden lg:flex flex-1 mx-8">
-                    <div className="relative w-full max-w-2xl">
-                        <input
-                            type="text"
-                            placeholder="What service are you looking for today?"
-                            className="w-full border border-gray-300 rounded pl-4 pr-10 py-2 focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
-                        />
-                        <button className="absolute right-0 top-0 h-full bg-gray-900 text-white px-4 rounded-r">
-                            <Search className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
-                
-                {/* Navigation */}
-                <div className="flex items-center space-x-6">
-                    {/* Conditional navigation based on user role */}
-                    {userRole === 'client' && (
-                        <Link to="/client/bids" className="text-sm font-medium hidden md:block">
-                            Bids
-                        </Link>
-                    )}
-                    {userRole === 'freelancer' && (
-                        <Link to="/jobs" className="text-sm font-medium hidden md:block">
-                            Jobs
-                        </Link>
-                    )}
-                    
-                    <Link to="/upgrade" className="text-sm font-medium hidden md:block">
-                        Upgrade to Pro
-                    </Link>
-                    <Link to="/orders" className="text-sm font-medium hidden md:block">
-                        Orders
-                    </Link>
-                    <Link to="/pro" className="text-sm font-medium hidden md:block">
-                        Try workvix Go
-                    </Link>
-                    
-                    {/* Icons */}
-                    <div className="flex items-center space-x-4">
-                        {/* Use BidNotifications component for clients */}
-                        {userRole === 'client' ? (
-                            <BidNotifications />
-                        ) : userRole === 'freelancer' ? (
-                            <Link to="/freelancer/notifications">
-                                <button className="relative">
-                                    <Bell className="h-5 w-5 text-gray-700" />
-                                </button>
-                            </Link>
-                        ) : (
-                            <button className="relative">
-                                <Bell className="h-5 w-5 text-gray-700" />
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
-                            </button>
-                        )}
-                        
-                        <button className="relative" onClick={handleChat}>
-                            <Mail className="h-5 w-5 text-gray-700" />
-                            {unreadMessages > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                                    {unreadMessages > 9 ? '9+' : unreadMessages}
-                                </span>
-                            )}
-                        </button>
-                        
-                        {/* User dropdown */}
-                        <div className="relative">
-                            <button 
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="flex items-center space-x-1 focus:outline-none"
-                            >
-                                <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white">
-                                    {getUserInitial()}
-                                </div>
-                                <ChevronDown className={`h-4 w-4 text-gray-600 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            
-                            {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                    {user && (
-                                        <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                                            <p>Signed in as</p>
-                                            <p className="font-medium truncate">{user.email}</p>
-                                        </div>
-                                    )}
-                                    <Link
-                                        to="/profile"
-                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        <User className="h-4 w-4 mr-2" />
-                                        Profile
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        <LogOut className="h-4 w-4 mr-2" />
-                                        Sign Out
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+            {/* Search bar - desktop */}
+            <div className="hidden md:flex h-10 max-w-md flex-1 items-center rounded-md border bg-background px-3">
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-70" />
+              <input 
+                type="search" 
+                placeholder="What service are you looking for today?" 
+                className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" 
+              />
+              <Button size="sm" className="h-7 bg-skillforge-primary">Search</Button>
             </div>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
+            {user && (
+              <Link 
+                to="/freelancer/notifications" 
+                className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
+              >
+                <Bell className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+            
+            <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+              <span className="text-xl font-bold text-skillforge-primary">
+                work<span className="text-orange-500">vix</span>
+              </span> Pro
+            </Link>
+            <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+              Become a Seller
+            </Link>
+            
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Link to="/freelancer" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                  Dashboard
+                </Link>
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = '/signin';
+                  }}
+                  className="text-gray-600 hover:text-skillforge-primary transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                  Sign In
+                </Link>
+                <Link to="/join">
+                  <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center space-x-4">
+            {user && (
+              <Link 
+                to="/freelancer/notifications" 
+                className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
+              >
+                <Bell className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+            <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
-    );
+
+        {/* Mobile Navigation Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden mt-2 py-2 bg-white shadow-lg rounded-md animate-fade-in">
+            <div className="px-4 py-2">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="search"
+                  placeholder="Search services..."
+                  className="h-10 w-full rounded-md border border-input pl-10 pr-3 focus:outline-none focus:ring-1 focus:ring-skillforge-primary"
+                />
+              </div>
+
+              <Link 
+                to="/premium-services" 
+                className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                WorkVix Premium
+              </Link>
+              <Link 
+                to="/become-seller" 
+                className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Become a Seller
+              </Link>
+              
+              {user ? (
+                <>
+                  <Link 
+                    to="/freelancer" 
+                    className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      setIsMenuOpen(false);
+                      window.location.href = '/signin';
+                    }}
+                    className="block py-2 text-gray-600 hover:text-skillforge-primary w-full text-left"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/signin" 
+                    className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/join" 
+                    className="block"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Button className="w-full bg-skillforge-primary hover:bg-skillforge-primary/90 mt-2">
+                      Join
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
 };
 
 export default Nav2;
