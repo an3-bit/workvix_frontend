@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,14 +17,22 @@ const Nav2 = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [userRole, setUserRole] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     checkUser();
+  }, []);
+
+  useEffect(() => {
     if (user) {
+      fetchUserRole();
       fetchUnreadNotifications();
+      fetchUnreadMessages();
       setupNotificationSubscription();
+      setupMessagesSubscription();
     }
   }, [user]);
 
@@ -33,6 +40,31 @@ const Nav2 = () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
   };
+
+  const fetchUserRole = async () => {
+  if (!user) return;
+  
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', user.id)
+      .single();
+
+    if (error) throw error;
+    
+    if (data && data.user_type) {
+      setUserRole(data.user_type);
+      console.log('User role set to:', data.user_type); // Debug log
+    } else {
+      console.warn('No user_type found for user:', user.id);
+    }
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    // You might want to set a default role here if appropriate
+    // setUserRole('client'); // or 'freelancer' depending on your needs
+  }
+};
 
   const fetchUnreadNotifications = async () => {
     if (!user) return;
@@ -50,26 +82,54 @@ const Nav2 = () => {
     }
   };
 
+  const fetchUnreadMessages = async () => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('messages')
+        .select('id')
+        .or(`and(receiver_id.eq.${user.id},read.eq.false),and(sender_id.eq.${user.id},read.eq.false)`)
+        .order('created_at', { ascending: false });
+
+      setUnreadMessagesCount(data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching unread messages:', error);
+    }
+  };
+
   const setupNotificationSubscription = () => {
     if (!user) return;
 
     const subscription = supabase
       .channel('notifications')
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`
       }, () => {
         fetchUnreadNotifications();
       })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  };
+
+  const setupMessagesSubscription = () => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('messages')
       .on('postgres_changes', {
-        event: 'UPDATE',
+        event: '*',
         schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
+        table: 'messages',
+        filter: `or(and(receiver_id.eq.${user.id},read.eq.false),and(sender_id.eq.${user.id},read.eq.false))`
       }, () => {
-        fetchUnreadNotifications();
+        fetchUnreadMessages();
       })
       .subscribe();
 
@@ -105,11 +165,7 @@ const Nav2 = () => {
   };
 
   const handleLogoClick = () => {
-    if (user) {
-      navigate('/freelancer');
-    } else {
-      navigate('/');
-    }
+    {navigate(userRole === 'freelancer' ? '/freelancer' : '/client')};
   };
 
   return (
@@ -142,6 +198,30 @@ const Nav2 = () => {
           <div className="hidden md:flex items-center space-x-6">
             {user && (
               <>
+                {userRole === 'freelancer' && (
+                  <Link 
+                    to="/freelancer/jobs" 
+                    className="text-gray-600 hover:text-skillforge-primary transition-colors"
+                  >
+                    Jobs
+                  </Link>
+                )}
+                {userRole === 'client' && (
+                  <Link 
+                    to="/client/bids" 
+                    className="text-gray-600 hover:text-skillforge-primary transition-colors"
+                  >
+                    Bids
+                  </Link>
+                )}
+                
+                <Link 
+                  to="/orders" 
+                  className="text-gray-600 hover:text-skillforge-primary transition-colors"
+                >
+                  Orders
+                </Link>
+                
                 <Link 
                   to="/freelancer/notifications" 
                   className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
@@ -153,8 +233,17 @@ const Nav2 = () => {
                     </span>
                   )}
                 </Link>
-                <Link to="/chat" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                
+                <Link 
+                  to="/client/chat" 
+                  className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
+                >
                   <MessageCircle className="h-6 w-6" />
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                    </span>
+                  )}
                 </Link>
                 
                 {/* User Avatar Dropdown */}
@@ -181,10 +270,10 @@ const Nav2 = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/freelancer/profile')}>
+                    <DropdownMenuItem onClick={() => navigate(userRole === 'freelancer' ? '/freelancer/profile' : '/client/profile')}>
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/freelancer')}>
+                    <DropdownMenuItem onClick={() => navigate(userRole === 'freelancer' ? '/freelancer' : '/client')}>
                       Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -223,8 +312,16 @@ const Nav2 = () => {
                     </span>
                   )}
                 </Link>
-                <Link to="/chat" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+                <Link 
+                  to="/client/chat" 
+                  className="relative text-gray-600 hover:text-skillforge-primary transition-colors"
+                >
                   <MessageCircle className="h-6 w-6" />
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}
@@ -265,15 +362,43 @@ const Nav2 = () => {
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                   </div>
+                  
+                  {userRole === 'freelancer' && (
+                    <Link 
+                      to="/freelancer/jobs" 
+                      className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Jobs
+                    </Link>
+                  )}
+                  {userRole === 'client' && (
+                    <Link 
+                      to="/client/bids" 
+                      className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Bids
+                    </Link>
+                  )}
+                  
                   <Link 
-                    to="/freelancer/profile" 
+                    to="/orders" 
+                    className="block py-2 text-gray-600 hover:text-skillforge-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Orders
+                  </Link>
+                  
+                  <Link 
+                    to={userRole === 'freelancer' ? '/freelancer/profile' : '/client/profile'} 
                     className="block py-2 text-gray-600 hover:text-skillforge-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Profile
                   </Link>
                   <Link 
-                    to="/freelancer" 
+                    to={userRole === 'freelancer' ? '/freelancer' : '/client'} 
                     className="block py-2 text-gray-600 hover:text-skillforge-primary"
                     onClick={() => setIsMenuOpen(false)}
                   >
