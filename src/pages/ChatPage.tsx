@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, User, DollarSign, Clock } from 'lucide-react';
@@ -143,6 +142,7 @@ const ChatPage: React.FC = () => {
 
   const markMessagesAsRead = async (chatId: string, userId: string) => {
     try {
+      // Mark messages as read in database
       await supabase
         .from('messages')
         .update({ read: true })
@@ -161,6 +161,25 @@ const ChatPage: React.FC = () => {
             }
           : chat
       ));
+
+      // Also update selected chat if it's the same
+      if (selectedChat && selectedChat.id === chatId) {
+        setSelectedChat(prev => prev ? {
+          ...prev,
+          unread_count: 0,
+          messages: prev.messages.map(msg => 
+            msg.sender_id !== userId ? { ...msg, read: true } : msg
+          )
+        } : null);
+      }
+
+      // Delete message notifications for this chat
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId)
+        .eq('type', 'new_message');
+
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }
