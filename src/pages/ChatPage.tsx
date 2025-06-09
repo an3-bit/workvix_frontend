@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, User, DollarSign, Clock } from 'lucide-react';
+import { Send, User, DollarSign, Clock, FileText, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 interface Chat {
   id: string;
@@ -25,8 +28,13 @@ interface Chat {
     last_name: string;
     email: string;
   } | null;
+  freelancer: {
+    first_name: string;
+    last_name: string;
+  } | null;
   messages: Message[];
   unread_count: number;
+  offer?: Offer | null;
 }
 
 interface Message {
@@ -38,6 +46,19 @@ interface Message {
   read: boolean;
 }
 
+interface Offer {
+  id: string;
+  chat_id: string;
+  job_id: string;
+  freelancer_id: string;
+  client_id: string;
+  amount: number;
+  days_to_complete: number;
+  description: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+}
+
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -47,6 +68,12 @@ const ChatPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showOfferDialog, setShowOfferDialog] = useState(false);
+  const [offerData, setOfferData] = useState({
+    amount: '',
+    days: '',
+    description: ''
+  });
 
   useEffect(() => {
     initializeData();
@@ -54,8 +81,18 @@ const ChatPage: React.FC = () => {
 
   const initializeData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      // Debug logging
+      console.log('Current user:', user);
+      console.log('User ID:', user?.id);
+      
+      if (userError) {
+        console.error('User error:', userError);
+      }
+      
       if (!user) {
+        console.log('No user found, redirecting to signin');
         navigate('/signin');
         return;
       }
@@ -76,11 +113,11 @@ const ChatPage: React.FC = () => {
 
   const fetchChats = async (userId: string) => {
     try {
-      // Get chats where current user is the freelancer
+      // Get chats where current user is either client or freelancer
       const { data: chatsData, error: chatsError } = await supabase
         .from('chats')
         .select('*')
-        .eq('freelancer_id', userId)
+        .or(`freelancer_id.eq.${userId},client_id.eq.${userId}`)
         .order('updated_at', { ascending: false });
 
       if (chatsError) {
@@ -105,6 +142,13 @@ const ChatPage: React.FC = () => {
               .eq('id', chat.client_id)
               .single();
 
+            // Fetch freelancer details
+            const { data: freelancerData } = await supabase
+              .from('freelancers')
+              .select('first_name, last_name')
+              .eq('id', chat.freelancer_id)
+              .single();
+
             // Fetch messages
             const { data: messages } = await supabase
               .from('messages')
@@ -112,17 +156,26 @@ const ChatPage: React.FC = () => {
               .eq('chat_id', chat.id)
               .order('created_at', { ascending: true });
 
-            // Count unread messages from client
+            // Count unread messages from other user
             const unreadCount = messages?.filter(
               m => m.sender_id !== userId && !m.read
             ).length || 0;
+
+            // Fetch offer if exists
+            const { data: offerData } = await supabase
+              .from('offers')
+              .select('*')
+              .eq('chat_id', chat.id)
+              .single();
 
             return {
               ...chat,
               job: jobData,
               client: clientData,
+              freelancer: freelancerData,
               messages: messages || [],
-              unread_count: unreadCount
+              unread_count: unreadCount,
+              offer: offerData || null
             };
           })
         );
@@ -229,13 +282,14 @@ const ChatPage: React.FC = () => {
           .update({ updated_at: new Date().toISOString() })
           .eq('id', selectedChat.id);
 
-        // Create notification for client
+        // Create notification for other user
+        const otherUserId = currentUser.id === selectedChat.client_id ? selectedChat.freelancer_id : selectedChat.client_id;
         await supabase
           .from('notifications')
           .insert([{
-            user_id: selectedChat.client_id,
+            user_id: otherUserId,
             type: 'new_message',
-            message: `New message from freelancer`,
+            message: `New message in your chat`,
             read: false
           }]);
       }
@@ -250,6 +304,168 @@ const ChatPage: React.FC = () => {
       setSending(false);
     }
   };
+
+  const handleCreateOffer = () => {
+    if (!selectedChat) return;
+    setOfferData({
+      amount: selectedChat.job?.budget?.toString() || '',
+      days: '',
+      description: ''
+    });
+    setShowOfferDialog(true);
+  };
+
+  const handleSubmitOffer = async () => {
+    if (!selectedChat || !currentUser) return;
+    
+    try {
+      const { data: offer, error } = await supabase
+        .from('offers')
+        .insert([{
+          chat_id: selectedChat.id,
+          job_id: selectedChat.job_id,
+          freelancer_id: selectedChat.freelancer_id,
+          client_id: selectedChat.client_id,
+          amount: parseFloat(offerData.amount),
+          days_to_complete: parseInt(offerData.days),
+          description: offerData.description,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedChat(prev => prev ? { ...prev, offer } : null);
+      setChats(prev => prev.map(chat => 
+        chat.id === selectedChat.id ? { ...chat, offer } : chat
+      ));
+
+      // Create notification for client
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: selectedChat.client_id,
+          type: 'new_offer',
+          message: `New offer received for ${selectedChat.job?.title || 'your job'}`,
+          read: false
+        }]);
+
+      toast({
+        title: 'Success',
+        description: 'Offer submitted successfully!',
+      });
+
+      setShowOfferDialog(false);
+    } catch (error) {
+      console.error('Error submitting offer:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit offer.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAcceptOffer = async (offerId: string) => {
+    try {
+      // Update offer status to accepted
+      const { data: updatedOffer, error } = await supabase
+        .from('offers')
+        .update({ status: 'accepted' })
+        .eq('id', offerId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedChat(prev => prev ? { 
+        ...prev, 
+        offer: updatedOffer 
+      } : null);
+      
+      setChats(prev => prev.map(chat => 
+        chat.id === selectedChat?.id ? { ...chat, offer: updatedOffer } : chat
+      ));
+
+      // Create notification for freelancer
+      if (selectedChat) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: selectedChat.freelancer_id,
+            type: 'offer_accepted',
+            message: `Your offer for ${selectedChat.job?.title || 'a job'} was accepted!`,
+            read: false
+          }]);
+      }
+
+      // Navigate to checkout
+      navigate(`/checkout?offer_id=${offerId}`);
+
+    } catch (error) {
+      console.error('Error accepting offer:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to accept offer.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeclineOffer = async (offerId: string) => {
+    try {
+      // Update offer status to declined
+      const { data: updatedOffer, error } = await supabase
+        .from('offers')
+        .update({ status: 'declined' })
+        .eq('id', offerId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedChat(prev => prev ? { 
+        ...prev, 
+        offer: updatedOffer 
+      } : null);
+      
+      setChats(prev => prev.map(chat => 
+        chat.id === selectedChat?.id ? { ...chat, offer: updatedOffer } : chat
+      ));
+
+      // Create notification for freelancer
+      if (selectedChat) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: selectedChat.freelancer_id,
+            type: 'offer_declined',
+            message: `Your offer for ${selectedChat.job?.title || 'a job'} was declined.`,
+            read: false
+          }]);
+      }
+
+      toast({
+        title: 'Offer Declined',
+        description: 'You have declined the offer.',
+      });
+
+    } catch (error) {
+      console.error('Error declining offer:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to decline offer.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const isFreelancer = selectedChat && currentUser?.id === selectedChat.freelancer_id;
+  const isClient = selectedChat && currentUser?.id === selectedChat.client_id;
 
   if (loading) {
     return (
@@ -290,12 +506,19 @@ const ChatPage: React.FC = () => {
                       >
                         <div className="flex items-start space-x-3">
                           <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-                            {chat.client?.first_name?.charAt(0) || 'C'}{chat.client?.last_name?.charAt(0) || 'L'}
+                            {currentUser?.id === chat.client_id 
+                              ? chat.freelancer?.first_name?.charAt(0) || 'F'
+                              : chat.client?.first_name?.charAt(0) || 'C'}
+                            {currentUser?.id === chat.client_id 
+                              ? chat.freelancer?.last_name?.charAt(0) || 'L'
+                              : chat.client?.last_name?.charAt(0) || 'L'}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <h3 className="font-medium text-gray-900 truncate">
-                                {chat.client?.first_name || 'Unknown'} {chat.client?.last_name || 'Client'}
+                                {currentUser?.id === chat.client_id 
+                                  ? `${chat.freelancer?.first_name || 'Freelancer'} ${chat.freelancer?.last_name || ''}`
+                                  : `${chat.client?.first_name || 'Client'} ${chat.client?.last_name || ''}`}
                               </h3>
                               {chat.unread_count > 0 && (
                                 <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -306,7 +529,18 @@ const ChatPage: React.FC = () => {
                             <p className="text-sm text-gray-600 truncate">
                               {chat.job?.title || 'No job title'}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            {chat.offer && (
+                              <div className="flex items-center mt-1">
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  chat.offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  chat.offer.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  Offer {chat.offer.status}
+                                </span>
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
                               {chat.messages.length > 0 
                                 ? chat.messages[chat.messages.length - 1].content.substring(0, 30) + '...'
                                 : 'No messages yet'
@@ -328,20 +562,85 @@ const ChatPage: React.FC = () => {
                     <div className="border-b border-gray-200 p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
-                          {selectedChat.client?.first_name?.charAt(0) || 'C'}{selectedChat.client?.last_name?.charAt(0) || 'L'}
+                          {isFreelancer 
+                            ? selectedChat.client?.first_name?.charAt(0) || 'C'
+                            : selectedChat.freelancer?.first_name?.charAt(0) || 'F'}
+                          {isFreelancer 
+                            ? selectedChat.client?.last_name?.charAt(0) || 'L'
+                            : selectedChat.freelancer?.last_name?.charAt(0) || 'L'}
                         </div>
                         <div>
                           <h2 className="font-semibold text-gray-900">
-                            {selectedChat.client?.first_name || 'Unknown'} {selectedChat.client?.last_name || 'Client'}
+                            {isFreelancer 
+                              ? `${selectedChat.client?.first_name || 'Client'} ${selectedChat.client?.last_name || ''}`
+                              : `${selectedChat.freelancer?.first_name || 'Freelancer'} ${selectedChat.freelancer?.last_name || ''}`}
                           </h2>
                           <p className="text-sm text-gray-600">{selectedChat.job?.title || 'No job title'}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">${selectedChat.job?.budget || 0}</p>
-                        <p className="text-xs text-gray-500">{selectedChat.job?.category || 'No category'}</p>
+                        {selectedChat.offer ? (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              ${selectedChat.offer.amount}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {selectedChat.offer.days_to_complete} days
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm font-medium text-gray-900">${selectedChat.job?.budget || 0}</p>
+                            <p className="text-xs text-gray-500">{selectedChat.job?.category || 'No category'}</p>
+                          </>
+                        )}
                       </div>
                     </div>
+
+                    {/* Offer Display */}
+                    {selectedChat.offer && (
+                      <div className={`border-b p-4 ${
+                        selectedChat.offer.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                        selectedChat.offer.status === 'accepted' ? 'bg-green-50 border-green-200' :
+                        'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium flex items-center">
+                              <FileText className="h-4 w-4 mr-2" />
+                              {selectedChat.offer.status === 'pending' 
+                                ? 'Pending Offer' 
+                                : selectedChat.offer.status === 'accepted' 
+                                  ? 'Accepted Offer' 
+                                  : 'Declined Offer'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Amount: ${selectedChat.offer.amount} • {selectedChat.offer.days_to_complete} days
+                            </p>
+                            {selectedChat.offer.description && (
+                              <p className="text-sm text-gray-600 mt-1">{selectedChat.offer.description}</p>
+                            )}
+                          </div>
+                          {isClient && selectedChat.offer.status === 'pending' && (
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleAcceptOffer(selectedChat.offer?.id || '')}
+                              >
+                                <Check className="h-4 w-4 mr-1" /> Accept
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDeclineOffer(selectedChat.offer?.id || '')}
+                              >
+                                <X className="h-4 w-4 mr-1" /> Decline
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -381,6 +680,18 @@ const ChatPage: React.FC = () => {
 
                     {/* Message Input */}
                     <div className="border-t border-gray-200 p-4">
+                      {isFreelancer && !selectedChat.offer && (
+                        <div className="mb-4">
+                          <Button 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={handleCreateOffer}
+                          >
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Create Offer
+                          </Button>
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <Textarea
                           value={newMessage}
@@ -417,6 +728,61 @@ const ChatPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Offer Dialog */}
+      <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Offer</DialogTitle>
+            <DialogDescription>
+              Fill in the details of your offer for this job.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Amount ($)</Label>
+              <Input
+                type="number"
+                value={offerData.amount}
+                onChange={(e) => setOfferData({...offerData, amount: e.target.value})}
+                placeholder="Enter amount"
+              />
+            </div>
+            <div>
+              <Label>Days to Complete</Label>
+              <Input
+                type="number"
+                value={offerData.days}
+                onChange={(e) => setOfferData({...offerData, days: e.target.value})}
+                placeholder="Enter number of days"
+              />
+            </div>
+            <div>
+              <Label>Description (Optional)</Label>
+              <Textarea
+                value={offerData.description}
+                onChange={(e) => setOfferData({...offerData, description: e.target.value})}
+                placeholder="Any additional details about your offer"
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowOfferDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitOffer}
+                disabled={!offerData.amount || !offerData.days}
+              >
+                Submit Offer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
