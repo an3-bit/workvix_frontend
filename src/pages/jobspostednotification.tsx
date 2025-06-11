@@ -65,7 +65,7 @@ const JobPostedNotification = () => {
     if (!session) {
       navigate('/signin');
     } else if (job?.id) {
-      navigate(`/job-bids/${job.id}`);
+      navigate('/client/bids');
     }
   };
 
