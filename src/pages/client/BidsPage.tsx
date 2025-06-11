@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, Calendar, User, MessageSquare, Clock, Star } from 'lucide-react';
@@ -140,9 +139,67 @@ const ClientBidsPage: React.FC = () => {
     return channel;
   };
 
+  const createChatRoom = async (jobId: string, clientId: string, freelancerId: string) => {
+    try {
+      // First, try to create the chat room with the authenticated user
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .insert([{
+          job_id: jobId,
+          client_id: clientId,
+          freelancer_id: freelancerId,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (chatError) {
+        console.error('Direct insert failed:', chatError);
+        
+        // If direct insert fails due to RLS, try using RPC function as fallback
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('create_chat_room', {
+            p_job_id: jobId,
+            p_client_id: clientId,
+            p_freelancer_id: freelancerId
+          });
+
+        if (rpcError) {
+          throw new Error(`Failed to create chat room: ${rpcError.message}`);
+        }
+        
+        return rpcData;
+      }
+
+      return chatData;
+    } catch (error) {
+      console.error('Error in createChatRoom:', error);
+      throw error;
+    }
+  };
+
   const handleAcceptBid = async (bid: Bid) => {
     try {
-      // Update bid status to accepted
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Start a transaction-like operation
+      // First, reject all other bids for the same job
+      const { error: rejectOthersError } = await supabase
+        .from('bids')
+        .update({ status: 'rejected' })
+        .eq('job_id', bid.job_id)
+        .neq('id', bid.id)
+        .eq('status', 'pending');
+
+      if (rejectOthersError) {
+        console.error('Error rejecting other bids:', rejectOthersError);
+        // Don't throw here, continue with accepting the bid
+      }
+
+      // Update the selected bid status to accepted
       const { error: bidError } = await supabase
         .from('bids')
         .update({ status: 'accepted' })
@@ -153,47 +210,86 @@ const ClientBidsPage: React.FC = () => {
       // Update job status to in_progress
       const { error: jobError } = await supabase
         .from('jobs')
-        .update({ status: 'in_progress' })
+        .update({ 
+          status: 'in_progress',
+          assigned_freelancer_id: bid.freelancer_id
+        })
         .eq('id', bid.job_id);
 
       if (jobError) throw jobError;
 
+      // Try to create chat room
+      let chatData = null;
+      try {
+        chatData = await createChatRoom(bid.job_id, user.id, bid.freelancer_id);
+      } catch (chatError) {
+        console.error('Chat creation failed:', chatError);
+        // Don't fail the entire operation if chat creation fails
+        toast({
+          title: 'Bid Accepted',
+          description: 'Bid accepted successfully, but chat room creation failed. You can try starting a chat later.',
+          variant: 'default',
+        });
+      }
+
       // Create notification for freelancer
-      await supabase
-        .from('notifications')
-        .insert([{
-          user_id: bid.freelancer_id,
-          type: 'bid_accepted',
-          message: `Your bid for "${bid.job.title}" has been accepted! You can now start chatting with the client.`,
-          bid_id: bid.id,
-          job_id: bid.job_id,
-          read: false
-        }]);
+      try {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: bid.freelancer_id,
+            type: 'bid_accepted',
+            message: `Your bid for "${bid.job.title}" has been accepted! You can now start chatting with the client.`,
+            bid_id: bid.id,
+            job_id: bid.job_id,
+            read: false,
+            created_at: new Date().toISOString()
+          }]);
+      } catch (notificationError) {
+        console.error('Notification creation failed:', notificationError);
+        // Don't fail the operation if notification fails
+      }
 
-      // Create chat room
-      const { data: chatData, error: chatError } = await supabase
-        .from('chats')
-        .insert([{
-          job_id: bid.job_id,
-          client_id: (await supabase.auth.getUser()).data.user?.id,
-          freelancer_id: bid.freelancer_id
-        }])
-        .select()
-        .single();
+      // Create notifications for rejected bidders
+      try {
+        const { data: rejectedBids } = await supabase
+          .from('bids')
+          .select('freelancer_id, freelancer(first_name)')
+          .eq('job_id', bid.job_id)
+          .eq('status', 'rejected')
+          .neq('id', bid.id);
 
-      if (chatError) throw chatError;
+        if (rejectedBids && rejectedBids.length > 0) {
+          const rejectedNotifications = rejectedBids.map(rejectedBid => ({
+            user_id: rejectedBid.freelancer_id,
+            type: 'bid_rejected',
+            message: `Your bid for "${bid.job.title}" was not selected.`,
+            job_id: bid.job_id,
+            read: false,
+            created_at: new Date().toISOString()
+          }));
 
-      toast({
-        title: 'Bid Accepted',
-        description: 'The freelancer has been notified and you can now start chatting.',
-      });
+          await supabase
+            .from('notifications')
+            .insert(rejectedNotifications);
+        }
+      } catch (rejectedNotificationError) {
+        console.error('Rejected notifications failed:', rejectedNotificationError);
+      }
+
+      if (chatData) {
+        toast({
+          title: 'Bid Accepted',
+          description: 'The freelancer has been notified and you can now start chatting.',
+        });
+      }
 
       fetchBids();
     } catch (error) {
       console.error('Error accepting bid:', error);
       toast({
         title: 'Error',
-        description: 'Failed to accept bid',
+        description: `Failed to accept bid: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     }
@@ -210,16 +306,21 @@ const ClientBidsPage: React.FC = () => {
       if (error) throw error;
 
       // Create notification for freelancer
-      await supabase
-        .from('notifications')
-        .insert([{
-          user_id: bid.freelancer_id,
-          type: 'bid_rejected',
-          message: `Your bid for "${bid.job.title}" was not selected.`,
-          bid_id: bid.id,
-          job_id: bid.job_id,
-          read: false
-        }]);
+      try {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: bid.freelancer_id,
+            type: 'bid_rejected',
+            message: `Your bid for "${bid.job.title}" was not selected.`,
+            bid_id: bid.id,
+            job_id: bid.job_id,
+            read: false,
+            created_at: new Date().toISOString()
+          }]);
+      } catch (notificationError) {
+        console.error('Notification creation failed:', notificationError);
+      }
 
       toast({
         title: 'Bid Rejected',
@@ -239,6 +340,11 @@ const ClientBidsPage: React.FC = () => {
 
   const handleStartChat = async (bid: Bid) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // Check if chat already exists
       const { data: existingChat } = await supabase
         .from('chats')
@@ -251,24 +357,18 @@ const ClientBidsPage: React.FC = () => {
         navigate(`/client/chat?chat=${existingChat.id}`);
       } else {
         // Create new chat
-        const { data: chatData, error } = await supabase
-          .from('chats')
-          .insert([{
-            job_id: bid.job_id,
-            client_id: (await supabase.auth.getUser()).data.user?.id,
-            freelancer_id: bid.freelancer_id
-          }])
-          .select()
-          .single();
-
-        if (error) throw error;
-        navigate(`/client/chat?chat=${chatData.id}`);
+        try {
+          const chatData = await createChatRoom(bid.job_id, user.id, bid.freelancer_id);
+          navigate(`/client/chat?chat=${chatData.id}`);
+        } catch (chatError) {
+          throw new Error(`Failed to create chat: ${chatError instanceof Error ? chatError.message : 'Unknown error'}`);
+        }
       }
     } catch (error) {
       console.error('Error starting chat:', error);
       toast({
         title: 'Error',
-        description: 'Failed to start chat',
+        description: `Failed to start chat: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     }

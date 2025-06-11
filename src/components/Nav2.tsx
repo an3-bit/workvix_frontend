@@ -200,7 +200,7 @@ const Nav2 = () => {
               <>
                 {userRole === 'freelancer' && (
                   <Link 
-                    to="/freelancer/jobs" 
+                    to="/jobs" 
                     className="text-gray-600 hover:text-skillforge-primary transition-colors"
                   >
                     Jobs

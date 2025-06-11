@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, DollarSign, User, MessageSquare, Send } from 'lucide-react';
+import { Clock, DollarSign, User, MessageSquare, Send, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -42,6 +41,7 @@ const JobsBid: React.FC = () => {
   const [existingBid, setExistingBid] = useState<Bid | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [bidSubmitted, setBidSubmitted] = useState(false);
   const [bidData, setBidData] = useState({
     amount: '',
     message: '',
@@ -50,10 +50,36 @@ const JobsBid: React.FC = () => {
 
   useEffect(() => {
     if (jobId) {
-      fetchJobDetails();
-      checkExistingBid();
+      fetchJobDetailsAndBid();
     }
   }, [jobId]);
+
+  const fetchJobDetailsAndBid = async () => {
+    try {
+      // Check if user is authenticated first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/signin');
+        return;
+      }
+
+      // Fetch job details and existing bid simultaneously
+      const [jobResult, bidResult] = await Promise.all([
+        fetchJobDetails(),
+        checkExistingBid(user.id)
+      ]);
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load job information.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchJobDetails = async () => {
     try {
@@ -91,36 +117,35 @@ const JobsBid: React.FC = () => {
       };
       
       setJob(processedJobData);
+      return processedJobData;
     } catch (error) {
       console.error('Error fetching job details:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch job details.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 
-  const checkExistingBid = async () => {
+  const checkExistingBid = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: bidData } = await supabase
+      const { data: bidData, error } = await supabase
         .from('bids')
         .select('*')
         .eq('job_id', jobId)
-        .eq('freelancer_id', user.id)
+        .eq('freelancer_id', userId)
         .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+        throw error;
+      }
 
       if (bidData) {
         setExistingBid(bidData);
+        return bidData;
       }
+      
+      return null;
     } catch (error) {
-      // No existing bid found, which is fine
-      console.log('No existing bid found');
+      console.error('Error checking existing bid:', error);
+      return null;
     }
   };
 
@@ -186,13 +211,16 @@ const JobsBid: React.FC = () => {
           }]);
       }
 
-      toast({
-        title: 'Bid Submitted',
-        description: 'Your bid has been submitted successfully. The client will be notified.',
-      });
-
+      // Set the bid as submitted and show success message
+      setBidSubmitted(true);
       setExistingBid(bidResult);
       setBidData({ amount: '', message: '', delivery_time: '' });
+
+      toast({
+        title: 'Bid Submitted Successfully!',
+        description: 'Your bid has been submitted. The client will review your proposal and get back to you.',
+      });
+
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({
@@ -207,6 +235,14 @@ const JobsBid: React.FC = () => {
 
   const handleStartChat = () => {
     navigate(`/chat?job=${jobId}`); 
+  };
+
+  const handleBackToJobs = () => {
+    navigate('/jobs');
+  };
+
+  const handleViewAllBids = () => {
+    navigate('/bids-details/:bidId');
   };
 
   if (loading) {
@@ -284,41 +320,122 @@ const JobsBid: React.FC = () => {
               )}
             </div>
 
-            {/* Existing Bid or Bid Form */}
-            {existingBid ? (
+            {/* Existing Bid, Success Message, or Bid Form */}
+            {existingBid && !bidSubmitted ? (
+              // Show existing bid information
               <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Bid</h2>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <p className="text-green-800 font-medium mb-2">Bid Submitted Successfully!</p>
-                  <div className="text-sm text-green-700">
-                    <p><strong>Amount:</strong> ${existingBid.amount}</p>
-                    <p><strong>Delivery Time:</strong> {existingBid.delivery_time}</p>
-                    <p><strong>Status:</strong> {existingBid.status.charAt(0).toUpperCase() + existingBid.status.slice(1)}</p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <MessageSquare className="h-6 w-6 text-yellow-600" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                        You Already Bidded for This Job
+                      </h3>
+                      <p className="text-yellow-700 mb-4">
+                        You have already submitted a bid for this job. Please browse other jobs to find more opportunities.
+                      </p>
+                      
+                      <div className="bg-white rounded-lg p-4 mb-4 border border-yellow-200">
+                        <h4 className="font-medium text-gray-900 mb-2">Your Bid Details:</h4>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p><strong>Amount:</strong> ${existingBid.amount}</p>
+                          <p><strong>Delivery Time:</strong> {existingBid.delivery_time}</p>
+                          <p><strong>Status:</strong> {existingBid.status.charAt(0).toUpperCase() + existingBid.status.slice(1)}</p>
+                          <p><strong>Submitted:</strong> {new Date(existingBid.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-4 mb-4 border border-yellow-200">
+                        <h4 className="font-medium text-gray-900 mb-2">Your Proposal:</h4>
+                        <p className="text-gray-700 text-sm">{existingBid.message}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          onClick={handleBackToJobs}
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          Browse Other Jobs
+                        </Button>
+                        <Button
+                          onClick={handleStartChat}
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Chat with Client
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleViewAllBids}
+                        >
+                          View All My Bids
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-blue-800 font-medium mb-2">Your Proposal</p>
-                  <p className="text-blue-700">{existingBid.message}</p>
-                </div>
+              </div>
+            ) : bidSubmitted ? (
+              // Show success message after bid submission
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-green-800 mb-2">
+                        Bid Submitted Successfully!
+                      </h3>
+                      <p className="text-green-700 mb-4">
+                        Your bid has been submitted and the client has been notified. The client will review your proposal and get back to you soon.
+                      </p>
+                      
+                      <div className="bg-white rounded-lg p-4 mb-4 border border-green-200">
+                        <h4 className="font-medium text-gray-900 mb-2">What happens next?</h4>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• The client will review your bid along with others</li>
+                          <li>• You'll receive a notification if the client is interested</li>
+                          <li>• If selected, you can start chatting with the client</li>
+                          <li>• Check your notifications regularly for updates</li>
+                        </ul>
+                      </div>
 
-                <div className="flex gap-4">
-                  <Button
-                    onClick={handleStartChat}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Start Chat with Client
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/bids')}
-                  >
-                    View All My Bids
-                  </Button>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          onClick={handleBackToJobs}
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          Browse Other Jobs
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleViewAllBids}
+                        >
+                          View All My Bids
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => navigate('/notifications')}
+                        >
+                          Check Notifications
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
+              // Show bid form for new bids
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Submit Your Bid</h2>
                 

@@ -362,6 +362,57 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          amount: number
+          created_at: string
+          delivery_time: string
+          freelancer_id: string | null
+          id: string
+          job_id: string | null
+          message: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          delivery_time: string
+          freelancer_id?: string | null
+          id?: string
+          job_id?: string | null
+          message: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          delivery_time?: string
+          freelancer_id?: string | null
+          id?: string
+          job_id?: string | null
+          message?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "freelancers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -524,3 +575,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

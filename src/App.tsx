@@ -14,6 +14,8 @@ import JobPostedNotification from "./pages/jobspostednotification";
 import ResetPassword from "./pages/reset_password/resetpassword";
 import ChatPage from "./pages/ChatPage";
 import ClientChatPage from "./pages/client/ClientChatPage";
+import BidsDetailsPage from "./pages/BidsDetailsPage";
+
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,7 @@ const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
 const OrderForm = lazy(() => import("./pages/OrderForm"));
 const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -85,6 +88,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/client/chat" element={<ClientChatPage />} />
+            <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

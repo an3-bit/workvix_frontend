@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Send, User, DollarSign, Clock, FileText, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +61,7 @@ interface Offer {
 
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -77,15 +78,24 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     initializeData();
+    setupRealtimeSubscription();
   }, []);
+
+  useEffect(() => {
+    // This effect handles the case when chats are loaded but we have a chat ID in URL
+    if (chats.length > 0 && searchParams.get('chat') && currentUser) {
+      const chatId = searchParams.get('chat');
+      const chat = chats.find(c => c.id === chatId);
+      if (chat) {
+        setSelectedChat(chat);
+        markMessagesAsRead(chat.id, currentUser.id);
+      }
+    }
+  }, [chats, searchParams, currentUser]);
 
   const initializeData = async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      // Debug logging
-      console.log('Current user:', user);
-      console.log('User ID:', user?.id);
       
       if (userError) {
         console.error('User error:', userError);
@@ -99,6 +109,12 @@ const ChatPage: React.FC = () => {
 
       setCurrentUser(user);
       await fetchChats(user.id);
+      
+      // Handle direct chat navigation from URL params
+      const chatId = searchParams.get('chat');
+      if (chatId) {
+        await selectChatById(chatId, user.id);
+      }
     } catch (error) {
       console.error('Error initializing data:', error);
       toast({
@@ -108,6 +124,66 @@ const ChatPage: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupRealtimeSubscription = () => {
+    // Subscribe to new messages
+    const messagesChannel = supabase
+      .channel('messages_changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+      }, (payload) => {
+        const newMessage = payload.new as Message;
+        
+        // Update chats with new message
+        setChats(prev => prev.map(chat => 
+          chat.id === newMessage.chat_id
+            ? {
+                ...chat,
+                messages: [...chat.messages, newMessage],
+                unread_count: chat.id === selectedChat?.id ? 0 : chat.unread_count + 1
+              }
+            : chat
+        ));
+        
+        // Update selected chat if it matches
+        setSelectedChat(prev => 
+          prev && prev.id === newMessage.chat_id
+            ? { ...prev, messages: [...prev.messages, newMessage] }
+            : prev
+        );
+      })
+      .subscribe();
+
+    // Subscribe to offer changes
+    const offersChannel = supabase
+      .channel('offers_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'offers'
+      }, () => {
+        // Refresh chat data when offers change
+        if (currentUser) {
+          fetchChats(currentUser.id);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(offersChannel);
+    };
+  };
+
+  const selectChatById = async (chatId: string, userId: string) => {
+    const chat = chats.find(c => c.id === chatId);
+    if (chat) {
+      setSelectedChat(chat);
+      await markMessagesAsRead(chatId, userId);
     }
   };
 
@@ -164,7 +240,7 @@ const ChatPage: React.FC = () => {
             // Fetch offer if exists
             const { data: offerData } = await supabase
               .from('offers')
-              .select('*')
+              .select('id, chat_id, job_id, freelancer_id, client_id, amount, days_to_complete, description, status, created_at')
               .eq('chat_id', chat.id)
               .single();
 
@@ -182,8 +258,8 @@ const ChatPage: React.FC = () => {
 
         setChats(chatsWithDetails);
         
-        // Auto-select first chat if available
-        if (chatsWithDetails.length > 0 && !selectedChat) {
+        // Auto-select first chat if available and no specific chat is selected
+        if (chatsWithDetails.length > 0 && !selectedChat && !searchParams.get('chat')) {
           setSelectedChat(chatsWithDetails[0]);
           await markMessagesAsRead(chatsWithDetails[0].id, userId);
         }
@@ -250,15 +326,17 @@ const ChatPage: React.FC = () => {
 
     setSending(true);
     try {
-      const { data: message } = await supabase
+      const { data: message, error } = await supabase
         .from('messages')
         .insert([{
           chat_id: selectedChat.id,
           sender_id: currentUser.id,
-          content: newMessage
+          content: newMessage.trim()
         }])
         .select()
         .single();
+
+      if (error) throw error;
 
       if (message) {
         // Update selected chat messages
@@ -270,7 +348,7 @@ const ChatPage: React.FC = () => {
         // Update chats list
         setChats(prev => prev.map(chat => 
           chat.id === selectedChat.id 
-            ? { ...chat, messages: [...chat.messages, message] }
+            ? { ...chat, messages: [...chat.messages, message], updated_at: new Date().toISOString() }
             : chat
         ));
 
@@ -284,12 +362,16 @@ const ChatPage: React.FC = () => {
 
         // Create notification for other user
         const otherUserId = currentUser.id === selectedChat.client_id ? selectedChat.freelancer_id : selectedChat.client_id;
+        const senderName = currentUser.id === selectedChat.client_id 
+          ? `${selectedChat.client?.first_name || 'Client'}`
+          : `${selectedChat.freelancer?.first_name || 'Freelancer'}`;
+
         await supabase
           .from('notifications')
           .insert([{
             user_id: otherUserId,
             type: 'new_message',
-            message: `New message in your chat`,
+            message: `New message from ${senderName}`,
             read: false
           }]);
       }
@@ -402,6 +484,11 @@ const ChatPage: React.FC = () => {
           }]);
       }
 
+      toast({
+        title: 'Offer Accepted',
+        description: 'The freelancer has been notified. You can now proceed to checkout.',
+      });
+
       // Navigate to checkout
       navigate(`/checkout?offer_id=${offerId}`);
 
@@ -493,25 +580,25 @@ const ChatPage: React.FC = () => {
                 <div className="flex-1 overflow-y-auto">
                   {chats.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
-                      No messages yet
+                      <div className="space-y-2">
+                        <p>No messages yet</p>
+                        <p className="text-xs">Accept a bid to start chatting with freelancers</p>
+                      </div>
                     </div>
                   ) : (
                     chats.map((chat) => (
                       <div
                         key={chat.id}
                         onClick={() => handleChatSelect(chat)}
-                        className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                        className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                           selectedChat?.id === chat.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                         }`}
                       >
                         <div className="flex items-start space-x-3">
                           <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
                             {currentUser?.id === chat.client_id 
-                              ? chat.freelancer?.first_name?.charAt(0) || 'F'
-                              : chat.client?.first_name?.charAt(0) || 'C'}
-                            {currentUser?.id === chat.client_id 
-                              ? chat.freelancer?.last_name?.charAt(0) || 'L'
-                              : chat.client?.last_name?.charAt(0) || 'L'}
+                              ? (chat.freelancer?.first_name?.charAt(0) || 'F') + (chat.freelancer?.last_name?.charAt(0) || 'L')
+                              : (chat.client?.first_name?.charAt(0) || 'C') + (chat.client?.last_name?.charAt(0) || 'L')}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
@@ -563,11 +650,8 @@ const ChatPage: React.FC = () => {
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
                           {isFreelancer 
-                            ? selectedChat.client?.first_name?.charAt(0) || 'C'
-                            : selectedChat.freelancer?.first_name?.charAt(0) || 'F'}
-                          {isFreelancer 
-                            ? selectedChat.client?.last_name?.charAt(0) || 'L'
-                            : selectedChat.freelancer?.last_name?.charAt(0) || 'L'}
+                            ? (selectedChat.client?.first_name?.charAt(0) || 'C') + (selectedChat.client?.last_name?.charAt(0) || 'L')
+                            : (selectedChat.freelancer?.first_name?.charAt(0) || 'F') + (selectedChat.freelancer?.last_name?.charAt(0) || 'L')}
                         </div>
                         <div>
                           <h2 className="font-semibold text-gray-900">
@@ -621,11 +705,13 @@ const ChatPage: React.FC = () => {
                               <p className="text-sm text-gray-600 mt-1">{selectedChat.offer.description}</p>
                             )}
                           </div>
+                          {/* Only show Accept/Decline buttons to CLIENT when offer status is PENDING */}
                           {isClient && selectedChat.offer.status === 'pending' && (
                             <div className="flex space-x-2">
                               <Button 
                                 size="sm" 
                                 onClick={() => handleAcceptOffer(selectedChat.offer?.id || '')}
+                                className="bg-green-600 hover:bg-green-700"
                               >
                                 <Check className="h-4 w-4 mr-1" /> Accept
                               </Button>
@@ -633,6 +719,7 @@ const ChatPage: React.FC = () => {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => handleDeclineOffer(selectedChat.offer?.id || '')}
+                                className="border-red-300 text-red-600 hover:bg-red-50"
                               >
                                 <X className="h-4 w-4 mr-1" /> Decline
                               </Button>
@@ -646,7 +733,12 @@ const ChatPage: React.FC = () => {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
                       {selectedChat.messages.length === 0 ? (
                         <div className="flex items-center justify-center h-full text-gray-500">
-                          No messages yet. Start the conversation!
+                          <div className="text-center">
+                            <p className="mb-2">No messages yet. Start the conversation!</p>
+                            <p className="text-sm">
+                              {isFreelancer ? "Introduce yourself and discuss the project details." : "Ask any questions about the project requirements."}
+                            </p>
+                          </div>
                         </div>
                       ) : (
                         selectedChat.messages.map((message) => (
@@ -661,7 +753,7 @@ const ChatPage: React.FC = () => {
                                   : 'bg-gray-100'
                               }`}
                             >
-                              <p>{message.content}</p>
+                              <p className="whitespace-pre-wrap">{message.content}</p>
                               <p className={`text-xs mt-1 ${
                                 message.sender_id === currentUser?.id 
                                   ? 'text-blue-100' 
@@ -680,6 +772,7 @@ const ChatPage: React.FC = () => {
 
                     {/* Message Input */}
                     <div className="border-t border-gray-200 p-4">
+                      {/* Only show Create Offer button to FREELANCER when NO offer exists yet */}
                       {isFreelancer && !selectedChat.offer && (
                         <div className="mb-4">
                           <Button 
@@ -697,7 +790,7 @@ const ChatPage: React.FC = () => {
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message here..."
-                          className="flex-1 min-h-[60px]"
+                          className="flex-1 min-h-[60px] resize-none"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
@@ -719,7 +812,13 @@ const ChatPage: React.FC = () => {
                   <div className="flex-1 flex items-center justify-center text-gray-500">
                     <div className="text-center">
                       <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>Select a conversation to start messaging</p>
+                      <p className="mb-2">Select a conversation to start messaging</p>
+                      <p className="text-sm">
+                        {chats.length === 0 
+                          ? "Accept a bid from the Bids page to start chatting with freelancers"
+                          : "Choose a conversation from the sidebar to continue chatting"
+                        }
+                      </p>
                     </div>
                   </div>
                 )}
@@ -728,6 +827,8 @@ const ChatPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+     
 
       {/* Create Offer Dialog */}
       <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
