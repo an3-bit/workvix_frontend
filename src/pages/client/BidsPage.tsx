@@ -38,6 +38,9 @@ const ClientBidsPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // State to manage loading for individual chat initiation to prevent multiple clicks
+  const [chatInitiatingBidId, setChatInitiatingBidId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchBids();
     const setupSubscription = async () => {
@@ -50,9 +53,16 @@ const ClientBidsPage: React.FC = () => {
       };
     };
     
-    const cleanup = setupSubscription();
+    // Call setupSubscription and handle its return
+    let cleanupFn: (() => void) | undefined;
+    setupSubscription().then(fn => {
+        cleanupFn = fn;
+    });
+
     return () => {
-      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+        if (cleanupFn) {
+            cleanupFn();
+        }
     };
   }, []);
 
@@ -125,57 +135,35 @@ const ClientBidsPage: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
+    // Use a unique channel name if this page is often mounted/unmounted
     const channel = supabase
-      .channel('bids_changes')
+      .channel('bids_changes_client_page')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'bids'
-      }, () => {
-        fetchBids();
+      }, (payload) => {
+        // Only re-fetch if the new bid is relevant to this client's jobs
+        // (i.e., for a job they posted)
+        const newBid = payload.new as Bid;
+        const relevantJobIds = bids.map(b => b.job_id); // Get current job IDs
+        if (relevantJobIds.includes(newBid.job_id)) {
+            fetchBids(); // Re-fetch to update list
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', // Listen for status updates
+        schema: 'public',
+        table: 'bids'
+      }, (payload) => {
+        const updatedBid = payload.new as Bid;
+        setBids(prevBids => prevBids.map(bid => 
+            bid.id === updatedBid.id ? updatedBid : bid
+        ));
       })
       .subscribe();
 
     return channel;
-  };
-
-  const createChatRoom = async (jobId: string, clientId: string, freelancerId: string) => {
-    try {
-      // First, try to create the chat room with the authenticated user
-      const { data: chatData, error: chatError } = await supabase
-        .from('chats')
-        .insert([{
-          job_id: jobId,
-          client_id: clientId,
-          freelancer_id: freelancerId,
-          created_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (chatError) {
-        console.error('Direct insert failed:', chatError);
-        
-        // If direct insert fails due to RLS, try using RPC function as fallback
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('create_chat_room', {
-            p_job_id: jobId,
-            p_client_id: clientId,
-            p_freelancer_id: freelancerId
-          });
-
-        if (rpcError) {
-          throw new Error(`Failed to create chat room: ${rpcError.message}`);
-        }
-        
-        return rpcData;
-      }
-
-      return chatData;
-    } catch (error) {
-      console.error('Error in createChatRoom:', error);
-      throw error;
-    }
   };
 
   const handleAcceptBid = async (bid: Bid) => {
@@ -186,29 +174,29 @@ const ClientBidsPage: React.FC = () => {
       }
 
       // Start a transaction-like operation
-      // First, reject all other bids for the same job
+      // First, reject all other bids for the same job (pending bids only)
       const { error: rejectOthersError } = await supabase
         .from('bids')
         .update({ status: 'rejected' })
         .eq('job_id', bid.job_id)
         .neq('id', bid.id)
-        .eq('status', 'pending');
+        .eq('status', 'pending'); // Only reject other pending bids
 
       if (rejectOthersError) {
         console.error('Error rejecting other bids:', rejectOthersError);
-        // Don't throw here, continue with accepting the bid
+        // Do not throw here, continue with accepting the bid
       }
 
       // Update the selected bid status to accepted
-      const { error: bidError } = await supabase
+      const { error: bidUpdateError } = await supabase
         .from('bids')
         .update({ status: 'accepted' })
         .eq('id', bid.id);
 
-      if (bidError) throw bidError;
+      if (bidUpdateError) throw bidUpdateError;
 
-      // Update job status to in_progress
-      const { error: jobError } = await supabase
+      // Update job status to in_progress and assign freelancer
+      const { error: jobUpdateError } = await supabase
         .from('jobs')
         .update({ 
           status: 'in_progress',
@@ -216,21 +204,7 @@ const ClientBidsPage: React.FC = () => {
         })
         .eq('id', bid.job_id);
 
-      if (jobError) throw jobError;
-
-      // Try to create chat room
-      let chatData = null;
-      try {
-        chatData = await createChatRoom(bid.job_id, user.id, bid.freelancer_id);
-      } catch (chatError) {
-        console.error('Chat creation failed:', chatError);
-        // Don't fail the entire operation if chat creation fails
-        toast({
-          title: 'Bid Accepted',
-          description: 'Bid accepted successfully, but chat room creation failed. You can try starting a chat later.',
-          variant: 'default',
-        });
-      }
+      if (jobUpdateError) throw jobUpdateError;
 
       // Create notification for freelancer
       try {
@@ -239,24 +213,21 @@ const ClientBidsPage: React.FC = () => {
           .insert([{
             user_id: bid.freelancer_id,
             type: 'bid_accepted',
-            message: `Your bid for "${bid.job.title}" has been accepted! You can now start chatting with the client.`,
-            bid_id: bid.id,
-            job_id: bid.job_id,
+            message: `Your bid for "${bid.job.title}" has been accepted!`,
+            metadata: { bid_id: bid.id, job_id: bid.job_id }, // Use metadata for structured data
             read: false,
-            created_at: new Date().toISOString()
           }]);
       } catch (notificationError) {
-        console.error('Notification creation failed:', notificationError);
-        // Don't fail the operation if notification fails
+        console.error('Notification for accepted bid failed:', notificationError);
       }
 
-      // Create notifications for rejected bidders
+      // Create notifications for rejected bidders (only those that were pending)
       try {
         const { data: rejectedBids } = await supabase
           .from('bids')
-          .select('freelancer_id, freelancer(first_name)')
+          .select('freelancer_id')
           .eq('job_id', bid.job_id)
-          .eq('status', 'rejected')
+          .eq('status', 'pending') // Select only those that were pending and now rejected
           .neq('id', bid.id);
 
         if (rejectedBids && rejectedBids.length > 0) {
@@ -264,9 +235,8 @@ const ClientBidsPage: React.FC = () => {
             user_id: rejectedBid.freelancer_id,
             type: 'bid_rejected',
             message: `Your bid for "${bid.job.title}" was not selected.`,
-            job_id: bid.job_id,
+            metadata: { job_id: bid.job_id },
             read: false,
-            created_at: new Date().toISOString()
           }));
 
           await supabase
@@ -277,19 +247,18 @@ const ClientBidsPage: React.FC = () => {
         console.error('Rejected notifications failed:', rejectedNotificationError);
       }
 
-      if (chatData) {
-        toast({
-          title: 'Bid Accepted',
-          description: 'The freelancer has been notified and you can now start chatting.',
-        });
-      }
+      toast({
+        title: 'Bid Accepted',
+        description: 'The freelancer has been notified and job status updated.',
+      });
 
+      // Re-fetch bids to update the UI
       fetchBids();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accepting bid:', error);
       toast({
         title: 'Error',
-        description: `Failed to accept bid: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to accept bid: ${error.message}`,
         variant: 'destructive',
       });
     }
@@ -313,10 +282,8 @@ const ClientBidsPage: React.FC = () => {
             user_id: bid.freelancer_id,
             type: 'bid_rejected',
             message: `Your bid for "${bid.job.title}" was not selected.`,
-            bid_id: bid.id,
-            job_id: bid.job_id,
+            metadata: { bid_id: bid.id, job_id: bid.job_id },
             read: false,
-            created_at: new Date().toISOString()
           }]);
       } catch (notificationError) {
         console.error('Notification creation failed:', notificationError);
@@ -328,49 +295,96 @@ const ClientBidsPage: React.FC = () => {
       });
 
       fetchBids();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error rejecting bid:', error);
       toast({
         title: 'Error',
-        description: 'Failed to reject bid',
+        description: `Failed to reject bid: ${error.message}`,
         variant: 'destructive',
       });
     }
   };
 
   const handleStartChat = async (bid: Bid) => {
+    setChatInitiatingBidId(bid.id); // Set loading state for this specific bid button
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
+      if (!user || !bid.job_id || !bid.freelancer_id) {
+        toast({
+          title: 'Error',
+          description: 'Missing user, job, or freelancer information to start chat.',
+          variant: 'destructive',
+        });
+        return;
       }
 
-      // Check if chat already exists
-      const { data: existingChat } = await supabase
+      // Check if a chat already exists for this job, client, and freelancer
+      const { data: existingChat, error: existingChatError } = await supabase
         .from('chats')
         .select('id')
         .eq('job_id', bid.job_id)
+        .eq('client_id', user.id)
         .eq('freelancer_id', bid.freelancer_id)
         .single();
 
-      if (existingChat) {
-        navigate(`/client/chat?chat=${existingChat.id}`);
-      } else {
-        // Create new chat
-        try {
-          const chatData = await createChatRoom(bid.job_id, user.id, bid.freelancer_id);
-          navigate(`/client/chat?chat=${chatData.id}`);
-        } catch (chatError) {
-          throw new Error(`Failed to create chat: ${chatError instanceof Error ? chatError.message : 'Unknown error'}`);
-        }
+      if (existingChatError && existingChatError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        // This is a real error other than "not found"
+        throw existingChatError;
       }
-    } catch (error) {
-      console.error('Error starting chat:', error);
+
+      let chatId: string;
+      if (existingChat) {
+        // Chat exists, use its ID
+        chatId = existingChat.id;
+        toast({
+            title: 'Chat Found',
+            description: 'Continuing existing conversation.',
+        });
+      } else {
+        // No existing chat, create a new one
+        const { data: newChat, error: newChatError } = await supabase
+          .from('chats')
+          .insert({
+            job_id: bid.job_id,
+            client_id: user.id,
+            freelancer_id: bid.freelancer_id,
+            created_at: new Date().toISOString(), // Ensure created_at is set for ordering
+            updated_at: new Date().toISOString(), // Ensure updated_at is set
+          })
+          .select('id')
+          .single();
+
+        if (newChatError) {
+          // This is where RLS errors often manifest if direct insert is not allowed
+          console.error("Error creating new chat:", newChatError.message);
+          if (newChatError.code === '42501') { // PostgreSQL permission denied error code
+            toast({
+              title: 'Permission Denied',
+              description: 'You do not have permission to create a chat. Please check RLS policies on `chats` table.',
+              variant: 'destructive',
+            });
+          }
+          throw newChatError; // Re-throw to be caught by outer catch block
+        }
+        chatId = newChat.id;
+        toast({
+            title: 'New Chat Started',
+            description: 'You can now message the freelancer.',
+        });
+      }
+
+      // Navigate to the chat page with the actual chat ID
+      navigate(`/client/chat?chat=${chatId}`);
+
+    } catch (error: any) {
+      console.error('Detailed error starting chat:', error);
       toast({
-        title: 'Error',
-        description: `Failed to start chat: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        title: 'Chat Error',
+        description: `Failed to start chat: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
+    } finally {
+      setChatInitiatingBidId(null); // Reset loading state
     }
   };
 
@@ -515,10 +529,11 @@ const ClientBidsPage: React.FC = () => {
                         {bid.status === 'accepted' && (
                           <Button
                             onClick={() => handleStartChat(bid)}
+                            disabled={chatInitiatingBidId === bid.id} // Disable button while chat is initiating
                             className="flex items-center gap-2"
                           >
                             <MessageSquare className="h-4 w-4" />
-                            Start Chat
+                            {chatInitiatingBidId === bid.id ? 'Starting Chat...' : 'Start Chat'}
                           </Button>
                         )}
                       </div>

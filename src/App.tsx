@@ -15,7 +15,8 @@ import ResetPassword from "./pages/reset_password/resetpassword";
 import ChatPage from "./pages/ChatPage";
 import ClientChatPage from "./pages/client/ClientChatPage";
 import BidsDetailsPage from "./pages/BidsDetailsPage";
-
+import ChatInterface from "./components/ChartInterface";
+import ChatSystem from "./components/chatsystem";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
 const OrderForm = lazy(() => import("./pages/OrderForm"));
 const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
+
 
 
 const App = () => (
@@ -89,6 +91,17 @@ const App = () => (
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/client/chat" element={<ClientChatPage />} />
             <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
+            <Route path="/chat-interface" element={<ChatInterface />} />
+            <Route
+              path="/chat-system"
+              element={
+                <ChatSystem jobId={null} bidId={null} receiverId={null} />
+              }
+            />
+            
+            {/* Add more routes as needed */}
+            {/* Fallback route */}
+
           </Routes>
         </Suspense>
       </BrowserRouter>
