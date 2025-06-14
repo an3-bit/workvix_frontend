@@ -254,7 +254,7 @@ const ChatPage: React.FC = () => {
             // Fetch offer if exists
             const { data: offerData } = await supabase
               .from('offers')
-              .select('id, chat_id, job_id, freelancer_id, client_id, amount, days_to_complete, description, status, created_at')
+              .select('*')
               .eq('chat_id', chat.id)
               .single();
 
@@ -895,7 +895,7 @@ const ChatPage: React.FC = () => {
 
                     {/* Message Input */}
                     <div className="border-t border-gray-200 p-4">
-                      {/* Only show Create Offer button to FREELANCER when NO offer exists yet */}
+                      {/* Create Offer button for freelancers when no offer exists */}
                       {isFreelancer && !selectedChat.offer && (
                         <div className="mb-4">
                           <Button 
@@ -957,17 +957,33 @@ const ChatPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Create Offer</DialogTitle>
             <DialogDescription>
-              Fill in the details of your offer for this job.
+              Fill in the details of your offer for "{selectedChat?.job?.title || 'this job'}".
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Job Details Display */}
+            {selectedChat?.job && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Job Details</h3>
+                <p className="text-sm text-gray-600 mb-1">
+                  <strong>Title:</strong> {selectedChat.job.title}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <strong>Category:</strong> {selectedChat.job.category}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Budget:</strong> ${selectedChat.job.budget}
+                </p>
+              </div>
+            )}
+            
             <div>
               <Label>Amount ($)</Label>
               <Input
                 type="number"
                 value={offerData.amount}
                 onChange={(e) => setOfferData({...offerData, amount: e.target.value})}
-                placeholder="Enter amount"
+                placeholder="Enter your offer amount"
               />
             </div>
             <div>
@@ -984,7 +1000,7 @@ const ChatPage: React.FC = () => {
               <Textarea
                 value={offerData.description}
                 onChange={(e) => setOfferData({...offerData, description: e.target.value})}
-                placeholder="Any additional details about your offer"
+                placeholder="Describe your approach or any additional details"
                 rows={3}
               />
             </div>

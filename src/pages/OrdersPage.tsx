@@ -85,8 +85,7 @@ const OrdersPage: React.FC = () => {
 
   const fetchOrders = async (userId: string) => {
     try {
-      // For clients, get orders where they are the job client
-      // For freelancers, get orders where they are the freelancer
+      // Get orders with proper joins
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
@@ -131,7 +130,18 @@ const OrdersPage: React.FC = () => {
         ) || [];
       }
 
-      setOrders(filteredOrders as Order[]);
+      // Transform the data to match our interface
+      const transformedOrders = filteredOrders.map(order => ({
+        ...order,
+        bid: order.bid ? {
+          ...order.bid,
+          freelancer: Array.isArray(order.bid.freelancer) 
+            ? order.bid.freelancer[0] || null 
+            : order.bid.freelancer
+        } : null
+      })) as Order[];
+
+      setOrders(transformedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
