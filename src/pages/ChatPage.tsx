@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Send, User, DollarSign, Clock, FileText, Check, X, HelpCircle } from 'lucide-react';
@@ -779,8 +780,8 @@ const ChatPage: React.FC = () => {
                         <div>
                           <h2 className="font-semibold text-gray-900">
                             {isFreelancer 
-                              ? `${selectedChat.client?.first_name || 'Client'} ${selectedChat.client?.last_name || ''}`
-                              : `${selectedChat.freelancer?.first_name || 'Freelancer'} ${selectedChat.freelancer?.last_name || ''}`}
+                              ? `${selectedChat.client?.first_name || ''} ${selectedChat.client?.last_name || ''}`.trim() || 'Client'
+                              : `${selectedChat.freelancer?.first_name || ''} ${selectedChat.freelancer?.last_name || ''}`.trim() || 'Freelancer'}
                           </h2>
                           <p className="text-sm text-gray-600">{selectedChat.job?.title || 'No job title'}</p>
                         </div>
