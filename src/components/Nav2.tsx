@@ -217,6 +217,16 @@ const Nav2 = () => {
     }
   };
 
+  const shouldShowJobs = () => {
+    return location.pathname === '/freelancer' || 
+           (userProfile?.user_type === 'freelancer' && ['/jobs', '/bids'].includes(location.pathname));
+  };
+
+  const shouldShowBids = () => {
+    return location.pathname === '/client' || 
+           (userProfile?.user_type === 'client' && location.pathname === '/client/bids');
+  };
+
   if (loading) {
     return (
       <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
@@ -241,6 +251,43 @@ const Nav2 = () => {
           >
             WorkVix
           </button>
+
+          {/* Navigation Links */}
+          {user && (
+            <div className="hidden md:flex items-center space-x-6">
+              {shouldShowJobs() && (
+                <>
+                  <Link 
+                    to="/jobs" 
+                    className={`text-gray-700 hover:text-blue-600 transition-colors ${
+                      location.pathname === '/jobs' ? 'text-blue-600 font-medium' : ''
+                    }`}
+                  >
+                    Jobs
+                  </Link>
+                  <Link 
+                    to="/bids" 
+                    className={`text-gray-700 hover:text-blue-600 transition-colors ${
+                      location.pathname === '/bids' ? 'text-blue-600 font-medium' : ''
+                    }`}
+                  >
+                    My Bids
+                  </Link>
+                </>
+              )}
+              
+              {shouldShowBids() && (
+                <Link 
+                  to="/client/bids" 
+                  className={`text-gray-700 hover:text-blue-600 transition-colors ${
+                    location.pathname === '/client/bids' ? 'text-blue-600 font-medium' : ''
+                  }`}
+                >
+                  Bids
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="flex-1 max-w-md mx-8">

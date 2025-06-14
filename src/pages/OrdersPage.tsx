@@ -1,357 +1,233 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, MoreHorizontal, MessageCircle, HelpCircle } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Nav2 from '@/components/Nav2';
+import { Calendar, Package, DollarSign, Clock, User, MessageCircle, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import Nav2 from '@/components/Nav2';
+import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
+  bid_id: string;
   amount: number;
-  status: string; // Order status (e.g., 'paid', 'in_progress', 'delivered', 'completed', 'cancelled')
+  status: string;
+  payment_method: string | null;
   created_at: string;
-  payment_method: string;
+  updated_at: string;
   bid: {
-    id: string;
-    delivery_time: string; // This comes from the bid
-    freelancer_id: string; // ID of the freelancer who made the bid
-    job_id: string; // ID of the job related to the bid
-    freelancer: { // This assumes 'bids.freelancer_id' links to 'profiles' table
+    amount: number;
+    message: string;
+    delivery_time: string;
+    freelancer_id: string;
+    job_id: string;
+    freelancer: {
       first_name: string;
       last_name: string;
-    };
-    job: { // This assumes 'bids.job_id' links to 'jobs' table
+      email: string;
+    } | null;
+    job: {
       title: string;
+      description: string;
       category: string;
-      client_id: string; // The ID of the client who posted the job
-      client: { // This assumes 'jobs.client_id' links to 'profiles' table
-        first_name: string;
-        last_name: string;
-      };
-    };
-  };
+      client_id: string;
+    } | null;
+  } | null;
 }
 
-const OrdersPage = () => {
+const OrdersPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('active');
-  const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
-  const fetchOrders = useCallback(async (currentUserId: string, role: 'client' | 'freelancer') => {
-    setLoading(true);
+  useEffect(() => {
+    initializeData();
+  }, []);
+
+  const initializeData = async () => {
     try {
-      let query = supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        navigate('/signin');
+        return;
+      }
+
+      setCurrentUser(user);
+
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      setUserProfile(profile);
+      
+      await fetchOrders(user.id);
+    } catch (error) {
+      console.error('Error initializing data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load orders.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOrders = async (userId: string) => {
+    try {
+      // For clients, get orders where they are the job client
+      // For freelancers, get orders where they are the freelancer
+      const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
           *,
-          bid:bid_id (
-            id,
-            delivery_time,
-            freelancer_id,
-            job_id,
-            freelancer:freelancer_id ( 
-              first_name, 
-              last_name
+          bid:bids (
+            *,
+            freelancer:profiles!bids_freelancer_id_fkey (
+              first_name,
+              last_name,
+              email
             ),
-            job:job_id ( 
-              title, 
+            job:jobs (
+              title,
+              description,
               category,
-              client_id,
-              client:client_id ( 
-                first_name,
-                last_name
-              )
+              client_id
             )
           )
         `)
         .order('created_at', { ascending: false });
 
-      if (role === 'client') {
-        const { data: clientJobs, error: clientJobsError } = await supabase
-          .from('jobs')
-          .select('id')
-          .eq('client_id', currentUserId);
+      if (error) throw error;
 
-        if (clientJobsError) {
-          console.error("Error fetching client jobs for order filtering:", clientJobsError.message);
-          throw clientJobsError;
-        }
+      // Filter orders based on user role
+      const userProfile = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', userId)
+        .single();
 
-        const clientJobIds = clientJobs.map(job => job.id);
+      let filteredOrders = ordersData || [];
 
-        if (clientJobIds.length === 0) {
-          setOrders([]);
-          setLoading(false);
-          toast({
-            title: "No Orders",
-            description: "You haven't posted any jobs that have resulted in orders yet.",
-            variant: "default"
-          });
-          return;
-        }
-        
-        query = query.in('bid.job_id', clientJobIds);
-
-      } else if (role === 'freelancer') {
-        query = query.eq('bid.freelancer_id', currentUserId);
-      } else {
-        setOrders([]);
-        setLoading(false);
-        return;
+      if (userProfile.data?.user_type === 'client') {
+        // Show orders for jobs posted by this client
+        filteredOrders = ordersData?.filter(order => 
+          order.bid?.job?.client_id === userId
+        ) || [];
+      } else if (userProfile.data?.user_type === 'freelancer') {
+        // Show orders for bids made by this freelancer
+        filteredOrders = ordersData?.filter(order => 
+          order.bid?.freelancer_id === userId
+        ) || [];
       }
 
-      const { data: ordersData, error: queryError } = await query;
-
-      if (queryError) {
-        console.error('Error fetching orders:', queryError);
-        toast({
-          title: "Error",
-          description: "Failed to fetch orders: " + queryError.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const typedOrders = (ordersData || []).filter(order => order.bid !== null) as Order[];
-      setOrders(typedOrders);
-
-      // Provide feedback if no orders are found after filtering
-      if (typedOrders.length === 0) {
-        toast({
-          title: "No Orders",
-          description: "No orders found for your account in this role.",
-          variant: "default"
-        });
-      }
-
-    } catch (error: any) {
-      console.error('Error in fetchOrders:', error.message);
+      setOrders(filteredOrders as Order[]);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
       toast({
-        title: "Error",
-        description: `Failed to fetch orders: ${error.message}`,
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to load orders.',
+        variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
-  }, [toast]);
+  };
 
-  useEffect(() => {
-    const initPage = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to view your orders.",
-          variant: "destructive"
-        });
-        return;
-      }
-      setUserId(user.id);
-
-      let determinedRole: 'client' | 'freelancer' | null = null;
-
-      // Check if user is a client (by having jobs)
-      const { count: clientJobCount, error: clientJobError } = await supabase
-        .from('jobs')
-        .select('id', { count: 'exact', head: true })
-        .eq('client_id', user.id);
-
-      if (clientJobError) {
-        console.error("Error checking client jobs for role determination:", clientJobError.message);
-      } else if (clientJobCount && clientJobCount > 0) {
-        determinedRole = 'client';
-      }
-
-      // If not definitively a client, check if they are a freelancer (by having bids)
-      if (!determinedRole) {
-        const { count: freelancerBidCount, error: freelancerBidError } = await supabase
-          .from('bids')
-          .select('id', { count: 'exact', head: true })
-          .eq('freelancer_id', user.id);
-
-        if (freelancerBidError) {
-          console.error("Error checking freelancer bids for role determination:", freelancerBidError.message);
-        } else if (freelancerBidCount && freelancerBidCount > 0) {
-          determinedRole = 'freelancer';
-        }
-      }
-
-      setUserRole(determinedRole);
-      
-      if (determinedRole) {
-        fetchOrders(user.id, determinedRole);
-      } else {
-        setLoading(false);
-        setOrders([]); // Ensure orders array is empty if no role is determined
-        toast({
-          title: "No Role Detected",
-          description: "Your account is not currently associated with any client jobs or freelancer bids.",
-          variant: "default"
-        });
-      }
-    };
-    initPage();
-  }, [fetchOrders, toast]); // Add fetchOrders and toast to dependencies for useCallback
-
-  useEffect(() => {
-    if (!userId || !userRole) return;
-
-    const channel = supabase
-      .channel('orders_changes_page') // Unique channel name
-      .on('postgres_changes', {
-        event: '*', // Listen for INSERT, UPDATE, DELETE
-        schema: 'public',
-        table: 'orders',
-      }, (payload) => {
-        // console.log("Realtime change detected in orders:", payload); // For debugging
-        // Re-fetch orders when there's a change in the 'orders' table
-        if (userId && userRole) {
-             fetchOrders(userId, userRole);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, userRole, fetchOrders]); // Add fetchOrders to dependencies for useCallback
-
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'paid': return 'bg-blue-100 text-blue-800'; // New: For orders just paid
-      case 'in_progress': return 'bg-indigo-100 text-indigo-800'; // Active work
-      case 'pending': return 'bg-yellow-100 text-yellow-800'; // Initial state before payment/start
-      case 'delivered': return 'bg-purple-100 text-purple-800'; // Freelancer delivered, awaiting client review
-      case 'completed': return 'bg-green-100 text-green-800'; // Client accepted delivery
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'late': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const filterOrdersByStatus = (statusTab: string) => {
-    if (!orders || orders.length === 0) return [];
-
-    switch (statusTab) {
-      case 'active':
-        // 'active' now includes 'paid', 'in_progress', 'pending'
-        return orders.filter(order => ['paid', 'in_progress', 'pending'].includes(order.status));
-      case 'late':
-        // This 'late' status needs to be set in your backend based on 'delivery_time' vs current date
-        return orders.filter(order => order.status === 'late');
-      case 'delivered':
-        return orders.filter(order => order.status === 'delivered');
       case 'completed':
-        return orders.filter(order => order.status === 'completed');
+        return 'default';
+      case 'in_progress':
+        return 'secondary';
+      case 'pending':
+        return 'outline';
       case 'cancelled':
-        return orders.filter(order => order.status === 'cancelled');
-      case 'starred':
-        // Implement starred logic if you have a 'starred' field on orders or user preferences
-        return []; // Placeholder
+        return 'destructive';
       default:
-        return orders;
+        return 'outline';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
+  const getStatusDisplay = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'in_progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      case 'pending':
+        return 'Pending';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  };
+
+  const handleContactFreelancer = (freelancerId: string, jobId: string) => {
+    // Navigate to chat with the freelancer
+    navigate(`/chat?freelancer=${freelancerId}&job=${jobId}`);
+  };
+
+  const createSupportChat = async () => {
+    if (!currentUser || !userProfile) return;
+
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (e) {
-      console.error("Invalid date string:", dateString);
-      return 'Invalid Date';
-    }
-  };
-
-  const getDisplayName = (order: Order) => {
-    // Ensure all nested properties exist before accessing them
-    if (!order.bid || !order.bid.freelancer || !order.bid.job || !order.bid.job.client) {
-      return 'N/A';
-    }
-
-    if (userRole === 'client') {
-      // Client views the freelancer they hired
-      return `${order.bid.freelancer.first_name} ${order.bid.freelancer.last_name}`;
-    } else if (userRole === 'freelancer') {
-      // Freelancer views the client who posted the job
-      return `${order.bid.job.client.first_name} ${order.bid.job.client.last_name}`;
-    }
-    return 'User'; // Default if role is null or not determined
-  };
-  
-  const getTableHeaderText = () => {
-    if (userRole === 'client') return 'FREELANCER';
-    if (userRole === 'freelancer') return 'CLIENT';
-    return 'USER';
-  };
-
-  const handleSupportChat = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Check if support chat already exists
+      // First check if user already has an open support chat
       const { data: existingChat } = await supabase
         .from('support_chats')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUser.id)
         .eq('status', 'open')
         .single();
 
       if (existingChat) {
-        // Navigate to existing support chat
         navigate(`/chat?support_chat=${existingChat.id}`);
-      } else {
-        // Create new support chat
-        const { data: newChat, error } = await supabase
-          .from('support_chats')
-          .insert([{
-            user_id: user.id,
-            user_type: userRole,
-            subject: 'General Support',
-            status: 'open'
-          }])
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        if (newChat) {
-          navigate(`/chat?support_chat=${newChat.id}`);
-        }
+        return;
       }
+
+      // Create new support chat
+      const { data: supportChat, error } = await supabase
+        .from('support_chats')
+        .insert([{
+          user_id: currentUser.id,
+          user_type: userProfile.user_type,
+          subject: 'Order Support',
+          status: 'open'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      navigate(`/chat?support_chat=${supportChat.id}`);
+
+      toast({
+        title: 'Support Chat Created',
+        description: 'You can now chat with our support team.',
+      });
     } catch (error) {
       console.error('Error creating support chat:', error);
       toast({
-        title: "Error",
-        description: "Failed to start support chat.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to create support chat.',
+        variant: 'destructive',
       });
     }
   };
 
-  if (loading || userRole === null) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Nav2 />
-        <div className="pt-20 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="ml-4 text-gray-700">Loading orders and determining your role...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -359,123 +235,145 @@ const OrdersPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
+      
       <div className="pt-20 pb-8">
         <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Manage {userRole === 'client' ? 'Purchases' : 'Sales'}
-            </h1>
-            <div className="flex items-center space-x-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
+                <p className="text-gray-600 mt-2">
+                  {userProfile?.user_type === 'client' 
+                    ? 'Manage your project orders and track progress'
+                    : 'View your active projects and deliverables'
+                  }
+                </p>
+              </div>
+              
               <Button 
-                variant="outline" 
-                onClick={handleSupportChat}
+                onClick={createSupportChat}
                 className="flex items-center space-x-2"
               >
                 <HelpCircle className="h-4 w-4" />
                 <span>Contact Support</span>
               </Button>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Search by service"
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-6 w-full max-w-2xl mb-8">
-              <TabsTrigger value="active">Active ({filterOrdersByStatus('active').length})</TabsTrigger>
-              <TabsTrigger value="late">Late ({filterOrdersByStatus('late').length})</TabsTrigger>
-              <TabsTrigger value="delivered">Delivered ({filterOrdersByStatus('delivered').length})</TabsTrigger>
-              <TabsTrigger value="completed">Completed ({filterOrdersByStatus('completed').length})</TabsTrigger>
-              <TabsTrigger value="cancelled">Cancelled ({filterOrdersByStatus('cancelled').length})</TabsTrigger>
-              <TabsTrigger value="starred">Starred</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={activeTab}>
-              {filterOrdersByStatus(activeTab).length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-500 text-lg">No {activeTab} orders to show</div>
-                  <p className="text-gray-400 mt-2">When you have {activeTab} orders, they'll appear here.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Table Header */}
-                  <div className="bg-white rounded-lg shadow-sm border">
-                    <div className="grid grid-cols-6 gap-4 p-4 text-sm font-medium text-gray-500 border-b">
-                      <div>{getTableHeaderText()}</div> {/* Dynamic header */}
-                      <div>GIG</div>
-                      <div>DUE ON</div>
-                      <div>ORDER DATE</div>
-                      <div>TOTAL</div>
-                      <div>ACTIONS</div>
-                    </div>
-
-                    {/* Orders */}
-                    {filterOrdersByStatus(activeTab).map((order) => (
-                      <div key={order.id} className="grid grid-cols-6 gap-4 p-4 border-b last:border-b-0 hover:bg-gray-50">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                            {getDisplayName(order)?.[0] || 'U'} {/* Use first char of dynamic name */}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {getDisplayName(order)}
-                            </div>
-                            <Badge className={getStatusColor(order.status)}>
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                            </Badge>
-                          </div>
+            {/* Orders Grid */}
+            {orders.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
+                <p className="text-gray-600 mb-6">
+                  {userProfile?.user_type === 'client' 
+                    ? 'Start by posting a job and accepting bids from freelancers.'
+                    : 'Start bidding on projects to receive your first order.'
+                  }
+                </p>
+                <Button 
+                  onClick={() => {
+                    if (userProfile?.user_type === 'client') {
+                      navigate('/post-job');
+                    } else {
+                      navigate('/jobs');
+                    }
+                  }}
+                >
+                  {userProfile?.user_type === 'client' ? 'Post a Job' : 'Browse Jobs'}
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {orders.map((order) => (
+                  <Card key={order.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg mb-1">
+                            {order.bid?.job?.title || 'Project'}
+                          </CardTitle>
+                          <CardDescription className="text-sm">
+                            {order.bid?.job?.category || 'General'}
+                          </CardDescription>
                         </div>
+                        <Badge variant={getStatusBadgeVariant(order.status)}>
+                          {getStatusDisplay(order.status)}
+                        </Badge>
+                      </div>
+                    </CardHeader>
 
-                        <div>
-                          <div className="font-medium text-gray-900 mb-1">
-                            {order.bid?.job?.title || 'Project Title'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {order.bid?.job?.category || 'Category'}
-                          </div>
-                        </div>
-
-                        <div className="text-sm text-gray-600">
-                          {order.bid?.delivery_time || 'Not specified'}
-                        </div>
-
-                        <div className="text-sm text-gray-600">
-                          {formatDate(order.created_at)}
-                        </div>
-
-                        <div className="font-medium text-gray-900">
-                          ${order.amount.toFixed(2)} {/* Format amount to 2 decimal places */}
-                        </div>
-
+                    <CardContent className="space-y-4">
+                      {/* Amount and Delivery */}
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center space-x-2">
-                          <Button size="sm" variant="outline">
-                            <MessageCircle className="h-4 w-4 mr-1" />
-                            Contact
-                          </Button>
-                          <Button size="sm" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Amount</p>
+                            <p className="font-semibold">${order.amount}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-blue-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Delivery</p>
+                            <p className="font-semibold">{order.bid?.delivery_time || 'N/A'}</p>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+
+                      {/* Freelancer Info (for clients) or Client Info (for freelancers) */}
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-600" />
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600">
+                            {userProfile?.user_type === 'client' ? 'Freelancer' : 'Client'}
+                          </p>
+                          <p className="font-medium">
+                            {userProfile?.user_type === 'client' 
+                              ? `${order.bid?.freelancer?.first_name || ''} ${order.bid?.freelancer?.last_name || ''}`.trim() || 'Unknown'
+                              : 'Client'
+                            }
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Order Date */}
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-gray-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Order Date</p>
+                          <p className="text-sm font-medium">
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex space-x-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleContactFreelancer(
+                            order.bid?.freelancer_id || '', 
+                            order.bid?.job_id || ''
+                          )}
+                          className="flex-1"
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          Chat
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

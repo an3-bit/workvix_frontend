@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, User, DollarSign, Clock, FileText, Check, X } from 'lucide-react';
+import { Send, User, DollarSign, Clock, FileText, Check, X, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -71,6 +70,7 @@ const ChatPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [showOfferDialog, setShowOfferDialog] = useState(false);
   const [offerData, setOfferData] = useState({
     amount: '',
@@ -118,6 +118,16 @@ const ChatPage: React.FC = () => {
       }
 
       setCurrentUser(user);
+      
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      setUserProfile(profile);
+      
       await fetchChats(user.id);
     } catch (error) {
       console.error('Error initializing data:', error);
@@ -276,6 +286,55 @@ const ChatPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
+    }
+  };
+
+  const createSupportChat = async () => {
+    if (!currentUser || !userProfile) return;
+
+    try {
+      // First check if user already has an open support chat
+      const { data: existingChat } = await supabase
+        .from('support_chats')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('status', 'open')
+        .single();
+
+      if (existingChat) {
+        setSupportChatId(existingChat.id);
+        setShowSupportChat(true);
+        return;
+      }
+
+      // Create new support chat
+      const { data: supportChat, error } = await supabase
+        .from('support_chats')
+        .insert([{
+          user_id: currentUser.id,
+          user_type: userProfile.user_type,
+          subject: 'General Support',
+          status: 'open'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSupportChatId(supportChat.id);
+      setShowSupportChat(true);
+
+      toast({
+        title: 'Support Chat Created',
+        description: 'You can now chat with our support team.',
+      });
+    } catch (error) {
+      console.error('Error creating support chat:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create support chat.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -603,7 +662,6 @@ const ChatPage: React.FC = () => {
                 onClose={() => {
                   setShowSupportChat(false);
                   setSupportChatId(null);
-                  navigate('/chat');
                 }}
               />
             </div>
@@ -625,8 +683,21 @@ const ChatPage: React.FC = () => {
               {/* Chat List Sidebar */}
               <div className="w-1/3 border-r border-gray-200 flex flex-col">
                 <div className="p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
-                  <p className="text-sm text-gray-600">{chats.length} conversations</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+                      <p className="text-sm text-gray-600">{chats.length} conversations</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={createSupportChat}
+                      className="flex items-center space-x-2"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      <span>Support</span>
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto">
