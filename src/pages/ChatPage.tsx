@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import SupportChat from '@/components/SupportChat';
 
 interface Chat {
   id: string;
@@ -75,6 +76,10 @@ const ChatPage: React.FC = () => {
     days: '',
     description: ''
   });
+  
+  // Support chat state
+  const [showSupportChat, setShowSupportChat] = useState(false);
+  const [supportChatId, setSupportChatId] = useState<string | null>(null);
 
   useEffect(() => {
     initializeData();
@@ -82,14 +87,18 @@ const ChatPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // This effect handles the case when chats are loaded but we have a chat ID in URL
-    if (chats.length > 0 && searchParams.get('chat') && currentUser) {
-      const chatId = searchParams.get('chat');
-      const chat = chats.find(c => c.id === chatId);
-      if (chat) {
-        setSelectedChat(chat);
-        markMessagesAsRead(chat.id, currentUser.id);
-      }
+    // Handle support chat from URL params
+    const supportChat = searchParams.get('support_chat');
+    if (supportChat) {
+      setSupportChatId(supportChat);
+      setShowSupportChat(true);
+      return;
+    }
+
+    // Handle direct chat navigation from URL params
+    const chatId = searchParams.get('chat');
+    if (chatId) {
+      selectChatById(chatId, currentUser?.id || '');
     }
   }, [chats, searchParams, currentUser]);
 
@@ -109,12 +118,6 @@ const ChatPage: React.FC = () => {
 
       setCurrentUser(user);
       await fetchChats(user.id);
-      
-      // Handle direct chat navigation from URL params
-      const chatId = searchParams.get('chat');
-      if (chatId) {
-        await selectChatById(chatId, user.id);
-      }
     } catch (error) {
       console.error('Error initializing data:', error);
       toast({
@@ -211,16 +214,16 @@ const ChatPage: React.FC = () => {
               .eq('id', chat.job_id)
               .single();
 
-            // Fetch client details
+            // Fetch client details from profiles table
             const { data: clientData } = await supabase
-              .from('clients')
+              .from('profiles')
               .select('first_name, last_name, email')
               .eq('id', chat.client_id)
               .single();
 
-            // Fetch freelancer details
+            // Fetch freelancer details from profiles table
             const { data: freelancerData } = await supabase
-              .from('freelancers')
+              .from('profiles')
               .select('first_name, last_name')
               .eq('id', chat.freelancer_id)
               .single();
@@ -259,7 +262,7 @@ const ChatPage: React.FC = () => {
         setChats(chatsWithDetails);
         
         // Auto-select first chat if available and no specific chat is selected
-        if (chatsWithDetails.length > 0 && !selectedChat && !searchParams.get('chat')) {
+        if (chatsWithDetails.length > 0 && !selectedChat && !searchParams.get('chat') && !showSupportChat) {
           setSelectedChat(chatsWithDetails[0]);
           await markMessagesAsRead(chatsWithDetails[0].id, userId);
         }
@@ -554,10 +557,34 @@ const ChatPage: React.FC = () => {
   const isFreelancer = selectedChat && currentUser?.id === selectedChat.freelancer_id;
   const isClient = selectedChat && currentUser?.id === selectedChat.client_id;
 
-  if (loading) {
+  if (loading || userRole === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show support chat if requested
+  if (showSupportChat && supportChatId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Nav2 />
+        <div className="pt-20 pb-8">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border h-[600px]">
+              <SupportChat 
+                chatId={supportChatId} 
+                onClose={() => {
+                  setShowSupportChat(false);
+                  setSupportChatId(null);
+                  navigate('/chat');
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -827,8 +854,6 @@ const ChatPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-     
 
       {/* Create Offer Dialog */}
       <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>

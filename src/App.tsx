@@ -44,8 +44,6 @@ const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
 const OrderForm = lazy(() => import("./pages/OrderForm"));
 const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
 
-
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -98,10 +96,6 @@ const App = () => (
                 <ChatSystem jobId={null} bidId={null} receiverId={null} />
               }
             />
-            
-            {/* Add more routes as needed */}
-            {/* Fallback route */}
-
           </Routes>
         </Suspense>
       </BrowserRouter>

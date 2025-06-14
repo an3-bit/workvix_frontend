@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, MoreHorizontal, MessageCircle } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, MessageCircle, HelpCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Nav2 from '@/components/Nav2';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +43,7 @@ const OrdersPage = () => {
   const [userRole, setUserRole] = useState<'client' | 'freelancer' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchOrders = useCallback(async (currentUserId: string, role: 'client' | 'freelancer') => {
     setLoading(true);
@@ -297,6 +299,51 @@ const OrdersPage = () => {
     return 'USER';
   };
 
+  const handleSupportChat = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check if support chat already exists
+      const { data: existingChat } = await supabase
+        .from('support_chats')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'open')
+        .single();
+
+      if (existingChat) {
+        // Navigate to existing support chat
+        navigate(`/chat?support_chat=${existingChat.id}`);
+      } else {
+        // Create new support chat
+        const { data: newChat, error } = await supabase
+          .from('support_chats')
+          .insert([{
+            user_id: user.id,
+            user_type: userRole,
+            subject: 'General Support',
+            status: 'open'
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        if (newChat) {
+          navigate(`/chat?support_chat=${newChat.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating support chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start support chat.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading || userRole === null) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -320,6 +367,14 @@ const OrdersPage = () => {
               Manage {userRole === 'client' ? 'Purchases' : 'Sales'}
             </h1>
             <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={handleSupportChat}
+                className="flex items-center space-x-2"
+              >
+                <HelpCircle className="h-4 w-4" />
+                <span>Contact Support</span>
+              </Button>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input

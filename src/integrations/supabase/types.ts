@@ -187,6 +187,7 @@ export type Database = {
       }
       jobs: {
         Row: {
+          assigned_freelancer_id: string | null
           budget: number
           category: string
           client_id: string | null
@@ -200,6 +201,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_freelancer_id?: string | null
           budget: number
           category: string
           client_id?: string | null
@@ -213,6 +215,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_freelancer_id?: string | null
           budget?: number
           category?: string
           client_id?: string | null
@@ -225,7 +228,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_jobs_client"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -272,31 +283,37 @@ export type Database = {
       notifications: {
         Row: {
           bid_id: string | null
+          chat_id: string | null
           created_at: string
           id: string
           job_id: string | null
           message: string
           read: boolean | null
+          support_chat_id: string | null
           type: string
           user_id: string
         }
         Insert: {
           bid_id?: string | null
+          chat_id?: string | null
           created_at?: string
           id?: string
           job_id?: string | null
           message: string
           read?: boolean | null
+          support_chat_id?: string | null
           type: string
           user_id: string
         }
         Update: {
           bid_id?: string | null
+          chat_id?: string | null
           created_at?: string
           id?: string
           job_id?: string | null
           message?: string
           read?: boolean | null
+          support_chat_id?: string | null
           type?: string
           user_id?: string
         }
@@ -320,6 +337,80 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          amount: number
+          chat_id: string | null
+          client_id: string | null
+          created_at: string | null
+          days_to_complete: number | null
+          delivery_time: string | null
+          description: string | null
+          freelancer_id: string | null
+          id: string
+          job_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          chat_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          days_to_complete?: number | null
+          delivery_time?: string | null
+          description?: string | null
+          freelancer_id?: string | null
+          id?: string
+          job_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          chat_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          days_to_complete?: number | null
+          delivery_time?: string | null
+          description?: string | null
+          freelancer_id?: string | null
+          id?: string
+          job_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "freelancers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
         ]
@@ -362,57 +453,6 @@ export type Database = {
           },
         ]
       }
-      offers: {
-        Row: {
-          amount: number
-          created_at: string
-          delivery_time: string
-          freelancer_id: string | null
-          id: string
-          job_id: string | null
-          message: string
-          status: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          delivery_time: string
-          freelancer_id?: string | null
-          id?: string
-          job_id?: string | null
-          message: string
-          status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          delivery_time?: string
-          freelancer_id?: string | null
-          id?: string
-          job_id?: string | null
-          message?: string
-          status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "offers_freelancer_id_fkey"
-            columns: ["freelancer_id"]
-            isOneToOne: false
-            referencedRelation: "freelancers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "offers_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -449,12 +489,91 @@ export type Database = {
         }
         Relationships: []
       }
+      support_chats: {
+        Row: {
+          created_at: string
+          id: string
+          status: string | null
+          subject: string | null
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string | null
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string | null
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read: boolean | null
+          sender_id: string
+          sender_type: string
+          support_chat_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          sender_id: string
+          sender_type: string
+          support_chat_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          sender_id?: string
+          sender_type?: string
+          support_chat_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_support_chat_id_fkey"
+            columns: ["support_chat_id"]
+            isOneToOne: false
+            referencedRelation: "support_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_notification_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      get_unread_message_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      get_unread_support_message_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
@@ -575,4 +694,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
