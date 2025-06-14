@@ -78,11 +78,17 @@ const SupportChat: React.FC<SupportChatProps> = ({ chatId, onClose }) => {
 
       if (error) throw error;
 
-      setMessages(messagesData || []);
+      // Type cast the data to ensure proper types
+      const typedMessages = (messagesData || []).map(msg => ({
+        ...msg,
+        sender_type: msg.sender_type as 'client' | 'freelancer' | 'admin'
+      })) as SupportMessage[];
+
+      setMessages(typedMessages);
 
       // Mark messages as read
-      if (messagesData && messagesData.length > 0) {
-        const unreadMessages = messagesData.filter(
+      if (typedMessages && typedMessages.length > 0) {
+        const unreadMessages = typedMessages.filter(
           msg => msg.sender_type === 'admin' && !msg.read
         );
 
@@ -107,7 +113,10 @@ const SupportChat: React.FC<SupportChatProps> = ({ chatId, onClose }) => {
         table: 'support_messages',
         filter: `support_chat_id=eq.${chatId}`
       }, (payload) => {
-        const newMessage = payload.new as SupportMessage;
+        const newMessage = {
+          ...payload.new,
+          sender_type: payload.new.sender_type as 'client' | 'freelancer' | 'admin'
+        } as SupportMessage;
         setMessages(prev => [...prev, newMessage]);
       })
       .subscribe();

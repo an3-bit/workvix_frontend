@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Send, User, DollarSign, Clock, FileText, Check, X } from 'lucide-react';
@@ -247,6 +248,12 @@ const ChatPage: React.FC = () => {
               .eq('chat_id', chat.id)
               .single();
 
+            // Type cast the offer status
+            const typedOffer = offerData ? {
+              ...offerData,
+              status: offerData.status as 'pending' | 'accepted' | 'declined'
+            } : null;
+
             return {
               ...chat,
               job: jobData,
@@ -254,8 +261,8 @@ const ChatPage: React.FC = () => {
               freelancer: freelancerData,
               messages: messages || [],
               unread_count: unreadCount,
-              offer: offerData || null
-            };
+              offer: typedOffer
+            } as Chat;
           })
         );
 
@@ -421,10 +428,16 @@ const ChatPage: React.FC = () => {
 
       if (error) throw error;
 
+      // Type cast the offer status
+      const typedOffer = {
+        ...offer,
+        status: 'pending' as 'pending' | 'accepted' | 'declined'
+      };
+
       // Update local state
-      setSelectedChat(prev => prev ? { ...prev, offer } : null);
+      setSelectedChat(prev => prev ? { ...prev, offer: typedOffer } : null);
       setChats(prev => prev.map(chat => 
-        chat.id === selectedChat.id ? { ...chat, offer } : chat
+        chat.id === selectedChat.id ? { ...chat, offer: typedOffer } : chat
       ));
 
       // Create notification for client
@@ -465,14 +478,20 @@ const ChatPage: React.FC = () => {
 
       if (error) throw error;
 
+      // Type cast the offer status
+      const typedOffer = {
+        ...updatedOffer,
+        status: 'accepted' as 'pending' | 'accepted' | 'declined'
+      };
+
       // Update local state
       setSelectedChat(prev => prev ? { 
         ...prev, 
-        offer: updatedOffer 
+        offer: typedOffer 
       } : null);
       
       setChats(prev => prev.map(chat => 
-        chat.id === selectedChat?.id ? { ...chat, offer: updatedOffer } : chat
+        chat.id === selectedChat?.id ? { ...chat, offer: typedOffer } : chat
       ));
 
       // Create notification for freelancer
@@ -517,14 +536,20 @@ const ChatPage: React.FC = () => {
 
       if (error) throw error;
 
+      // Type cast the offer status
+      const typedOffer = {
+        ...updatedOffer,
+        status: 'declined' as 'pending' | 'accepted' | 'declined'
+      };
+
       // Update local state
       setSelectedChat(prev => prev ? { 
         ...prev, 
-        offer: updatedOffer 
+        offer: typedOffer 
       } : null);
       
       setChats(prev => prev.map(chat => 
-        chat.id === selectedChat?.id ? { ...chat, offer: updatedOffer } : chat
+        chat.id === selectedChat?.id ? { ...chat, offer: typedOffer } : chat
       ));
 
       // Create notification for freelancer
@@ -557,7 +582,7 @@ const ChatPage: React.FC = () => {
   const isFreelancer = selectedChat && currentUser?.id === selectedChat.freelancer_id;
   const isClient = selectedChat && currentUser?.id === selectedChat.client_id;
 
-  if (loading || userRole === null) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
