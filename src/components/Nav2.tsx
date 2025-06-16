@@ -213,7 +213,7 @@ const Nav2 = () => {
     if (userProfile?.user_type === 'freelancer') {
       navigate('/freelancer/notifications');
     } else {
-      navigate('/dashboard'); // or wherever client notifications are
+      navigate('/freelancer/notifications'); // or wherever client notifications are
     }
   };
 

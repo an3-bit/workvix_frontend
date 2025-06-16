@@ -331,7 +331,7 @@ const ClientDashboard = () => {
                     ))
                   )}
                 </div>
-                <Link to="/notifications" className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-4 inline-block">
+                <Link to="/freelancer/notifications" className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-4 inline-block">
                   View all notifications →
                 </Link>
               </div>
