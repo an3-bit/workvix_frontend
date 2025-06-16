@@ -249,7 +249,7 @@ const Nav2 = () => {
             onClick={handleLogoClick}
             className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
           >
-            WorkVix
+             <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
           </button>
 
           {/* Navigation Links */}
