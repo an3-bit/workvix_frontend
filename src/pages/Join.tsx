@@ -48,6 +48,7 @@ const Join = () => {
 
         const { data } = await supabase.auth.getSession();
         if (data.session) {
+          // If already logged in, redirect to respective dashboard
           navigate(`/${role}`);
         }
       } catch (error) {
@@ -78,7 +79,8 @@ const Join = () => {
     try {
       if (!role) throw new Error("Role not defined. Please start again.");
 
-      const { data, error } = await supabase.auth.signUp({
+      // 1. Sign up user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -86,36 +88,94 @@ const Join = () => {
           data: {
             first_name: values.firstName,
             last_name: values.lastName,
-            role: role
+            role: role // Store role in user_metadata
           }
         }
       });
 
-      if (error) throw error;
-
-      if (data.user?.identities?.length === 0) {
-        throw new Error("User already registered");
+      if (authError) {
+        // Handle specific auth errors like duplicate email
+        if (authError.message.includes("User already registered")) {
+          throw new Error("An account with this email already exists. Please sign in instead.");
+        }
+        throw authError; // Re-throw other auth errors
       }
 
-      if (data.user?.confirmation_sent_at) {
-        toast({
-          title: "Success",
-          description: "Check your email for the confirmation link!",
-        });
+      // Ensure user data is available (it should be after a successful signUp)
+      if (authData.user) {
+        const userId = authData.user.id;
+
+        // 2. Create entry in 'profiles' table for ALL users (both clients and freelancers)
+        // This table typically holds shared user information like names and email.
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId, // Crucial: This ID must match auth.users.id
+            first_name: values.firstName,
+            last_name: values.lastName,
+            email: values.email,
+            // Add any other default profile fields here (e.g., avatar_url, bio, etc.)
+          });
+
+        if (profileError) {
+          console.error("Error creating profile entry:", profileError.message);
+          // If profile creation fails, you might want to handle user deletion from auth here
+          // to prevent orphaned auth users, or show a more critical error.
+          throw new Error("Failed to create user profile. Please try again.");
+        }
+
+        // 3. If role is 'freelancer', create a corresponding entry in the 'freelancers' table.
+        // This table holds freelancer-specific attributes and is crucial for the foreign key.
+        if (role === 'freelancer') {
+          const { error: freelancerError } = await supabase
+            .from('freelancers')
+            .insert({
+              id: userId, // Crucial: This ID must match auth.users.id and profiles.id
+              // Add any other default freelancer-specific fields here (e.g., bio: '', skills: [])
+              // For a new freelancer, these might be empty initially and filled out later.
+            });
+
+          if (freelancerError) {
+            console.error("Error creating freelancer entry:", freelancerError.message);
+            throw new Error("Failed to create freelancer specific data. Please try again.");
+          }
+        }
+        // If role is 'client', you might also have a 'clients' table
+        // and add an entry there similarly if needed, or 'profiles' might be sufficient.
+        // For the current foreign key issue, 'freelancers' table population is key.
+
+        if (authData.user.confirmation_sent_at) {
+          toast({
+            title: "Success",
+            description: "Check your email for the confirmation link to activate your account!",
+          });
+          // Redirect to a page indicating email confirmation is pending
+          navigate('/auth-pending-confirmation'); 
+        } else {
+          // If email confirmation is not required or already handled by Supabase
+          toast({
+            title: "Account Created!",
+            description: `Welcome! You've successfully joined as a ${role}.`,
+          });
+          navigate(`/${role}`); // Navigate to client or freelancer dashboard
+        }
       } else {
-        navigate(`/${role}`);
+        // Fallback for unexpected scenarios where authData.user is null but no specific error
+        throw new Error("An unexpected error occurred during registration. No user data returned.");
       }
-    } catch (error: any) {
-      let errorMessage = "Please try again later";
 
-      if (error.message?.includes("already registered")) {
+    } catch (error: any) {
+      let errorMessage = "An unexpected error occurred. Please try again later.";
+      
+      // Improve error messages for user feedback
+      if (error.message?.includes("already exists") || error.code === '23505') { // 23505 is PostgreSQL unique violation code
         errorMessage = "An account with this email already exists. Please sign in instead.";
-      } else if (error.message?.includes("invalid email")) {
+      } else if (error.message?.includes("valid email")) {
         errorMessage = "Please enter a valid email address.";
       } else if (error.message?.includes("password")) {
         errorMessage = "Password must be at least 8 characters long.";
       } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = error.message; // Use the specific error message if available
       }
 
       toast({
