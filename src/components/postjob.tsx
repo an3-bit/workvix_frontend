@@ -35,6 +35,30 @@ const PostJobForm: React.FC = () => {
     agreeToTerms: false
   });
 
+  // File upload state and handlers
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    } else {
+      setSelectedFile(null);
+    }
+  };
+
+  const handleDownload = () => {
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = selectedFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const categories = [
     'Web Development',
     'Mobile Development',
@@ -309,6 +333,37 @@ const PostJobForm: React.FC = () => {
                     />
                   </div>
 
+                  {/* --- FILE UPLOAD SECTION START --- */}
+                <div className="space-y-4 pt-4 border-t border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-800">Attachments </h3>
+                  <div>
+                    <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        id="file-upload"
+                        type="file"
+                        onChange={handleFileChange}
+                        className="hidden" // Hide the default browser file input button
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md border border-gray-300 transition-colors"
+                      >
+                        Choose File
+                      </label>
+                      {selectedFile ? (
+                        <span className="text-sm text-gray-600 truncate max-w-xs">
+                          {selectedFile.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-500">No file chosen</span>
+                      )}
+                    </div>
+                    
+                  </div>
+                </div>
+                {/* --- FILE UPLOAD SECTION END --- */}
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="budget">Budget ($) *</Label>
@@ -331,6 +386,7 @@ const PostJobForm: React.FC = () => {
                         onChange={(e) => handleInputChange('min_budget', e.target.value)}
                       />
                     </div>
+                    
                     <div>
                       <Label htmlFor="max_budget">Max Budget ($)</Label>
                       <Input
