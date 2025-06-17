@@ -121,18 +121,21 @@ const Join = () => {
         navigate(`/${role}`); // Navigate directly to client or freelancer dashboard
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = "An unexpected error occurred. Please try again later.";
-      
-      // Improve error messages for user feedback
-      if (error.message?.includes("already registered") || error.code === '23505') { // 23505 is PostgreSQL unique violation code
-        errorMessage = "An account with this email already exists. Please sign in instead.";
-      } else if (error.message?.includes("valid email")) {
-        errorMessage = "Please enter a valid email address.";
-      } else if (error.message?.includes("password")) {
-        errorMessage = "Password must be at least 8 characters long.";
-      } else if (error.message) {
-        errorMessage = error.message; // Use the specific error message if available
+
+      // Type guard for error object
+      if (typeof error === "object" && error !== null) {
+        const err = error as { message?: string; code?: string };
+        if (err.message?.includes("already registered") || err.code === '23505') { // 23505 is PostgreSQL unique violation code
+          errorMessage = "An account with this email already exists. Please sign in instead.";
+        } else if (err.message?.includes("valid email")) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (err.message?.includes("password")) {
+          errorMessage = "Password must be at least 8 characters long.";
+        } else if (err.message) {
+          errorMessage = err.message; // Use the specific error message if available
+        }
       }
 
       toast({
