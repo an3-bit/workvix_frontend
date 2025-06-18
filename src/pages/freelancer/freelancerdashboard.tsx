@@ -354,7 +354,7 @@ const FreelancerDashboard = () => {
       icon: <Users className="h-6 w-6" />, 
       title: "My Proposals", 
       desc: "Track your bids",
-      link: "/bids"
+      link: "/bids-details/:bidId"
     },
     { 
       icon: <DollarSign className="h-6 w-6" />, 
