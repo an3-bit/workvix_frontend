@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from './Navbar';
 import Footer from '@/components/Footer';
-import { Eye, EyeOff } from 'lucide-react';
-import Nav2 from './Nav2'; // Import your Nav2 component
+import { Eye, EyeOff, UploadCloud } from 'lucide-react';
+import Nav2 from './Nav2';
 
 const PostJobForm: React.FC = () => {
   const navigate = useNavigate();
@@ -20,8 +20,8 @@ const PostJobForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
-  const [userSession, setUserSession] = useState<any>(null); // State to hold user session
-  const [checkingAuth, setCheckingAuth] = useState(true); // State to track auth check
+  const [userSession, setUserSession] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -39,7 +39,6 @@ const PostJobForm: React.FC = () => {
     agreeToTerms: false
   });
 
-  // File upload state and handlers
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,33 +49,12 @@ const PostJobForm: React.FC = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (selectedFile) {
-      const url = URL.createObjectURL(selectedFile);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = selectedFile.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-  };
-
   const categories = [
-    'Web Development',
-    'Mobile Development',
-    'Design & Creative',
-    'Writing & Translation',
-    'Digital Marketing',
-    'Video & Animation',
-    'Music & Audio',
-    'Programming & Tech',
-    'Business',
-    'Data'
+    'Web Development', 'Mobile Development', 'Design & Creative', 'Writing & Translation',
+    'Digital Marketing', 'Video & Animation', 'Music & Audio', 'Programming & Tech',
+    'Business', 'Data'
   ];
 
-  // Effect to check user session on component mount
   useEffect(() => {
     const checkUser = async () => {
       setCheckingAuth(true);
@@ -84,7 +62,6 @@ const PostJobForm: React.FC = () => {
       setUserSession(session);
       setCheckingAuth(false);
 
-      // Optional: If a user is logged in, pre-fill email/name if available in profile (more advanced)
       if (session) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
@@ -95,12 +72,10 @@ const PostJobForm: React.FC = () => {
         if (profileData && !profileError) {
           setFormData(prev => ({
             ...prev,
-            email: profileData.email || session.user.email || '', // Fallback to auth email
+            email: profileData.email || session.user.email || '',
             name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
-            // No need for password fields if already logged in
           }));
         } else {
-             // If profile not found but session exists, just use session email
              setFormData(prev => ({
                 ...prev,
                 email: session.user.email || '',
@@ -110,13 +85,12 @@ const PostJobForm: React.FC = () => {
     };
     checkUser();
 
-    // Listen for auth state changes (e.g., user logs in/out from another tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserSession(session);
     });
 
     return () => subscription.unsubscribe();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -132,8 +106,6 @@ const PostJobForm: React.FC = () => {
         }
       });
       if (error) throw error;
-      // If no error, Supabase will handle redirection to Google,
-      // and then to /client after successful auth.
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -148,7 +120,6 @@ const PostJobForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate job fields
     if (!formData.title || !formData.description || !formData.category || !formData.budget) {
       toast({
         title: 'Missing Information',
@@ -158,7 +129,6 @@ const PostJobForm: React.FC = () => {
       return;
     }
 
-    // Only validate auth fields if user is NOT logged in
     if (!userSession) {
         if (!formData.email || !formData.password) {
             toast({
@@ -169,7 +139,6 @@ const PostJobForm: React.FC = () => {
             return;
         }
 
-        // Additional validation for signup
         if (authTab === 'signup') {
             if (!formData.name) {
                 toast({
@@ -209,26 +178,23 @@ const PostJobForm: React.FC = () => {
         }
     }
 
-
     setLoading(true);
     try {
-      let currentUserId = userSession?.user?.id; // Use existing user ID if logged in
+      let currentUserId = userSession?.user?.id;
 
-      // If user is not logged in, handle authentication (signin/signup) first
       if (!userSession) {
         if (authTab === 'signup') {
-          // Register new user
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
             options: {
               data: {
-                user_type: 'client', // This will be used by your database trigger
-                first_name: formData.name.split(' ')[0] || '', // Assuming first word is first_name
-                last_name: formData.name.split(' ').slice(1).join(' ') || '', // Rest is last_name
+                user_type: 'client',
+                first_name: formData.name.split(' ')[0] || '',
+                last_name: formData.name.split(' ').slice(1).join(' ') || '',
                 phone: formData.phone,
               },
-              emailRedirectTo: `${window.location.origin}/auth/callback`, // Supabase callback for confirmation
+              emailRedirectTo: `${window.location.origin}/auth/callback`,
             },
           });
 
@@ -239,8 +205,6 @@ const PostJobForm: React.FC = () => {
               throw signUpError;
           }
 
-          // If signup is successful, but user needs to confirm email
-          // The job will be posted by a database trigger AFTER email confirmation.
           toast({
             title: 'Account Created & Confirmation Sent!',
             description: 'We sent a confirmation link to your email. After confirming, please sign in. Your job will be automatically posted upon your first sign-in after confirmation.',
@@ -249,23 +213,54 @@ const PostJobForm: React.FC = () => {
           navigate('/signin', {
             state: { email: formData.email, message: 'Please confirm your email and sign in to see your job posted.' },
           });
-          return; // Exit here, job creation handled by trigger later
+          return;
         } else {
-          // Sign in existing user
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: formData.email,
             password: formData.password,
           });
 
           if (signInError) throw signInError;
-          currentUserId = signInData.user?.id; // Get ID of signed-in user
+          currentUserId = signInData.user?.id;
           if (!currentUserId) throw new Error('Sign in failed: No user ID obtained.');
         }
       }
 
-      // If we reach here, it means:
-      // 1. User was already logged in (currentUserId available from userSession) OR
-      // 2. User just successfully signed in (currentUserId obtained from signInData)
+      // --- Debugging Logs ---
+      console.log('Attempting file upload...');
+      console.log('Current User ID:', currentUserId);
+      console.log('User Session (at upload time):', userSession);
+      // If currentUserId is null/undefined here, that's likely the issue.
+      // If userSession is also null/undefined, it means the auth state isn't recognized.
+
+      // --- File Upload Logic ---
+      let attachmentUrl: string | null = null;
+      if (selectedFile) {
+        const fileExtension = selectedFile.name.split('.').pop();
+        const filePath = `${currentUserId}/${Date.now()}.${fileExtension}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('attachments') // Correct bucket name
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          // Changed from new new Error to new Error
+          throw new Error(`File upload failed: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('attachments') // Correct bucket name
+          .getPublicUrl(filePath);
+
+        if (publicUrlData) {
+          attachmentUrl = publicUrlData.publicUrl;
+        } else {
+          throw new Error('Failed to get public URL for the uploaded file.');
+        }
+      }
 
       // Create the job
       const { data: jobData, error: jobError } = await supabase
@@ -277,21 +272,21 @@ const PostJobForm: React.FC = () => {
           budget: parseFloat(formData.budget),
           min_budget: formData.min_budget ? parseFloat(formData.min_budget) : null,
           max_budget: formData.max_budget ? parseFloat(formData.max_budget) : null,
-          client_id: currentUserId, // Use the determined user ID
+          client_id: currentUserId,
           status: 'open',
+          attachment_url: attachmentUrl,
         }])
         .select()
         .single();
 
       if (jobError) throw jobError;
 
-      // Notify freelancers (this part is good, keep it)
       const { data: freelancers, error: freelancersError } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_type', 'freelancer');
 
-      if (freelancersError) console.error("Error fetching freelancers for notification:", freelancersError.message); // Log but don't stop job post
+      if (freelancersError) console.error("Error fetching freelancers for notification:", freelancersError.message);
 
       if (freelancers && freelancers.length > 0) {
         const notifications = freelancers.map(freelancer => ({
@@ -313,7 +308,7 @@ const PostJobForm: React.FC = () => {
       navigate('/job-posted-notification', {
         state: {
           jobId: jobData.id,
-          isNewUser: false, // This is for existing/just-signed-in users
+          isNewUser: false,
         },
       });
     } catch (error: any) {
@@ -328,7 +323,6 @@ const PostJobForm: React.FC = () => {
     }
   };
 
-  // Render loading state while checking auth
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -340,7 +334,6 @@ const PostJobForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Conditional Navbar rendering */}
       {userSession ? <Nav2 /> : <Navbar />}
       
       <div className="pt-20 pb-8">
@@ -392,9 +385,8 @@ const PostJobForm: React.FC = () => {
                     />
                   </div>
 
-                  {/* --- FILE UPLOAD SECTION START --- */}
                 <div className="space-y-4 pt-4 border-t border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-800">Attachments </h3>
+                  <h3 className="text-xl font-semibold text-gray-800">Attachments (Optional)</h3>
                   <div>
                     <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
                     <div className="flex items-center space-x-2">
@@ -402,26 +394,33 @@ const PostJobForm: React.FC = () => {
                         id="file-upload"
                         type="file"
                         onChange={handleFileChange}
-                        className="hidden" // Hide the default browser file input button
+                        className="hidden"
                       />
                       <label
                         htmlFor="file-upload"
-                        className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md border border-gray-300 transition-colors"
+                        className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md border border-gray-300 transition-colors flex items-center"
                       >
+                        <UploadCloud className="mr-2 h-4 w-4" />
                         Choose File
                       </label>
                       {selectedFile ? (
                         <span className="text-sm text-gray-600 truncate max-w-xs">
                           {selectedFile.name}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="ml-2 text-red-500 hover:text-red-700"
+                            onClick={() => setSelectedFile(null)}
+                          >
+                            x
+                          </Button>
                         </span>
                       ) : (
                         <span className="text-sm text-gray-500">No file chosen</span>
                       )}
                     </div>
-                    
                   </div>
                 </div>
-                {/* --- FILE UPLOAD SECTION END --- */}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -458,7 +457,6 @@ const PostJobForm: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Authentication section with tabs - only shown if user is NOT logged in */}
                   {!userSession && (
                     <div className="pt-4 border-t border-gray-200">
                       <div className="mb-6">
@@ -489,7 +487,6 @@ const PostJobForm: React.FC = () => {
                       </div>
 
                       <div className="space-y-4">
-                        {/* Google Sign In/Up Button */}
                         <Button
                           type="button"
                           variant="outline"
@@ -519,7 +516,6 @@ const PostJobForm: React.FC = () => {
 
                         <div className="text-center text-gray-500 text-sm">or</div>
 
-                        {/* Email Field */}
                         <div>
                           <Label htmlFor="email">{authTab === 'signin' ? 'Email or ID' : 'Email'}</Label>
                           <Input
@@ -532,7 +528,6 @@ const PostJobForm: React.FC = () => {
                           />
                         </div>
 
-                        {/* Password Field */}
                         <div className="relative">
                           <Label htmlFor="password">Password</Label>
                           <Input
@@ -551,7 +546,6 @@ const PostJobForm: React.FC = () => {
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
                         </div>
-                        {/* Confirm Password Field for signup */}
                         {authTab === 'signup' && (
                           <div className="relative">
                             <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -574,7 +568,6 @@ const PostJobForm: React.FC = () => {
                         )}
                         
 
-                        {/* Additional fields for signup */}
                         {authTab === 'signup' && (
                           <>
                             <div>
@@ -587,23 +580,6 @@ const PostJobForm: React.FC = () => {
                                 required
                               />
                             </div>
-
-                            {/* <div>
-                              <Label htmlFor="phone">Phone</Label>
-                              <div className="flex">
-                                <div className="flex items-center px-3 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
-                                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjMDA5QzAwIi8+CjxyZWN0IHk9IjgiIHdpZHRoPSIyNCIgaGVpZ2h0PSI4IiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHk9IjE2IiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgZmlsbD0iI0ZGMDAwMCIvPgo8L3N2Zz4K" alt="Kenya flag" className="w-5 h-4" />
-                                  <span className="ml-2 text-sm">+254</span>
-                                </div>
-                                <Input
-                                  id="phone"
-                                  placeholder="712345678"
-                                  value={formData.phone}
-                                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                                  className="rounded-l-none"
-                                />
-                              </div>
-                            </div> */}
 
                             <div className="space-y-2">
                               <div className="flex items-start space-x-2">
@@ -643,7 +619,6 @@ const PostJobForm: React.FC = () => {
                           </>
                         )}
 
-                        {/* Forgot password link for signin only */}
                         {authTab === 'signin' && (
                           <div className="text-right">
                             <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
@@ -653,8 +628,7 @@ const PostJobForm: React.FC = () => {
                         )}
                       </div>
                     </div>
-                  )} {/* End of !userSession conditional block */}
-
+                  )}
 
                   <div className="flex gap-4 pt-4">
                     <Button
