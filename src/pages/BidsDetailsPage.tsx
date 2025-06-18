@@ -96,6 +96,14 @@ const BidsDetailsPage: React.FC = () => {
         // Fetch client information for each job
         const bidsWithClientInfo = await Promise.all(
           bidsData.map(async (bid) => {
+            const status =
+              bid.status === 'pending' ||
+              bid.status === 'accepted' ||
+              bid.status === 'rejected' ||
+              bid.status === 'withdrawn'
+                ? bid.status
+                : 'pending';
+
             if (bid.jobs?.client_id) {
               const { data: clientData } = await supabase
                 .from('profiles')
@@ -105,16 +113,18 @@ const BidsDetailsPage: React.FC = () => {
 
               return {
                 ...bid,
+                status,
                 job: {
                   ...bid.jobs,
                   client: clientData
                 }
-              };
+              } as BidWithJob;
             }
             return {
               ...bid,
+              status,
               job: bid.jobs
-            };
+            } as BidWithJob;
           })
         );
 

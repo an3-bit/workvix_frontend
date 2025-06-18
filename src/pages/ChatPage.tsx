@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Send, User, DollarSign, Clock, FileText, Check, X, HelpCircle } from 'lucide-react';
@@ -78,10 +79,33 @@ const ChatPage: React.FC = () => {
     days: '',
     description: ''
   });
+
+  // File attachment state
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   
   // Support chat state
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [supportChatId, setSupportChatId] = useState<string | null>(null);
+
+  // Handle file attachment
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setAttachedFile(e.target.files[0]);
+    }
+  };
+
+  // Handle download of attached file
+  const handleDownloadAttachedFile = () => {
+    if (!attachedFile) return;
+    const url = URL.createObjectURL(attachedFile);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachedFile.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     initializeData();
@@ -909,12 +933,52 @@ const ChatPage: React.FC = () => {
                           </Button>
                         </div>
                       )}
-                      <div className="flex gap-2">
-                        <Textarea
+                      {/* Chat Input Area */}
+                      {attachedFile && (
+                        <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between text-sm text-blue-800">
+                          <span>Attached: {attachedFile.name}</span>
+                          <button onClick={() => setAttachedFile(null)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">X</button>
+                        </div>
+                      )}
+                      <div className="flex gap-2 items-end"> {/* Added items-end to align items at the bottom */}
+                        {/* Hidden file input */}
+                        <input
+                          id="chat-file-upload"
+                          type="file"
+                          onChange={handleFileAttach}
+                          className="hidden"
+                        />
+                        {/* Attach File Button */}
+                        <label
+                          htmlFor="chat-file-upload"
+                          className="flex-shrink-0 p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors duration-200 flex items-center justify-center h-[42px] w-[42px]" // Adjust size to match button height
+                          title="Attach File"
+                        >
+                          {/* Attachment Icon (Paperclip) SVG */}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.2a2 2 0 0 1-2.83-2.83l8.49-8.49"/></svg>
+                        </label>
+
+                        {/* Download Button */}
+                        <button
+                          onClick={handleDownloadAttachedFile}
+                          disabled={!attachedFile} // Disable if no file is attached
+                          className={`flex-shrink-0 p-3 rounded-full transition-colors duration-200 flex items-center justify-center h-[42px] w-[42px] ${
+                            !attachedFile
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          }`}
+                          title="Download Attached File"
+                        >
+                          {/* Download Icon SVG */}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        </button>
+
+                        {/* Message Textarea */}
+                        <textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message here..."
-                          className="flex-1 min-h-[60px] resize-none"
+                          className="flex-1 min-h-[42px] max-h-[120px] resize-y px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
@@ -922,27 +986,28 @@ const ChatPage: React.FC = () => {
                             }
                           }}
                         />
-                        <Button 
+                        {/* Send Button */}
+                        <button
                           onClick={handleSendMessage}
-                          disabled={sending || !newMessage.trim()}
-                          className="h-[60px]"
+                          disabled={sending || (!newMessage.trim() && !attachedFile)} // Disable if sending or no message/file
+                          className={`flex-shrink-0 h-[42px] w-[42px] rounded-full transition-colors duration-200 flex items-center justify-center ${
+                            sending || (!newMessage.trim() && !attachedFile)
+                              ? 'bg-blue-300 text-white cursor-not-allowed'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                          }`}
+                          title="Send Message"
                         >
-                          <Send className="h-4 w-4" />
-                        </Button>
+                          {/* Send Icon SVG */}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
+                        </button>
                       </div>
                     </div>
                   </>
                 ) : (
                   <div className="flex-1 flex items-center justify-center text-gray-500">
                     <div className="text-center">
-                      <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="mb-2">Select a conversation to start messaging</p>
-                      <p className="text-sm">
-                        {chats.length === 0 
-                          ? "Accept a bid from the Bids page to start chatting with freelancers"
-                          : "Choose a conversation from the sidebar to continue chatting"
-                        }
-                      </p>
+                      <p className="mb-2">Select a conversation to start chatting.</p>
+                      <p className="text-sm">Your messages will appear here.</p>
                     </div>
                   </div>
                 )}
@@ -1029,3 +1094,4 @@ const ChatPage: React.FC = () => {
 };
 
 export default ChatPage;
+
