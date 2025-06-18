@@ -1,8 +1,6 @@
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, User, DollarSign, Clock, FileText, Check, X, HelpCircle } from 'lucide-react';
+import { Send, User, DollarSign, Clock, FileText, Check, X, HelpCircle, Paperclip, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -47,6 +45,7 @@ interface Message {
   content: string;
   created_at: string;
   read: boolean;
+  attachment_url?: string; // Optional URL for attached file
 }
 
 interface Offer {
@@ -82,7 +81,8 @@ const ChatPage: React.FC = () => {
 
   // File attachment state
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
-  
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element
+
   // Support chat state
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [supportChatId, setSupportChatId] = useState<string | null>(null);
@@ -91,26 +91,37 @@ const ChatPage: React.FC = () => {
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setAttachedFile(e.target.files[0]);
+    } else {
+      setAttachedFile(null);
     }
   };
 
-  // Handle download of attached file
-  const handleDownloadAttachedFile = () => {
-    if (!attachedFile) return;
-    const url = URL.createObjectURL(attachedFile);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachedFile.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  // Function to clear attached file state and input
+  const clearAttachedFile = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Clear the actual file input
+    }
+  };
+
+  // Helper to format timestamps
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   useEffect(() => {
     initializeData();
     setupRealtimeSubscription();
   }, []);
+
+  useEffect(() => {
+    // Scroll to bottom of chat messages when messages change or chat is selected
+    const messagesContainer = document.getElementById('messages-container');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }, [selectedChat?.messages]); // Only re-run when selected chat's messages array changes
 
   useEffect(() => {
     // Handle support chat from URL params
@@ -123,10 +134,10 @@ const ChatPage: React.FC = () => {
 
     // Handle direct chat navigation from URL params
     const chatId = searchParams.get('chat');
-    if (chatId) {
+    if (chatId && chats.length > 0) { // Ensure chats are loaded before trying to select
       selectChatById(chatId, currentUser?.id || '');
     }
-  }, [chats, searchParams, currentUser]);
+  }, [chats, searchParams, currentUser]); // Added chats to dependency array
 
   const initializeData = async () => {
     try {
@@ -177,7 +188,6 @@ const ChatPage: React.FC = () => {
       }, (payload) => {
         const newMessage = payload.new as Message;
         
-        // Update chats with new message
         setChats(prev => prev.map(chat => 
           chat.id === newMessage.chat_id
             ? {
@@ -188,7 +198,6 @@ const ChatPage: React.FC = () => {
             : chat
         ));
         
-        // Update selected chat if it matches
         setSelectedChat(prev => 
           prev && prev.id === newMessage.chat_id
             ? { ...prev, messages: [...prev.messages, newMessage] }
@@ -228,7 +237,6 @@ const ChatPage: React.FC = () => {
 
   const fetchChats = async (userId: string) => {
     try {
-      // Get chats where current user is either client or freelancer
       const { data: chatsData, error: chatsError } = await supabase
         .from('chats')
         .select('*')
@@ -243,47 +251,40 @@ const ChatPage: React.FC = () => {
       if (chatsData) {
         const chatsWithDetails = await Promise.all(
           chatsData.map(async (chat) => {
-            // Fetch job details
             const { data: jobData } = await supabase
               .from('jobs')
               .select('title, budget, category')
               .eq('id', chat.job_id)
               .single();
 
-            // Fetch client details from profiles table
             const { data: clientData } = await supabase
               .from('profiles')
               .select('first_name, last_name, email')
               .eq('id', chat.client_id)
               .single();
 
-            // Fetch freelancer details from profiles table
             const { data: freelancerData } = await supabase
               .from('profiles')
               .select('first_name, last_name')
               .eq('id', chat.freelancer_id)
               .single();
 
-            // Fetch messages
             const { data: messages } = await supabase
               .from('messages')
               .select('*')
               .eq('chat_id', chat.id)
               .order('created_at', { ascending: true });
 
-            // Count unread messages from other user
             const unreadCount = messages?.filter(
               m => m.sender_id !== userId && !m.read
             ).length || 0;
 
-            // Fetch offer if exists
             const { data: offerData } = await supabase
               .from('offers')
               .select('*')
               .eq('chat_id', chat.id)
               .single();
 
-            // Type cast the offer status
             const typedOffer = offerData ? {
               ...offerData,
               status: offerData.status as 'pending' | 'accepted' | 'declined'
@@ -303,7 +304,6 @@ const ChatPage: React.FC = () => {
 
         setChats(chatsWithDetails);
         
-        // Auto-select first chat if available and no specific chat is selected
         if (chatsWithDetails.length > 0 && !selectedChat && !searchParams.get('chat') && !showSupportChat) {
           setSelectedChat(chatsWithDetails[0]);
           await markMessagesAsRead(chatsWithDetails[0].id, userId);
@@ -318,7 +318,6 @@ const ChatPage: React.FC = () => {
     if (!currentUser || !userProfile) return;
 
     try {
-      // First check if user already has an open support chat
       const { data: existingChat } = await supabase
         .from('support_chats')
         .select('id')
@@ -332,7 +331,6 @@ const ChatPage: React.FC = () => {
         return;
       }
 
-      // Create new support chat
       const { data: supportChat, error } = await supabase
         .from('support_chats')
         .insert([{
@@ -365,14 +363,12 @@ const ChatPage: React.FC = () => {
 
   const markMessagesAsRead = async (chatId: string, userId: string) => {
     try {
-      // Mark messages as read in database
       await supabase
         .from('messages')
         .update({ read: true })
         .eq('chat_id', chatId)
         .neq('sender_id', userId);
 
-      // Update local state
       setChats(prev => prev.map(chat => 
         chat.id === chatId 
           ? { 
@@ -385,7 +381,6 @@ const ChatPage: React.FC = () => {
           : chat
       ));
 
-      // Also update selected chat if it's the same
       if (selectedChat && selectedChat.id === chatId) {
         setSelectedChat(prev => prev ? {
           ...prev,
@@ -396,7 +391,6 @@ const ChatPage: React.FC = () => {
         } : null);
       }
 
-      // Delete message notifications for this chat
       await supabase
         .from('notifications')
         .delete()
@@ -416,16 +410,53 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat || !currentUser) return;
+    if (!selectedChat || !currentUser) return;
+    if (!newMessage.trim() && !attachedFile) {
+      toast({
+        title: 'Empty Message',
+        description: 'Please type a message or attach a file to send.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setSending(true);
     try {
+      let attachmentUrl: string | null = null;
+
+      if (attachedFile) {
+        const fileExtension = attachedFile.name.split('.').pop();
+        const filePath = `${selectedChat.id}/${currentUser.id}/${Date.now()}.${fileExtension}`; 
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('chat-attachments')
+          .upload(filePath, attachedFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error(`File upload failed: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('chat-attachments')
+          .getPublicUrl(filePath);
+
+        if (publicUrlData) {
+          attachmentUrl = publicUrlData.publicUrl;
+        } else {
+          throw new Error('Failed to get public URL for the uploaded file.');
+        }
+      }
+
       const { data: message, error } = await supabase
         .from('messages')
         .insert([{
           chat_id: selectedChat.id,
           sender_id: currentUser.id,
-          content: newMessage.trim()
+          content: newMessage.trim(),
+          attachment_url: attachmentUrl,
         }])
         .select()
         .single();
@@ -433,13 +464,11 @@ const ChatPage: React.FC = () => {
       if (error) throw error;
 
       if (message) {
-        // Update selected chat messages
         setSelectedChat(prev => prev ? {
           ...prev,
           messages: [...prev.messages, message]
         } : null);
 
-        // Update chats list
         setChats(prev => prev.map(chat => 
           chat.id === selectedChat.id 
             ? { ...chat, messages: [...chat.messages, message], updated_at: new Date().toISOString() }
@@ -447,14 +476,13 @@ const ChatPage: React.FC = () => {
         ));
 
         setNewMessage('');
+        clearAttachedFile();
 
-        // Update chat's updated_at
         await supabase
           .from('chats')
           .update({ updated_at: new Date().toISOString() })
           .eq('id', selectedChat.id);
 
-        // Create notification for other user
         const otherUserId = currentUser.id === selectedChat.client_id ? selectedChat.freelancer_id : selectedChat.client_id;
         const senderName = currentUser.id === selectedChat.client_id 
           ? `${selectedChat.client?.first_name || 'Client'}`
@@ -473,7 +501,7 @@ const ChatPage: React.FC = () => {
       console.error('Error sending message:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send message.',
+        description: error.message || 'Failed to send message.',
         variant: 'destructive',
       });
     } finally {
@@ -512,19 +540,16 @@ const ChatPage: React.FC = () => {
 
       if (error) throw error;
 
-      // Type cast the offer status
       const typedOffer = {
         ...offer,
         status: 'pending' as 'pending' | 'accepted' | 'declined'
       };
 
-      // Update local state
       setSelectedChat(prev => prev ? { ...prev, offer: typedOffer } : null);
       setChats(prev => prev.map(chat => 
         chat.id === selectedChat.id ? { ...chat, offer: typedOffer } : chat
       ));
 
-      // Create notification for client
       await supabase
         .from('notifications')
         .insert([{
@@ -552,7 +577,6 @@ const ChatPage: React.FC = () => {
 
   const handleAcceptOffer = async (offerId: string) => {
     try {
-      // Update offer status to accepted
       const { data: updatedOffer, error } = await supabase
         .from('offers')
         .update({ status: 'accepted' })
@@ -562,13 +586,11 @@ const ChatPage: React.FC = () => {
 
       if (error) throw error;
 
-      // Type cast the offer status
       const typedOffer = {
         ...updatedOffer,
         status: 'accepted' as 'pending' | 'accepted' | 'declined'
       };
 
-      // Update local state
       setSelectedChat(prev => prev ? { 
         ...prev, 
         offer: typedOffer 
@@ -578,7 +600,6 @@ const ChatPage: React.FC = () => {
         chat.id === selectedChat?.id ? { ...chat, offer: typedOffer } : chat
       ));
 
-      // Create notification for freelancer
       if (selectedChat) {
         await supabase
           .from('notifications')
@@ -595,7 +616,6 @@ const ChatPage: React.FC = () => {
         description: 'The freelancer has been notified. You can now proceed to checkout.',
       });
 
-      // Navigate to checkout
       navigate(`/checkout?offer_id=${offerId}`);
 
     } catch (error) {
@@ -610,7 +630,6 @@ const ChatPage: React.FC = () => {
 
   const handleDeclineOffer = async (offerId: string) => {
     try {
-      // Update offer status to declined
       const { data: updatedOffer, error } = await supabase
         .from('offers')
         .update({ status: 'declined' })
@@ -620,13 +639,11 @@ const ChatPage: React.FC = () => {
 
       if (error) throw error;
 
-      // Type cast the offer status
       const typedOffer = {
         ...updatedOffer,
         status: 'declined' as 'pending' | 'accepted' | 'declined'
       };
 
-      // Update local state
       setSelectedChat(prev => prev ? { 
         ...prev, 
         offer: typedOffer 
@@ -636,7 +653,6 @@ const ChatPage: React.FC = () => {
         chat.id === selectedChat?.id ? { ...chat, offer: typedOffer } : chat
       ));
 
-      // Create notification for freelancer
       if (selectedChat) {
         await supabase
           .from('notifications')
@@ -776,8 +792,11 @@ const ChatPage: React.FC = () => {
                               </div>
                             )}
                             <p className="text-xs text-gray-500 mt-1">
+                              {/* Display a preview of the last message or indicate attachment */}
                               {chat.messages.length > 0 
-                                ? chat.messages[chat.messages.length - 1].content.substring(0, 30) + '...'
+                                ? chat.messages[chat.messages.length - 1].attachment_url
+                                  ? 'Attachment sent 📎'
+                                  : chat.messages[chat.messages.length - 1].content.substring(0, 30) + (chat.messages[chat.messages.length - 1].content.length > 30 ? '...' : '')
                                 : 'No messages yet'
                               }
                             </p>
@@ -853,7 +872,6 @@ const ChatPage: React.FC = () => {
                               <p className="text-sm text-gray-600 mt-1">{selectedChat.offer.description}</p>
                             )}
                           </div>
-                          {/* Only show Accept/Decline buttons to CLIENT when offer status is PENDING */}
                           {isClient && selectedChat.offer.status === 'pending' && (
                             <div className="flex space-x-2">
                               <Button 
@@ -878,7 +896,7 @@ const ChatPage: React.FC = () => {
                     )}
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div id="messages-container" className="flex-1 overflow-y-auto p-4 space-y-4">
                       {selectedChat.messages.length === 0 ? (
                         <div className="flex items-center justify-center h-full text-gray-500">
                           <div className="text-center">
@@ -901,16 +919,42 @@ const ChatPage: React.FC = () => {
                                   : 'bg-gray-100'
                               }`}
                             >
-                              <p className="whitespace-pre-wrap">{message.content}</p>
+                              {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
+                              
+                              {/* Display attached file */}
+                              {message.attachment_url && (
+                                <div className="mt-2 flex items-center space-x-2 bg-white text-gray-800 p-2 rounded-md shadow-sm">
+                                  <FileText className="h-5 w-5 flex-shrink-0" />
+                                  <a 
+                                    href={message.attachment_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-blue-600 hover:underline flex-1 truncate"
+                                    title={message.attachment_url.split('/').pop() || 'Download File'}
+                                  >
+                                    {message.attachment_url.split('/').pop() || 'Download Attachment'}
+                                  </a>
+                                  {/* The Button wrapper is good for styling, but for direct download, the <a> tag is key. */}
+                                  {/* Ensure the 'download' attribute is on the <a> tag itself. */}
+                                  {/* The issue is likely not in this part, but in the URL or permissions. */}
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    asChild 
+                                  >
+                                    <a href={message.attachment_url} download target="_blank" rel="noopener noreferrer">
+                                      <Download className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                </div>
+                              )}
+                              
                               <p className={`text-xs mt-1 ${
                                 message.sender_id === currentUser?.id 
                                   ? 'text-blue-100' 
                                   : 'text-gray-500'
                               }`}>
-                                {new Date(message.created_at).toLocaleTimeString([], { 
-                                  hour: '2-digit', 
-                                  minute: '2-digit' 
-                                })}
+                                {formatTimestamp(message.created_at)}
                               </p>
                             </div>
                           </div>
@@ -918,97 +962,71 @@ const ChatPage: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Message Input */}
-                    <div className="border-t border-gray-200 p-4">
-                      {/* Create Offer button for freelancers when no offer exists */}
-                      {isFreelancer && !selectedChat.offer && (
-                        <div className="mb-4">
+                    {/* Message Input and Send Button */}
+                    <div className="p-4 border-t border-gray-200">
+                      {attachedFile && (
+                        <div className="mb-2 flex items-center justify-between p-2 bg-gray-100 rounded-md">
+                          <span className="text-sm text-gray-700 flex items-center">
+                            <Paperclip className="h-4 w-4 mr-2" /> {attachedFile.name}
+                          </span>
                           <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={handleCreateOffer}
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={clearAttachedFile}
+                            className="text-red-500 hover:text-red-700"
                           >
-                            <DollarSign className="h-4 w-4 mr-2" />
-                            Create Offer
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                       )}
-                      {/* Chat Input Area */}
-                      {attachedFile && (
-                        <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between text-sm text-blue-800">
-                          <span>Attached: {attachedFile.name}</span>
-                          <button onClick={() => setAttachedFile(null)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">X</button>
-                        </div>
-                      )}
-                      <div className="flex gap-2 items-end"> {/* Added items-end to align items at the bottom */}
-                        {/* Hidden file input */}
+                      <div className="flex items-center space-x-2">
                         <input
-                          id="chat-file-upload"
                           type="file"
+                          ref={fileInputRef}
                           onChange={handleFileAttach}
                           className="hidden"
                         />
-                        {/* Attach File Button */}
-                        <label
-                          htmlFor="chat-file-upload"
-                          className="flex-shrink-0 p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer transition-colors duration-200 flex items-center justify-center h-[42px] w-[42px]" // Adjust size to match button height
-                          title="Attach File"
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-gray-500 hover:text-gray-700"
+                          disabled={sending}
                         >
-                          {/* Attachment Icon (Paperclip) SVG */}
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.2a2 2 0 0 1-2.83-2.83l8.49-8.49"/></svg>
-                        </label>
-
-                        {/* Download Button */}
-                        <button
-                          onClick={handleDownloadAttachedFile}
-                          disabled={!attachedFile} // Disable if no file is attached
-                          className={`flex-shrink-0 p-3 rounded-full transition-colors duration-200 flex items-center justify-center h-[42px] w-[42px] ${
-                            !attachedFile
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-500 hover:bg-blue-600 text-white'
-                          }`}
-                          title="Download Attached File"
-                        >
-                          {/* Download Icon SVG */}
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                        </button>
-
-                        {/* Message Textarea */}
-                        <textarea
+                          <Paperclip className="h-5 w-5" />
+                        </Button>
+                        <Textarea
+                          placeholder="Type your message..."
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type your message here..."
-                          className="flex-1 min-h-[42px] max-h-[120px] resize-y px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          onKeyDown={(e) => {
+                          className="flex-1 resize-none"
+                          rows={1}
+                          onKeyPress={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
                               handleSendMessage();
                             }
                           }}
+                          disabled={sending}
                         />
-                        {/* Send Button */}
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={sending || (!newMessage.trim() && !attachedFile)} // Disable if sending or no message/file
-                          className={`flex-shrink-0 h-[42px] w-[42px] rounded-full transition-colors duration-200 flex items-center justify-center ${
-                            sending || (!newMessage.trim() && !attachedFile)
-                              ? 'bg-blue-300 text-white cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700 text-white'
-                          }`}
-                          title="Send Message"
+                        <Button 
+                          onClick={handleSendMessage} 
+                          disabled={sending || (!newMessage.trim() && !attachedFile)}
                         >
-                          {/* Send Icon SVG */}
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
-                        </button>
+                          {sending ? 'Sending...' : <Send className="h-5 w-5" />}
+                        </Button>
                       </div>
+                      {isFreelancer && !selectedChat.offer && (
+                        <div className="mt-2 text-right">
+                          <Button size="sm" onClick={handleCreateOffer}>Create Offer</Button>
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <p className="mb-2">Select a conversation to start chatting.</p>
-                      <p className="text-sm">Your messages will appear here.</p>
-                    </div>
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Select a chat to start messaging
                   </div>
                 )}
               </div>
@@ -1017,73 +1035,46 @@ const ChatPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Create Offer Dialog */}
       <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Offer</DialogTitle>
+            <DialogTitle>Create New Offer</DialogTitle>
             <DialogDescription>
-              Fill in the details of your offer for "{selectedChat?.job?.title || 'this job'}".
+              Submit an offer for the selected job.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Job Details Display */}
-            {selectedChat?.job && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Job Details</h3>
-                <p className="text-sm text-gray-600 mb-1">
-                  <strong>Title:</strong> {selectedChat.job.title}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  <strong>Category:</strong> {selectedChat.job.category}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Budget:</strong> ${selectedChat.job.budget}
-                </p>
-              </div>
-            )}
-            
+          <div className="space-y-4 py-4">
             <div>
-              <Label>Amount ($)</Label>
+              <Label htmlFor="offer-amount">Offer Amount ($)</Label>
               <Input
+                id="offer-amount"
                 type="number"
                 value={offerData.amount}
-                onChange={(e) => setOfferData({...offerData, amount: e.target.value})}
-                placeholder="Enter your offer amount"
+                onChange={(e) => setOfferData({ ...offerData, amount: e.target.value })}
               />
             </div>
             <div>
-              <Label>Days to Complete</Label>
+              <Label htmlFor="offer-days">Days to Complete</Label>
               <Input
+                id="offer-days"
                 type="number"
                 value={offerData.days}
-                onChange={(e) => setOfferData({...offerData, days: e.target.value})}
-                placeholder="Enter number of days"
+                onChange={(e) => setOfferData({ ...offerData, days: e.target.value })}
               />
             </div>
             <div>
-              <Label>Description (Optional)</Label>
+              <Label htmlFor="offer-description">Description</Label>
               <Textarea
+                id="offer-description"
+                placeholder="Details about your offer..."
                 value={offerData.description}
-                onChange={(e) => setOfferData({...offerData, description: e.target.value})}
-                placeholder="Describe your approach or any additional details"
-                rows={3}
+                onChange={(e) => setOfferData({ ...offerData, description: e.target.value })}
+                rows={4}
               />
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowOfferDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmitOffer}
-                disabled={!offerData.amount || !offerData.days}
-              >
-                Submit Offer
-              </Button>
-            </div>
+            <Button onClick={handleSubmitOffer} disabled={sending}>
+              {sending ? 'Submitting...' : 'Submit Offer'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1094,4 +1085,3 @@ const ChatPage: React.FC = () => {
 };
 
 export default ChatPage;
-
