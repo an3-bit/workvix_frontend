@@ -17,6 +17,9 @@ import ClientChatPage from "./pages/client/ClientChatPage";
 import BidsDetailsPage from "./pages/BidsDetailsPage";
 import ChatInterface from "./components/ChartInterface";
 import ChatSystem from "./components/chatsystem";
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminLogin from "./components/admin/AdminLogin";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +93,16 @@ const App = () => (
             <Route path="/client/chat" element={<ClientChatPage />} />
             <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
             <Route path="/chat-interface" element={<ChatInterface />} />
+             {/* Admin Specific Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        {/* Protected Admin Routes */}
+        <Route path="/admin/*" element={
+          <AdminProtectedRoute>
+            <AdminDashboardPage />
+          </AdminProtectedRoute>
+        } />
+
             <Route
               path="/chat-system"
               element={
