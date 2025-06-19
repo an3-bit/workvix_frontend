@@ -322,6 +322,18 @@ const Nav2 = () => {
                   )}
                 </Link>
 
+                  {/* orders */}
+                <Link
+                  to="/orders"
+                  className={`text-gray-700 hover:text-blue-600 transition-colors ${
+                    location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                  }`}
+                >
+                  <span className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors">
+                    Orders
+                  </span>
+                </Link>
+
                 {/* User Avatar Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

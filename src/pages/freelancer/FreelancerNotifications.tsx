@@ -137,7 +137,7 @@ const FreelancerNotifications: React.FC = () => {
       default:
         return <Bell className="h-5 w-5 text-gray-600" />;
     }
-  };
+  };   
 
 
   const handleNotificationClick = async (notification: Notification) => {
