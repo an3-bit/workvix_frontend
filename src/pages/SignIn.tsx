@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserRole } from "@/lib/auth";
+// Removed getUserRole as it's not strictly needed for this direct check
 import { Eye, EyeOff } from "lucide-react";
 
 const signInFormSchema = z.object({
@@ -38,7 +38,50 @@ const SignIn = () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
-          navigate('/dashboard');
+          // If a session exists, we need to determine the user's correct redirect path
+          // This prevents a brief flash of the sign-in page if already logged in.
+          const user = data.session.user;
+          
+          // Check if user is an admin
+          const { data: adminUser, error: adminCheckError } = await supabase
+            .from('support_users')
+            .select('email')
+            .eq('email', user.email)
+            .single();
+
+          if (adminCheckError && adminCheckError.code !== 'PGRST116') { // PGRST116 is "no rows found"
+            console.error('Error checking admin status:', adminCheckError.message);
+            // Don't throw, just proceed as non-admin for now or handle appropriately
+          }
+
+          if (adminUser) {
+            navigate('/admin');
+            return;
+          }
+
+          // If not admin, check for client/freelancer profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', user.id)
+            .single();
+
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            // Default to a general dashboard or sign-out if profile not found
+            navigate('/dashboard'); 
+            return;
+          }
+
+          const userRole = profileData?.user_type || user.user_metadata?.role; // Fallback to metadata
+
+          if (userRole === 'client') {
+            navigate('/client');
+          } else if (userRole === 'freelancer') {
+            navigate('/freelancer');
+          } else {
+            navigate('/dashboard'); // Default dashboard
+          }
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
@@ -68,15 +111,52 @@ const SignIn = () => {
       if (error) throw error;
       if (!data.user) throw new Error("Authentication failed - no user data returned");
 
+      const loggedInUser = data.user;
+
+      // --- NEW ADMIN CHECK LOGIC ---
+      const { data: adminUser, error: adminCheckError } = await supabase
+        .from('support_users')
+        .select('email')
+        .eq('email', loggedInUser.email)
+        .single();
+
+      if (adminCheckError && adminCheckError.code !== 'PGRST116') { // PGRST116 is "no rows found"
+        console.error('Error checking admin status from support_users:', adminCheckError.message);
+        // Do not throw here, proceed as non-admin if this check fails for other reasons
+      }
+
+      if (adminUser) {
+        // User is an admin, redirect to admin dashboard
+        toast({
+          title: "Welcome, Administrator!",
+          description: "You have been signed in successfully to the admin panel.",
+        });
+        navigate('/admin');
+        return; // Important: exit the function after admin redirect
+      }
+      // --- END NEW ADMIN CHECK LOGIC ---
+
+      // If not an admin, proceed with existing client/freelancer role check
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('user_type')
-        .eq('id', data.user.id)
+        .eq('id', loggedInUser.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        // This might happen if a user logs in but doesn't have a profile yet (e.g., direct auth.users entry)
+        // You might want to create a default profile here or redirect to a profile setup page.
+        toast({
+          title: "Profile not found",
+          description: "Proceeding to general dashboard. Please complete your profile if needed.",
+          variant: "default",
+        });
+        navigate('/dashboard'); // Default general dashboard
+        return;
+      }
 
-      const userRole = profileData?.user_type || data.user.user_metadata?.role;
+      const userRole = profileData?.user_type || loggedInUser.user_metadata?.role; // Fallback to user_metadata
 
       toast({
         title: "Welcome back!",
@@ -88,7 +168,8 @@ const SignIn = () => {
       } else if (userRole === 'freelancer') {
         navigate('/freelancer');
       } else {
-        navigate('/dashboard');
+        // Fallback for unexpected roles or if user_type is null/undefined
+        navigate('/dashboard'); 
       }
 
     } catch (error: any) {
@@ -128,7 +209,7 @@ const SignIn = () => {
             <h1 className="text-center text-3xl font-bold">Sign in to your account</h1>
             <p className="mt-2 text-center text-sm text-gray-600">
               Or{" "}
-              <Link to="/join" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
                 create a new account
               </Link>
             </p>
@@ -190,7 +271,7 @@ const SignIn = () => {
 
                 <div className="text-right text-sm">
                   <Link
-                    to="/reset-password"
+                    to="/forgot-password" // Changed from /reset-password as per your other code
                     className="text-blue-600 hover:underline font-medium"
                   >
                     Forgot your password?
