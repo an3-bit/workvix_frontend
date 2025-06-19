@@ -75,7 +75,7 @@ const App = () => (
             <Route path="/client" element={<ClientDashboard />} />
             <Route path="/client/bids" element={<ClientBidsPage />} />
             <Route path="/order/:bidId" element={<OrderForm />} />
-            <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
+            <Route path="/freelancer/notifications" element={<FreelancerNotifications />} />
             <Route path="/upgrade" element={<UpgradeToProPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />
@@ -98,9 +98,7 @@ const App = () => (
         
         {/* Protected Admin Routes */}
         <Route path="/admin/*" element={
-          <AdminProtectedRoute>
-            <AdminDashboardPage />
-          </AdminProtectedRoute>
+          <AdminProtectedRoute />
         } />
 
             <Route

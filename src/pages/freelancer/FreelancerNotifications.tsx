@@ -15,6 +15,15 @@ interface Notification {
   bid_id?: string;
   chat_id?: string;
   offer_id?: string;
+  job?: {
+    id: string;
+    title: string;
+    budget: number;
+  };
+  client?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 const FreelancerNotifications: React.FC = () => {
@@ -106,7 +115,7 @@ const FreelancerNotifications: React.FC = () => {
       default:
         return <Bell className="h-5 w-5 text-gray-600" />;
     }
-  };
+  };   
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
@@ -136,15 +145,119 @@ const FreelancerNotifications: React.FC = () => {
     );
   }
 
+  function formatTimeAgo(created_at: string): React.ReactNode {
+    const now = new Date();
+    const created = new Date(created_at);
+    const diff = Math.floor((now.getTime() - created.getTime()) / 1000);
+
+    if (diff < 60) return 'just now';
+    if (diff < 3600) {
+      const mins = Math.floor(diff / 60);
+      return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+    }
+    if (diff < 86400) {
+      const hours = Math.floor(diff / 3600);
+      return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    }
+    if (diff < 2592000) {
+      const days = Math.floor(diff / 86400);
+      return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+    // Show date if older than 30 days
+    return created.toLocaleDateString();
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
       <div className="pt-20 pb-8">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
-              <p className="text-gray-600 mt-2">Stay updated with your latest activity</p>
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+                <p className="text-gray-600 mt-1">Stay updated with your freelancing activities</p>
+              </div>
+
+              <div className="divide-y divide-gray-200">
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications yet</h3>
+                    <p className="text-gray-500">You'll see notifications about jobs, bids, and messages here.</p>
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                      }`}
+                     onClick={() => {
+                        markAsRead(notification.id);
+                        if (notification.type === 'job_posted' && notification.job) {
+                          navigate(`/jobs/${notification.job.id}/bids`);
+                        } else if (notification.type === 'bid_accepted' && notification.job) {
+                          navigate(`/jobs/${notification.job.id}/bids`);
+                        } else if (notification.type === 'payment_received') {
+                          navigate('/orders');
+                        } else if (notification.type === 'message' && notification.client) {
+                          navigate(`/chat/${notification.client?.first_name}-${notification.client?.last_name}`);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className={`text-sm font-medium ${
+                              !notification.read ? 'text-gray-900' : 'text-gray-700'
+                            }`}>
+                              {notification.message}
+                            </h3>
+                            <div className="flex items-center space-x-2">
+                              <Clock className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm text-gray-500">
+                                {formatTimeAgo(notification.created_at)}
+                              </span>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mt-1">
+                            {notification.message}
+                          </p>
+                          
+                          {notification.job && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {notification.job.title}
+                                </span>
+                                <span className="text-sm font-medium text-green-600">
+                                  ${notification.job.budget}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {notification.client && (
+                            <div className="mt-2">
+                              <span className="text-sm text-gray-500">
+                                From: {notification.client.first_name} {notification.client.last_name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
             {notifications.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-12 text-center">
