@@ -72,7 +72,7 @@ const App = () => (
             <Route path="/client" element={<ClientDashboard />} />
             <Route path="/client/bids" element={<ClientBidsPage />} />
             <Route path="/order/:bidId" element={<OrderForm />} />
-            <Route path="/freelancer/notifications" element={<FreelancerNotificationsPage />} />
+            <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
             <Route path="/upgrade" element={<UpgradeToProPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />
