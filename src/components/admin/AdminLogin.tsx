@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,11 +103,16 @@ const AdminLogin: React.FC = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
-        </CardContent>
+    <Button type="submit" className="w-full" disabled={loading}>
+      {loading ? 'Logging in...' : 'Login'}
+    </Button>
+    <div className="mt-4 text-center">
+      <Link to="/" className="text-sm text-blue-600 hover:underline">
+        ← Back to Workvix Homepage
+      </Link>
+    </div>
+  </form>
+</CardContent>
       </Card>
     </div>
   );
