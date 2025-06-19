@@ -289,6 +289,34 @@ const Nav2 = () => {
             </div>
           )}
 
+          {/* orders */}
+          {user && userProfile?.user_type === 'client' && (
+            <div className="hidden md:flex items-center space-x-6">
+              <Link 
+                to="/orders" 
+                className={`text-gray-700 hover:text-blue-600 transition-colors ${
+                  location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                }`}
+              >
+                Orders
+              </Link>
+            </div>
+          )}
+
+           {/* orders */}
+          {user && userProfile?.user_type === 'freelancer' && (
+            <div className="hidden md:flex items-center space-x-6">
+              <Link 
+                to="/orders" 
+                className={`text-gray-700 hover:text-blue-600 transition-colors ${
+                  location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                }`}
+              >
+                Orders
+              </Link>
+            </div>
+          )}
+          
           {/* Search Bar */}
           <div className="flex-1 max-w-md mx-8">
             <form onSubmit={handleSearch} className="relative">
