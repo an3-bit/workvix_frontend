@@ -72,6 +72,7 @@ const ManageJobs: React.FC = () => {
     fetchFreelancers();
   }, []);
 
+
   const fetchJobs = async () => {
     setLoading(true);
     setError(null);
@@ -80,26 +81,12 @@ const ManageJobs: React.FC = () => {
         .from('jobs')
         .select(`
           *,
-          client:client_id(first_name, last_name, email),
-          freelancer:freelancer_id(first_name, last_name, email)
+          client:client_id(first_name, last_name, email)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Map and sanitize freelancer property to match Job interface
-      setJobs(
-        (data as any[]).map((job) => ({
-          ...job,
-          freelancer:
-            job.freelancer &&
-            typeof job.freelancer === 'object' &&
-            'first_name' in job.freelancer &&
-            'last_name' in job.freelancer &&
-            'email' in job.freelancer
-              ? job.freelancer
-              : null,
-        }))
-      );
+      setJobs(data as Job[]);
     } catch (err: any) {
       console.error('Error fetching jobs:', err.message);
       setError('Failed to fetch jobs: ' + err.message);
