@@ -1,17 +1,45 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, List, MessageSquare, Star, User, DollarSign,
+  LayoutDashboard, List, MessageSquare, Star, DollarSign,
   Gift, Briefcase, FileText, Activity, Rss, Settings, Users,
   ClipboardList, Package, ScrollText, Building2, User2, BookUser,
-  SquareKanban, FileBadge, LifeBuoy
-} from 'lucide-react'; // Added new icons: SquareKanban, FileBadge, LifeBuoy
+  SquareKanban, FileBadge, LifeBuoy, ChevronDown, ChevronUp // Added ChevronDown and ChevronUp
+} from 'lucide-react';
 
 interface AdminSidebarProps {
   onNavLinkClick: (path: string) => void;
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
+  const location = useLocation();
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+
+  // Function to toggle the open/close state of a menu
+  const toggleMenu = (name: string) => {
+    setOpenMenus(prevOpenMenus => ({
+      ...prevOpenMenus,
+      [name]: !prevOpenMenus[name],
+    }));
+  };
+
+  // Effect to automatically open the parent menu if a sub-item's path matches the current URL
+  React.useEffect(() => {
+    menuItems.forEach(item => {
+      if (item.subItems) {
+        const isSubItemActive = item.subItems.some(subItem =>
+          location.pathname.startsWith(subItem.path)
+        );
+        if (isSubItemActive && !openMenus[item.name]) {
+          setOpenMenus(prevOpenMenus => ({
+            ...prevOpenMenus,
+            [item.name]: true,
+          }));
+        }
+      }
+    });
+  }, [location.pathname]); // Re-run when the path changes
+
   const menuItems = [
     {
       name: 'Overview',
@@ -45,7 +73,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       icon: DollarSign,
       path: '/admin/payments',
       subItems: [
-        { name: 'All Transactions', path: '/admin/payments/all' }, // Renamed from transactions
+        { name: 'All Transactions', path: '/admin/payments/all' },
         { name: 'Payouts', path: '/admin/payments/payouts' },
         { name: 'Deposits', path: '/admin/payments/deposits' },
       ],
@@ -62,17 +90,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       subItems: [
         { name: 'Clients', path: '/admin/users/clients' },
         { name: 'Freelancers', path: '/admin/users/freelancers' },
-        { name: 'Applications', path: '/admin/users/applications' }, // For new freelancer applications
+        { name: 'Applications', path: '/admin/users/applications' },
         { name: 'Talent Pools', path: '/admin/users/talent-pools' },
       ],
     },
     {
-      name: 'Samples', // New - for admin-managed work samples
+      name: 'Samples',
       icon: ScrollText,
       path: '/admin/samples',
     },
     {
-      name: 'News & Announcements', // New
+      name: 'News & Announcements',
       icon: Rss,
       path: '/admin/news',
     },
@@ -82,8 +110,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       path: '/admin/activity-log',
     },
     {
-      name: 'Support Tickets', // New - based on previous chat context
-      icon: LifeBuoy, // Changed from HelpCircle to LifeBuoy for support
+      name: 'Support Tickets',
+      icon: LifeBuoy,
       path: '/admin/support-tickets',
     },
     {
@@ -97,8 +125,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
         { name: 'Email Settings', path: '/admin/settings/email' },
       ],
     },
-    // Keep other potential items in mind for future expansion
-    // { name: 'My Sites', icon: Building2, path: '/admin/my-sites' },
   ];
 
   return (
@@ -110,22 +136,50 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       <ul className="space-y-1">
         {menuItems.map((item) => (
           <li key={item.name}>
-            <NavLink
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center space-x-3 p-3 rounded-md transition-colors duration-200 ${
-                  isActive
+            {item.subItems ? (
+              // If the item has subItems, it becomes a clickable parent
+              <div
+                className={`flex items-center justify-between space-x-3 p-3 rounded-md transition-colors duration-200 cursor-pointer ${
+                  openMenus[item.name] || item.subItems.some(subItem => location.pathname.startsWith(subItem.path))
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'hover:bg-gray-700 text-gray-300'
-                }`
-              }
-              onClick={() => onNavLinkClick(item.path)}
-              end={item.path === '/admin'} // 'end' prop for exact match for dashboard
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="font-medium">{item.name}</span>
-            </NavLink>
-            {item.subItems && (
+                }`}
+                onClick={() => {
+                  toggleMenu(item.name);
+                  onNavLinkClick(item.path); // You might still want to trigger this for analytics or other side effects
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <item.icon className="h-5 w-5" />
+                  <span className="font-medium">{item.name}</span>
+                </div>
+                {openMenus[item.name] ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </div>
+            ) : (
+              // If no subItems, it's a regular NavLink
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-md transition-colors duration-200 ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'hover:bg-gray-700 text-gray-300'
+                  }`
+                }
+                onClick={() => onNavLinkClick(item.path)}
+                end={item.path === '/admin'}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="font-medium">{item.name}</span>
+              </NavLink>
+            )}
+
+            {/* Render sub-items only if the menu is open */}
+            {item.subItems && openMenus[item.name] && (
               <ul className="ml-6 mt-1 space-y-1">
                 {item.subItems.map((subItem) => (
                   <li key={subItem.name}>
