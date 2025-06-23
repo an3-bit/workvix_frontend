@@ -158,9 +158,14 @@ const FreelancerNotifications: React.FC = () => {
         setShowPaymentModal(true);
         break;
       case 'message':
-        navigate('/chat', { state: { client: notification.client, notification } });
+        if (notification.client) {
+          navigate('/chat', { state: { client: notification.client, notification } });
+        } else {
+          navigate('/chat', { state: { notification } });
+        }
         break;
       default:
+        navigate('/chat', { state: { notification } });
         break;
     }
   };
@@ -221,6 +226,9 @@ const FreelancerNotifications: React.FC = () => {
                         !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification)}
+                      tabIndex={0}
+                      role="button"
+                      onKeyPress={e => { if (e.key === 'Enter') handleNotificationClick(notification); }}
                     >
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0">

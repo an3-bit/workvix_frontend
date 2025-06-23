@@ -122,8 +122,20 @@ const ClientNotification: React.FC = () => {
     return date.toLocaleDateString();
   };
 
-  const handleNotificationClick = (notification: NotificationData) => {
-    markAsRead(notification.id);
+  const handleNotificationClick = async (notification: NotificationData) => {
+    if (!notification.read) {
+      // Mark as read in backend
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notification.id);
+      // Update local state
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === notification.id ? { ...n, read: true } : n
+        )
+      );
+    }
     switch (notification.type) {
       case 'new_bid':
         if (notification.bid && notification.bid.id) {
@@ -141,9 +153,14 @@ const ClientNotification: React.FC = () => {
         setShowPaymentModal(true);
         break;
       case 'message':
-        navigate('/chat', { state: { freelancer: notification.freelancer, notification } });
+        if (notification.freelancer) {
+          navigate('/chat', { state: { freelancer: notification.freelancer, notification } });
+        } else {
+          navigate('/chat', { state: { notification } });
+        }
         break;
       default:
+        navigate('/chat', { state: { notification } });
         break;
     }
   };
@@ -229,6 +246,9 @@ const ClientNotification: React.FC = () => {
                         !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification)}
+                      tabIndex={0}
+                      role="button"
+                      onKeyPress={e => { if (e.key === 'Enter') handleNotificationClick(notification); }}
                     >
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0">
