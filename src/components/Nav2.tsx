@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -212,8 +211,10 @@ const Nav2 = () => {
     // Navigate to appropriate notifications page
     if (userProfile?.user_type === 'freelancer') {
       navigate('/freelancer/notifications');
+    } else if (userProfile?.user_type === 'client') {
+      navigate('/client/notifications');
     } else {
-      navigate('/freelancer/notifications'); // or wherever client notifications are
+      navigate('/freelancer/notifications'); // fallback
     }
   };
 
@@ -361,18 +362,6 @@ const Nav2 = () => {
                       {messageCount > 99 ? '99+' : messageCount}
                     </span>
                   )}
-                </Link>
-
-                  {/* orders */}
-                <Link
-                  to="/orders"
-                  className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                    location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
-                  }`}
-                >
-                  <span className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors">
-                    Orders
-                  </span>
                 </Link>
 
                 {/* User Avatar Dropdown */}
