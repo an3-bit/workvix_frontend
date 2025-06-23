@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Send, User, DollarSign, Clock, FileText, Check, X, HelpCircle, Paperclip, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -64,6 +64,7 @@ interface Offer {
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { toast } = useToast();
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -121,7 +122,7 @@ const ChatPage: React.FC = () => {
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-  }, [selectedChat?.messages]); // Only re-run when selected chat's messages array changes
+  }, [selectedChat?.messages]);
 
   useEffect(() => {
     // Handle support chat from URL params
@@ -137,7 +138,32 @@ const ChatPage: React.FC = () => {
     if (chatId && chats.length > 0) { // Ensure chats are loaded before trying to select
       selectChatById(chatId, currentUser?.id || '');
     }
-  }, [chats, searchParams, currentUser]); // Added chats to dependency array
+
+    // Handle navigation from notification (location.state)
+    if (location.state && chats.length > 0) {
+      console.log('ChatPage location.state:', location.state);
+      // Try to find chat by client, freelancer, bid, or job
+      const { client, freelancer, clientId, freelancerId, bid, job, notification } = location.state;
+      let chatToSelect = null;
+      if (clientId) {
+        chatToSelect = chats.find(c => c.client_id === clientId || c.freelancer_id === clientId);
+      } else if (freelancerId) {
+        chatToSelect = chats.find(c => c.freelancer_id === freelancerId || c.client_id === freelancerId);
+      } else if (client && client.id) {
+        chatToSelect = chats.find(c => c.client_id === client.id);
+      } else if (freelancer && freelancer.id) {
+        chatToSelect = chats.find(c => c.freelancer_id === freelancer.id);
+      } else if (bid && bid.id) {
+        chatToSelect = chats.find(c => c.job_id === bid.job_id);
+      } else if (job && job.id) {
+        chatToSelect = chats.find(c => c.job_id === job.id);
+      }
+      if (chatToSelect) {
+        setSelectedChat(chatToSelect);
+        markMessagesAsRead(chatToSelect.id, currentUser?.id || '');
+      }
+    }
+  }, [chats, searchParams, currentUser, location.state]);
 
   const initializeData = async () => {
     try {
