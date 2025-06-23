@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, DollarSign } from 'lucide-react';
@@ -171,7 +170,7 @@ const CheckoutPage = () => {
     setProcessing(true);
     try {
       // Create order record
-      const { error: orderError } = await supabase
+      const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert([
           {
@@ -180,7 +179,9 @@ const CheckoutPage = () => {
             status: 'paid',
             payment_method: paymentMethod
           }
-        ]);
+        ])
+        .select()
+        .single();
 
       if (orderError) throw orderError;
 
@@ -192,9 +193,33 @@ const CheckoutPage = () => {
 
       if (bidError) throw bidError;
 
+      // Mark job as completed
+      await supabase
+        .from('jobs')
+        .update({ status: 'completed' })
+        .eq('id', bid.job_id);
+
+      // Notify both client and freelancer
+      await supabase
+        .from('notifications')
+        .insert([
+          {
+            user_id: bid.freelancer_id,
+            type: 'order_paid',
+            message: `Order for "${job?.title}" has been paid and is now complete!`,
+            read: false
+          },
+          {
+            user_id: currentUser.id,
+            type: 'order_paid',
+            message: `You have successfully paid for "${job?.title}". Order is complete!`,
+            read: false
+          }
+        ]);
+
       toast({
         title: 'Payment Successful',
-        description: 'Your payment has been processed successfully!',
+        description: 'Your payment has been processed successfully! Order is complete.',
       });
 
       navigate('/orders');

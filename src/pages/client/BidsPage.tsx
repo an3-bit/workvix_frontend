@@ -214,45 +214,36 @@ const ClientBidsPage: React.FC = () => {
             user_id: bid.freelancer_id,
             type: 'bid_accepted',
             message: `Your bid for "${bid.job.title}" has been accepted!`,
-            metadata: { bid_id: bid.id, job_id: bid.job_id }, // Use metadata for structured data
+            metadata: { bid_id: bid.id, job_id: bid.job_id },
             read: false,
           }]);
       } catch (notificationError) {
         console.error('Notification for accepted bid failed:', notificationError);
       }
 
-      // Create notifications for rejected bidders (only those that were pending)
-      try {
-        const { data: rejectedBids } = await supabase
-          .from('bids')
-          .select('freelancer_id')
-          .eq('job_id', bid.job_id)
-          .eq('status', 'pending') // Select only those that were pending and now rejected
-          .neq('id', bid.id);
-
-        if (rejectedBids && rejectedBids.length > 0) {
-          const rejectedNotifications = rejectedBids.map(rejectedBid => ({
-            user_id: rejectedBid.freelancer_id,
-            type: 'bid_rejected',
-            message: `Your bid for "${bid.job.title}" was not selected.`,
-            metadata: { job_id: bid.job_id },
-            read: false,
-          }));
-
-          await supabase
-            .from('notifications')
-            .insert(rejectedNotifications);
-        }
-      } catch (rejectedNotificationError) {
-        console.error('Rejected notifications failed:', rejectedNotificationError);
+      // Ensure chat exists for this job/client/freelancer
+      const { data: existingChat, error: chatError } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('job_id', bid.job_id)
+        .eq('client_id', user.id)
+        .eq('freelancer_id', bid.freelancer_id)
+        .single();
+      if (!existingChat) {
+        // Create chat
+        await supabase
+          .from('chats')
+          .insert([{
+            job_id: bid.job_id,
+            client_id: user.id,
+            freelancer_id: bid.freelancer_id
+          }]);
       }
 
       toast({
         title: 'Bid Accepted',
-        description: 'The freelancer has been notified and job status updated.',
+        description: 'The freelancer has been notified and a chat has been created.',
       });
-
-      // Re-fetch bids to update the UI
       fetchBids();
     } catch (error: any) {
       console.error('Error accepting bid:', error);

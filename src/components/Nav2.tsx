@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,71 +19,27 @@ const Nav2 = () => {
   const [messageCount, setMessageCount] = useState(0);
 
   useEffect(() => {
-    checkUser();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        fetchUserProfile(session.user.id);
-        fetchNotificationCounts(session.user.id);
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        setNotificationCount(0);
-        setMessageCount(0);
+    const fetchUserAndNotifications = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        setUser(user);
+        await fetchUserProfile(user.id);
+        fetchNotifications(user.id);
+        setupRealtime(user.id);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
       }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    };
+    fetchUserAndNotifications();
+    return () => {
+      supabase.removeAllChannels();
+    };
   }, []);
-
-  useEffect(() => {
-    if (user?.id) {
-      // Set up realtime subscriptions for notifications and messages
-      const notificationsChannel = supabase
-        .channel('notifications_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, () => {
-          fetchNotificationCounts(user.id);
-        })
-        .subscribe();
-
-      const messagesChannel = supabase
-        .channel('messages_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages'
-        }, () => {
-          fetchNotificationCounts(user.id);
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(notificationsChannel);
-        supabase.removeChannel(messagesChannel);
-      };
-    }
-  }, [user?.id]);
-
-  const checkUser = async () => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        setUser(currentUser);
-        await fetchUserProfile(currentUser.id);
-        await fetchNotificationCounts(currentUser.id);
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -93,33 +48,35 @@ const Nav2 = () => {
         .select('*')
         .eq('id', userId)
         .single();
-
       setUserProfile(profile);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setLoading(false);
     }
   };
 
-  const fetchNotificationCounts = async (userId: string) => {
-    try {
-      // Get notification count using the database function
-      const { data: notificationData, error: notificationError } = await supabase
-        .rpc('get_notification_count', { user_uuid: userId });
-
-      if (!notificationError && notificationData !== null) {
-        setNotificationCount(notificationData);
-      }
-
-      // Get message count using the database function
-      const { data: messageData, error: messageError } = await supabase
-        .rpc('get_unread_message_count', { user_uuid: userId });
-
-      if (!messageError && messageData !== null) {
-        setMessageCount(messageData);
-      }
-    } catch (error) {
-      console.error('Error fetching notification counts:', error);
+  const fetchNotifications = async (uid) => {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id, read')
+      .eq('user_id', uid);
+    if (!error) {
+      setNotificationCount(data.filter(n => !n.read).length);
     }
+  };
+
+  const setupRealtime = (uid) => {
+    const channel = supabase
+      .channel('notifications_nav2')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${uid}`
+      }, () => {
+        fetchNotifications(uid);
+      })
+      .subscribe();
   };
 
   const handleLogout = async () => {

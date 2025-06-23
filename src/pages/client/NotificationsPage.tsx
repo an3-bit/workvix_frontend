@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
 import Footer from '@/components/Footer';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 interface Notification {
   id: string;
@@ -17,7 +18,7 @@ interface Notification {
   offer_id?: string;
 }
 
-const FreelancerNotifications: React.FC = () => {
+const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const FreelancerNotifications: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     const channel = supabase
-      .channel('notifications_changes_freelancer')
+      .channel('notifications_changes_client')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -90,12 +91,18 @@ const FreelancerNotifications: React.FC = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'job_posted':
-        return <Briefcase className="h-5 w-5 text-blue-600" />;
+      case 'bid_received':
+        return <DollarSign className="h-5 w-5 text-blue-600" />;
       case 'bid_accepted':
         return <DollarSign className="h-5 w-5 text-green-600" />;
       case 'bid_rejected':
         return <User className="h-5 w-5 text-red-600" />;
+      case 'job_posted':
+        return <Briefcase className="h-5 w-5 text-blue-600" />;
+      case 'job_started':
+        return <Briefcase className="h-5 w-5 text-green-600" />;
+      case 'job_completed':
+        return <Briefcase className="h-5 w-5 text-green-600" />;
       case 'payment_received':
       case 'order_paid':
         return <DollarSign className="h-5 w-5 text-green-600" />;
@@ -113,18 +120,26 @@ const FreelancerNotifications: React.FC = () => {
       markAsRead(notification.id);
     }
     // Navigate based on notification type and available IDs
-    if (notification.type === 'job_posted' && notification.job_id) {
-      navigate(`/jobs/${notification.job_id}/bids`);
+    if (notification.type === 'bid_received' && notification.bid_id) {
+      navigate(`/client/bids`);
     } else if (notification.type === 'bid_accepted' && notification.bid_id) {
       navigate('/orders');
-    } else if (notification.type === 'bid_rejected' && notification.job_id) {
+    } else if (notification.type === 'bid_rejected' && notification.bid_id) {
+      navigate(`/client/bids`);
+    } else if (notification.type === 'job_posted' && notification.job_id) {
       navigate(`/jobs/${notification.job_id}/bids`);
     } else if (notification.type === 'new_message' && notification.chat_id) {
-      navigate(`/chat?chat=${notification.chat_id}`);
+      navigate(`/client/chat?chat=${notification.chat_id}`);
     } else if (notification.type === 'new_offer' && notification.chat_id) {
-      navigate(`/chat?chat=${notification.chat_id}`);
+      navigate(`/client/chat?chat=${notification.chat_id}`);
     } else if (notification.type === 'order_paid') {
       navigate('/orders');
+    } else if (notification.type === 'new_message') {
+      toast({
+        title: 'Error',
+        description: 'This message notification is missing a chat link.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -176,10 +191,10 @@ const FreelancerNotifications: React.FC = () => {
                           <Clock className="h-4 w-4" />
                           {new Date(notification.created_at).toLocaleString()}
                         </div>
-                        {notification.type === 'job_posted' && (
+                        {notification.type === 'bid_received' && (
                           <div className="mt-2">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              Click to view job and place bid
+                              New bid received
                             </span>
                           </div>
                         )}
@@ -221,4 +236,4 @@ const FreelancerNotifications: React.FC = () => {
   );
 };
 
-export default FreelancerNotifications;
+export default NotificationsPage; 
