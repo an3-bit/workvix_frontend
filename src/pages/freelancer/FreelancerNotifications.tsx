@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav2 from '@/components/Nav2';
-import { Bell, Clock, DollarSign, User, MessageSquare } from 'lucide-react';
+import { Bell, Clock, DollarSign, User, MessageSquare, Briefcase } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 
-interface NotificationData {
+interface Notification {
   id: string;
-  type: 'job_posted' | 'bid_accepted' | 'payment_received' | 'message';
+  type: string;
   title: string;
   message: string;
-  created_at: string;
   read: boolean;
+  created_at: string;
+  job_id?: string;
+  bid_id?: string;
+  chat_id?: string;
+  offer_id?: string;
   job?: {
     id: string;
     title: string;
@@ -24,9 +28,9 @@ interface NotificationData {
 }
 
 const FreelancerNotifications: React.FC = () => {
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedJob, setSelectedJob] = useState<NotificationData['job'] | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Notification['job'] | null>(null);
   const [showJobModal, setShowJobModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState('');
@@ -84,45 +88,59 @@ const FreelancerNotifications: React.FC = () => {
     }
   };
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
+  const setupRealtimeSubscription = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const channel = supabase
+      .channel('notifications_changes_freelancer')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        fetchNotifications(user.id);
+      })
+      .subscribe();
+    return channel;
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+      if (user && user.id) {
+        fetchNotifications(user.id);
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'job_posted':
-        return <Bell className="h-6 w-6 text-blue-600" />;
+        return <Briefcase className="h-5 w-5 text-blue-600" />;
       case 'bid_accepted':
-        return <User className="h-6 w-6 text-green-600" />;
+        return <DollarSign className="h-5 w-5 text-green-600" />;
+      case 'bid_rejected':
+        return <User className="h-5 w-5 text-red-600" />;
       case 'payment_received':
-        return <DollarSign className="h-6 w-6 text-green-600" />;
-      case 'message':
-        return <MessageSquare className="h-6 w-6 text-purple-600" />;
+      case 'order_paid':
+        return <DollarSign className="h-5 w-5 text-green-600" />;
+      case 'new_message':
+        return <MessageSquare className="h-5 w-5 text-purple-600" />;
+      case 'new_offer':
+        return <DollarSign className="h-5 w-5 text-yellow-600" />;
       default:
-        return <Bell className="h-6 w-6 text-gray-600" />;
+        return <Bell className="h-5 w-5 text-gray-600" />;
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    return date.toLocaleDateString();
-  };
-
-  const handleNotificationClick = async (notification: NotificationData) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
       await supabase
         .from('notifications')
@@ -165,19 +183,36 @@ const FreelancerNotifications: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Nav2 />
-        <div className="pt-20 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
+  function formatTimeAgo(created_at: string): React.ReactNode {
+    const now = new Date();
+    const date = new Date(created_at);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return 'just now';
+    if (diff < 3600) {
+      const mins = Math.floor(diff / 60);
+      return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+    }
+    if (diff < 86400) {
+      const hours = Math.floor(diff / 3600);
+      return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    }
+    if (diff < 604800) {
+      const days = Math.floor(diff / 86400);
+      return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+    // Otherwise, show date
+    return date.toLocaleDateString();
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
-      
       <div className="pt-20 pb-8">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -260,6 +295,73 @@ const FreelancerNotifications: React.FC = () => {
                 )}
               </div>
             </div>
+            {notifications.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No notifications yet</h3>
+                <p className="text-gray-600">
+                  You'll receive notifications about job opportunities and bid updates here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      !notification.read ? 'border-l-4 border-l-blue-600 bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`${!notification.read ? 'font-medium' : ''} text-gray-900`}>
+                          {notification.message}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                          <Clock className="h-4 w-4" />
+                          {new Date(notification.created_at).toLocaleString()}
+                        </div>
+                        {notification.type === 'job_posted' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Click to view job and place bid
+                            </span>
+                          </div>
+                        )}
+                        {notification.type === 'new_message' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              New message
+                            </span>
+                          </div>
+                        )}
+                        {notification.type === 'new_offer' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              New offer
+                            </span>
+                          </div>
+                        )}
+                        {notification.type === 'order_paid' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Order complete
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
