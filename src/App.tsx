@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -46,6 +45,7 @@ const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
 const OrderForm = lazy(() => import("./pages/OrderForm"));
 const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
+const ClientNotification = lazy(() => import("./pages/client/ClientNotification"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -76,6 +76,7 @@ const App = () => (
             <Route path="/client/bids" element={<ClientBidsPage />} />
             <Route path="/order/:bidId" element={<OrderForm />} />
             <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
+            <Route path="/client/notifications" element={<ClientNotification />} />
             <Route path="/upgrade" element={<UpgradeToProPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />

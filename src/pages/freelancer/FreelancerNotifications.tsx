@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Briefcase, DollarSign, User, Clock, MessageSquare } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import Nav2 from '@/components/Nav2';
-import Footer from '@/components/Footer';
 import { useNavigate } from 'react-router-dom';
+import Nav2 from '@/components/Nav2';
+import { Bell, Clock, DollarSign, User, MessageSquare, Briefcase } from 'lucide-react';
+import { Dialog } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Notification {
   id: string;
@@ -29,42 +29,61 @@ interface Notification {
 const FreelancerNotifications: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedJob, setSelectedJob] = useState<Notification['job'] | null>(null);
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchNotifications();
-    const setupSubscription = async () => {
-      const subscription = await setupRealtimeSubscription();
-      return () => {
-        if (subscription) {
-          supabase.removeChannel(subscription);
-        }
-      };
+    const fetchUserAndNotifications = async () => {
+      setLoading(true);
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
+      if (currentUser) {
+        await fetchNotifications(currentUser.id);
+      } else {
+        setNotifications([]);
+      }
+      setLoading(false);
     };
-    const cleanup = setupSubscription();
-    return () => {
-      cleanup.then(cleanupFn => cleanupFn && cleanupFn());
-    };
+    fetchUserAndNotifications();
   }, []);
 
-  const fetchNotifications = async () => {
+  const getNotificationTitle = (n: any) => {
+    switch (n.type) {
+      case 'job_posted': return 'New Job Posted';
+      case 'bid_accepted': return 'Bid Accepted!';
+      case 'payment_received': return 'Payment Received';
+      case 'message': return 'New Message';
+      default: return 'Notification';
+    }
+  };
+
+  const fetchNotifications = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/signin');
-        return;
-      }
-      const { data: notificationsData, error } = await supabase
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setNotifications(notificationsData || []);
+      // Transform raw notifications to match NotificationData interface
+      const transformed = (data || []).map((n: any) => ({
+        id: n.id,
+        type: n.type,
+        title: getNotificationTitle(n),
+        message: n.message || '',
+        created_at: n.created_at,
+        read: n.read,
+        job: n.job_id ? { id: n.job_id, title: n.job_title || '', budget: n.job_budget || 0 } : undefined,
+        client: n.client_first_name ? { first_name: n.client_first_name, last_name: n.client_last_name } : undefined,
+      }));
+      setNotifications(transformed);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
+      setNotifications([]);
     }
   };
 
@@ -79,7 +98,7 @@ const FreelancerNotifications: React.FC = () => {
         table: 'notifications',
         filter: `user_id=eq.${user.id}`
       }, () => {
-        fetchNotifications();
+        fetchNotifications(user.id);
       })
       .subscribe();
     return channel;
@@ -91,7 +110,9 @@ const FreelancerNotifications: React.FC = () => {
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
-      fetchNotifications();
+      if (user && user.id) {
+        fetchNotifications(user.id);
+      }
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -115,25 +136,32 @@ const FreelancerNotifications: React.FC = () => {
       default:
         return <Bell className="h-5 w-5 text-gray-600" />;
     }
-  };   
+  };
+
 
   const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) {
-      markAsRead(notification.id);
-    }
-    // Navigate based on notification type and available IDs
-    if (notification.type === 'job_posted' && notification.job_id) {
-      navigate(`/jobs/${notification.job_id}/bids`);
-    } else if (notification.type === 'bid_accepted' && notification.bid_id) {
-      navigate('/orders');
-    } else if (notification.type === 'bid_rejected' && notification.job_id) {
-      navigate(`/jobs/${notification.job_id}/bids`);
-    } else if (notification.type === 'new_message' && notification.chat_id) {
-      navigate(`/chat?chat=${notification.chat_id}`);
-    } else if (notification.type === 'new_offer' && notification.chat_id) {
-      navigate(`/chat?chat=${notification.chat_id}`);
-    } else if (notification.type === 'order_paid') {
-      navigate('/orders');
+    markAsRead(notification.id);
+    switch (notification.type) {
+      case 'job_posted':
+        if (notification.job && notification.job.id) {
+          navigate(`/jobs/${notification.job.id}`, { state: { job: notification.job } });
+        } else if (notification.job) {
+          setSelectedJob(notification.job);
+          setShowJobModal(true);
+        }
+        break;
+      case 'bid_accepted':
+        navigate('/chat', { state: { client: notification.client, job: notification.job, notification } });
+        break;
+      case 'payment_received':
+        setPaymentMessage(notification.message);
+        setShowPaymentModal(true);
+        break;
+      case 'message':
+        navigate('/chat', { state: { client: notification.client, notification } });
+        break;
+      default:
+        break;
     }
   };
 
@@ -192,18 +220,7 @@ const FreelancerNotifications: React.FC = () => {
                       className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
                         !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                       }`}
-                     onClick={() => {
-                        markAsRead(notification.id);
-                        if (notification.type === 'job_posted' && notification.job) {
-                          navigate(`/jobs/${notification.job.id}/bids`);
-                        } else if (notification.type === 'bid_accepted' && notification.job) {
-                          navigate(`/jobs/${notification.job.id}/bids`);
-                        } else if (notification.type === 'payment_received') {
-                          navigate('/orders');
-                        } else if (notification.type === 'message' && notification.client) {
-                          navigate(`/chat/${notification.client?.first_name}-${notification.client?.last_name}`);
-                        }
-                      }}
+                      onClick={() => handleNotificationClick(notification)}
                     >
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0">
@@ -329,7 +346,49 @@ const FreelancerNotifications: React.FC = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      {/* Job Details Modal */}
+      {showJobModal && selectedJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowJobModal(false)}
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-2">{selectedJob.title}</h2>
+            <p className="mb-2">Budget: <span className="font-semibold text-green-600">${selectedJob.budget}</span></p>
+            <p className="mb-4 text-gray-600">More job details can be shown here. (Extend as needed.)</p>
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={() => setShowJobModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Payment Confirmation Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowPaymentModal(false)}
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-2">Payment Confirmation</h2>
+            <p className="mb-4 text-gray-600">{paymentMessage}</p>
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={() => setShowPaymentModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
