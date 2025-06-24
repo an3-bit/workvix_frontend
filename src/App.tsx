@@ -100,7 +100,7 @@ const App = () => (
         {/* Protected Admin Routes */}
         <Route path="/admin/*" element={
           <AdminProtectedRoute>
-            <AdminDashboardPage />
+            <AdminDashboardPage adminEmail="admin@example.com" />
           </AdminProtectedRoute>
         } />
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Clock, DollarSign, User, MessageSquare, Send, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,8 +36,9 @@ interface Bid {
 const JobsBid: React.FC = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [job, setJob] = useState<Job | null>(null);
+  const [job, setJob] = useState<Job | null>(location.state?.job || null);
   const [existingBid, setExistingBid] = useState<Bid | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -49,10 +50,14 @@ const JobsBid: React.FC = () => {
   });
 
   useEffect(() => {
-    if (jobId) {
+    if (!job && jobId) {
       fetchJobDetailsAndBid();
+    } else if (jobId && job) {
+      // If job is already present from state, just check for existing bid
+      checkExistingBidForJob(jobId);
+      setLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, job]);
 
   const fetchJobDetailsAndBid = async () => {
     try {
@@ -146,6 +151,19 @@ const JobsBid: React.FC = () => {
     } catch (error) {
       console.error('Error checking existing bid:', error);
       return null;
+    }
+  };
+
+  const checkExistingBidForJob = async (jobId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/signin');
+        return;
+      }
+      await checkExistingBid(user.id);
+    } catch (error) {
+      console.error('Error checking existing bid:', error);
     }
   };
 

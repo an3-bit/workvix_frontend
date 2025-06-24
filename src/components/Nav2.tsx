@@ -47,7 +47,8 @@ const Nav2 = () => {
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
-        }, () => {
+        }, (payload) => {
+          console.log('Realtime notification event:', payload);
           fetchNotificationCounts(user.id);
         })
         .subscribe();

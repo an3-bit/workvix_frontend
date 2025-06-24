@@ -124,12 +124,10 @@ const ClientNotification: React.FC = () => {
 
   const handleNotificationClick = async (notification: NotificationData) => {
     if (!notification.read) {
-      // Mark as read in backend
       await supabase
         .from('notifications')
         .update({ read: true })
         .eq('id', notification.id);
-      // Update local state
       setNotifications(prev =>
         prev.map(n =>
           n.id === notification.id ? { ...n, read: true } : n

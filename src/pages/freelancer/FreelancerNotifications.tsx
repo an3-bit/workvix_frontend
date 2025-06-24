@@ -124,12 +124,10 @@ const FreelancerNotifications: React.FC = () => {
 
   const handleNotificationClick = async (notification: NotificationData) => {
     if (!notification.read) {
-      // Mark as read in backend
       await supabase
         .from('notifications')
         .update({ read: true })
         .eq('id', notification.id);
-      // Update local state
       setNotifications(prev =>
         prev.map(n =>
           n.id === notification.id ? { ...n, read: true } : n
@@ -139,7 +137,7 @@ const FreelancerNotifications: React.FC = () => {
     switch (notification.type) {
       case 'job_posted':
         if (notification.job && notification.job.id) {
-          navigate(`/jobs/${notification.job.id}`, { state: { job: notification.job } });
+          navigate(`/jobs/${notification.job.id}`, { state: { job: notification.job, notification } });
         } else if (notification.job) {
           setSelectedJob(notification.job);
           setShowJobModal(true);

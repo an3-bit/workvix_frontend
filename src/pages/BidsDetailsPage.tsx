@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Clock, 
   DollarSign, 
@@ -49,15 +49,20 @@ interface BidWithJob {
 
 const BidsDetailsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [bids, setBids] = useState<BidWithJob[]>([]);
+  const [bids, setBids] = useState<BidWithJob[]>(location.state?.bids || []);
   const [filteredBids, setFilteredBids] = useState<BidWithJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [removingBid, setRemovingBid] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchUserBids();
+    if (!bids.length) {
+      fetchUserBids();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
