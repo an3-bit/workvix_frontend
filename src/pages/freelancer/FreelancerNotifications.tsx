@@ -35,7 +35,7 @@ const FreelancerNotifications: React.FC = () => {
   const [showJobModal, setShowJobModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,11 +56,14 @@ const FreelancerNotifications: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/signin');
+        setLoading(false);
         return;
       }
+      setUser(user);
       const { data: notificationsData, error } = await supabase
         .from('notifications')
         .select('*')
@@ -68,15 +71,34 @@ const FreelancerNotifications: React.FC = () => {
         .order('created_at', { ascending: false });
       if (error) throw error;
       setNotifications(notificationsData || []);
+      // Mark all unread notifications as read
+      const unreadIds = (notificationsData || []).filter(n => !n.read).map(n => n.id);
+      console.log('Unread notification IDs:', unreadIds);
+      if (unreadIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from('notifications')
+          .update({ read: true })
+          .in('id', unreadIds);
+        if (updateError) {
+          console.error('Error marking notifications as read:', updateError);
+        } else {
+          console.log('Marked notifications as read:', unreadIds);
+        }
+        // Optionally update local state
+        setNotifications(prev => prev.map(n => unreadIds.includes(n.id) ? { ...n, read: true } : n));
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const setupRealtimeSubscription = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
+    
     const channel = supabase
       .channel('notifications_changes_freelancer')
       .on('postgres_changes', {
@@ -87,7 +109,16 @@ const FreelancerNotifications: React.FC = () => {
       }, () => {
         fetchNotifications();
       })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        fetchNotifications();
+      })
       .subscribe();
+      
     return channel;
   };
 
@@ -322,14 +353,28 @@ const FreelancerNotifications: React.FC = () => {
                         {notification.type === 'new_message' && (
                           <div className="mt-2">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              New message
+                              Click to open chat
+                            </span>
+                          </div>
+                        )}
+                        {notification.type === 'bid_accepted' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Bid accepted - Click to chat
+                            </span>
+                          </div>
+                        )}
+                        {notification.type === 'bid_rejected' && (
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Bid not selected
                             </span>
                           </div>
                         )}
                         {notification.type === 'new_offer' && (
                           <div className="mt-2">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              New offer
+                              New offer received
                             </span>
                           </div>
                         )}
@@ -352,6 +397,23 @@ const FreelancerNotifications: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Payment Received</h3>
+            <p className="text-gray-600 mb-4">{paymentMessage}</p>
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      
       <Footer />
     </div>
   );

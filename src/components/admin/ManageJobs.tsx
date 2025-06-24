@@ -91,9 +91,9 @@ const ManageJobs: React.FC = () => {
         .from('jobs')
         .select(`
           id, title, description, category, budget, min_budget, max_budget, client_id, freelancer_id, status, created_at, attachment_url,
-        
-          freelancer:freelancer_id (first_name, last_name, email) 
-      `); // Select freelancer details as well
+          profiles!fk_jobs_client (first_name, last_name, email),
+          freelancer:freelancer_id (first_name, last_name, email)
+        `); // Select both client and freelancer details
 
       if (statusFilter && statusFilter !== 'all') { // Apply filter if it's not 'all' and exists
         if (statusFilter === 'open') {
