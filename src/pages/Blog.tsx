@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -23,77 +22,41 @@ type BlogPost = {
   };
 };
 
+const WORDPRESS_API = 'https://demo.wp-api.org/wp-json/wp/v2/posts?_embed'; // Placeholder WordPress API
+
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Sample blog posts data
-  const blogPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: "How to Find the Perfect Freelancer for Your Project",
-      excerpt: "Learn the key strategies to identify and hire the best talent for your specific needs.",
-      category: "Hiring",
-      date: "May 10, 2025",
-      readTime: "5 min read",
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
-      author: {
-        name: "Alex Johnson",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(WORDPRESS_API);
+        const data = await res.json();
+        const posts: BlogPost[] = data.map((post: any) => ({
+          id: post.id,
+          title: post.title.rendered,
+          excerpt: post.excerpt.rendered.replace(/<[^>]+>/g, ''),
+          category: post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Uncategorized',
+          date: new Date(post.date).toLocaleDateString(),
+          readTime: '5 min read', // Placeholder
+          image: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://via.placeholder.com/600x400',
+          author: {
+            name: post._embedded?.author?.[0]?.name || 'Unknown',
+            avatar: post._embedded?.author?.[0]?.avatar_urls?.['48'] || 'https://via.placeholder.com/48'
+          }
+        }));
+        setBlogPosts(posts);
+      } catch (err) {
+        setBlogPosts([]);
+      } finally {
+        setLoading(false);
       }
-    },
-    {
-      id: 2,
-      title: "Building Your Freelance Portfolio: What Clients Really Want to See",
-      excerpt: "Discover what makes a portfolio stand out and how to showcase your skills effectively.",
-      category: "Freelancing",
-      date: "May 8, 2025",
-      readTime: "7 min read",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-      author: {
-        name: "Samantha Lee",
-        avatar: "https://randomuser.me/api/portraits/women/44.jpg"
-      }
-    },
-    {
-      id: 3,
-      title: "5 Ways to Improve Your Client Communication Skills",
-      excerpt: "Effective communication is key to successful projects. Here's how to master it.",
-      category: "Business",
-      date: "May 5, 2025",
-      readTime: "4 min read",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-      author: {
-        name: "David Wilson",
-        avatar: "https://randomuser.me/api/portraits/men/67.jpg"
-      }
-    },
-    {
-      id: 4,
-      title: "Setting Your Rates: A Guide for New Freelancers",
-      excerpt: "Determining the right price for your services can be challenging. This guide will help you find the sweet spot.",
-      category: "Freelancing",
-      date: "May 1, 2025",
-      readTime: "6 min read",
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-      author: {
-        name: "Emily Zhang",
-        avatar: "https://randomuser.me/api/portraits/women/22.jpg"
-      }
-    },
-    {
-      id: 5,
-      title: "The Future of Remote Work: Trends to Watch in 2025",
-      excerpt: "How the freelance marketplace is evolving and what it means for both clients and service providers.",
-      category: "Trends",
-      date: "April 28, 2025",
-      readTime: "8 min read",
-      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-      author: {
-        name: "Michael Brown",
-        avatar: "https://randomuser.me/api/portraits/men/45.jpg"
-      }
-    },
-  ];
+    };
+    fetchPosts();
+  }, []);
 
   const filteredPosts = blogPosts.filter(post => 
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -143,6 +106,9 @@ const Blog = () => {
       
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 py-12">
+        {loading ? (
+          <div className="text-center py-12 text-lg text-gray-500">Loading blog posts...</div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-8">
@@ -330,6 +296,7 @@ const Blog = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
       
       <Footer />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Trash, Eye, RefreshCcw } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -43,7 +44,8 @@ const ManageMessages: React.FC = () => {
           sender_profile:sender_id(first_name, last_name, email, user_type),
           chat_info:chat_id(client_id, freelancer_id, job:job_id(title))
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(20); // Show only the 20 most recent messages
 
       if (error) throw error;
       setMessages(data as Message[]);
@@ -110,7 +112,7 @@ const ManageMessages: React.FC = () => {
     <div className="p-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Messages</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">Recent Messages <span className="text-base font-normal text-gray-500">(Most Recent First, showing up to 20)</span></CardTitle>
           <Button onClick={fetchMessages} variant="outline" className="flex items-center space-x-2">
             <RefreshCcw className="h-4 w-4" />
             <span>Refresh Messages</span>

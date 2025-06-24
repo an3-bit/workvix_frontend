@@ -62,7 +62,7 @@ const ManageSupportTickets: React.FC = () => {
     setError(null);
     try {
       const { data, error } = await supabase
-        .from('support_tickets')
+        .from('support_tickets' as any)
         .select(`
           *,
           user_profile:user_id(first_name, last_name, email, user_type),
@@ -71,7 +71,7 @@ const ManageSupportTickets: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTickets(data as SupportTicket[]);
+      setTickets((data as any[]) as SupportTicket[]);
     } catch (err: any) {
       console.error('Error fetching tickets:', err.message);
       setError('Failed to fetch tickets: ' + err.message);
@@ -88,19 +88,19 @@ const ManageSupportTickets: React.FC = () => {
   const fetchAdmins = async () => {
     try {
       const { data, error } = await supabase
-        .from('support_users') // Assuming support_users table contains admin email and ID is user.id
+        .from('support_users' as any)
         .select(`
-          id:user_id, -- Maps the support_users id to auth.users id
+          user_id,
           email,
-          user_profile:id(first_name, last_name) -- Join back to profiles to get name
+          profiles:user_id (first_name, last_name)
         `);
 
       if (error) throw error;
-      const adminProfiles = data.map(admin => ({
-        id: admin.id,
+      const adminProfiles = (data as any[]).map(admin => ({
+        id: admin.user_id,
         email: admin.email,
-        first_name: admin.user_profile?.first_name || 'Admin',
-        last_name: admin.user_profile?.last_name || '',
+        first_name: admin.profiles?.first_name || 'Admin',
+        last_name: admin.profiles?.last_name || '',
       }));
       setAvailableAdmins(adminProfiles as AdminProfile[]);
     } catch (err: any) {
@@ -131,7 +131,7 @@ const ManageSupportTickets: React.FC = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('support_tickets')
+        .from('support_tickets' as any)
         .update({
           subject: editFormData.subject,
           description: editFormData.description || null,
@@ -174,7 +174,7 @@ const ManageSupportTickets: React.FC = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('support_tickets')
+        .from('support_tickets' as any)
         .delete()
         .eq('id', ticketToDelete.id);
 
