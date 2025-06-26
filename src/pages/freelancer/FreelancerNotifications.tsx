@@ -70,7 +70,22 @@ const FreelancerNotifications: React.FC = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setNotifications(notificationsData || []);
+      setNotifications(
+        (notificationsData || []).map((n: any) => ({
+          id: n.id,
+          type: n.type,
+          title: n.title ?? '', // Provide a default if missing
+          message: n.message,
+          read: n.read,
+          created_at: n.created_at,
+          job_id: n.job_id,
+          bid_id: n.bid_id,
+          chat_id: n.chat_id,
+          offer_id: n.offer_id,
+          job: n.job,
+          client: n.client,
+        }))
+      );
       // Mark all unread notifications as read
       const unreadIds = (notificationsData || []).filter(n => !n.read).map(n => n.id);
       console.log('Unread notification IDs:', unreadIds);
@@ -269,7 +284,7 @@ const FreelancerNotifications: React.FC = () => {
                             <h3 className={`text-sm font-medium ${
                               !notification.read ? 'text-gray-900' : 'text-gray-700'
                             }`}>
-                              {notification.title}
+                              {notification.message}
                             </h3>
                             <div className="flex items-center space-x-2">
                               <Clock className="h-4 w-4 text-gray-400" />
