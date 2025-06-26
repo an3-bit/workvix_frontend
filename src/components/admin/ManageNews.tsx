@@ -178,7 +178,7 @@ const ManageNews: React.FC = () => {
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-600">{error}</div>;
+    return <div className="p-6 text-center font-bold">Your news articles will appear here.</div>;
   }
 
   return (

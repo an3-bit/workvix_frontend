@@ -128,9 +128,13 @@ const ManageJobs: React.FC = () => {
   const fetchFreelancers = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email')
-        .eq('user_type', 'freelancer');
+        .from('payments')
+        .select(`
+          *,
+          user_profile:user_id(id, email, first_name, last_name, user_type),
+          job_title:related_job(title)
+        `)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setAvailableFreelancers(data as Profile[]);

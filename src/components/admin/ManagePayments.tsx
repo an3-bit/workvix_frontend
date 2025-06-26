@@ -47,6 +47,9 @@ const ManagePayments: React.FC = () => {
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
 
+  const [isViewPaymentDialogOpen, setIsViewPaymentDialogOpen] = useState(false);
+  const [paymentToView, setPaymentToView] = useState<Payment | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
   useEffect(() => {
     fetchPayments();
@@ -56,20 +59,22 @@ const ManagePayments: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('payments')
         .select(`
           *,
-          user_profile:user_id(first_name, last_name, email, user_type),
-          job_title:related_job_id(title)
+          user_profile:user_id(id, email, first_name, last_name, user_type),
+          job_title:related_job(title)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setPayments(data as Payment[]);
-    } catch (err: any) {
-      console.error('Error fetching payments:', err.message);
-      setError('Failed to fetch payments: ' + err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Error fetching payments:', message);
+      setError('Failed to fetch payments: ' + message);
       toast({
         title: 'Error',
         description: 'Failed to fetch payments.',
@@ -105,11 +110,12 @@ const ManagePayments: React.FC = () => {
       setIsEditPaymentDialogOpen(false);
       setPaymentToEdit(null);
       fetchPayments();
-    } catch (err: any) {
-      console.error('Error updating payment status:', err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Error updating payment status:', message);
       toast({
         title: 'Error',
-        description: 'Failed to update payment status: ' + err.message,
+        description: 'Failed to update payment status: ' + message,
         variant: 'destructive',
       });
     } finally {
@@ -141,15 +147,40 @@ const ManagePayments: React.FC = () => {
       setIsConfirmDeleteDialogOpen(false);
       setPaymentToDelete(null);
       fetchPayments();
-    } catch (err: any) {
-      console.error('Error deleting payment:', err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Error deleting payment:', message);
       toast({
         title: 'Error',
-        description: 'Failed to delete payment: ' + err.message,
+        description: 'Failed to delete payment: ' + message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewPayment = async (paymentId: string) => {
+    setViewLoading(true);
+    setIsViewPaymentDialogOpen(true);
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`*, user_profile:user_id(email), job_title:related_job_id(title)`)
+        .eq('id', paymentId)
+        .single();
+      if (error) throw error;
+      setPaymentToView(data as Payment);
+    } catch (err: unknown) {
+      setPaymentToView(null);
+      const message = err instanceof Error ? err.message : String(err);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch payment details: ' + message,
+        variant: 'destructive',
+      });
+    } finally {
+      setViewLoading(false);
     }
   };
 
@@ -158,7 +189,7 @@ const ManagePayments: React.FC = () => {
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-600">{error}</div>;
+    return <div className="p-6 text-center font-bold">Your payments will appear here.</div>;
   }
 
   return (
@@ -205,10 +236,19 @@ const ManagePayments: React.FC = () => {
                           {payment.status}
                         </span>
                       </TableCell>
-                      <TableCell>{payment.user_profile ? `${payment.user_profile.first_name} (${payment.user_profile.user_type})` : 'N/A'}</TableCell>
+                      <TableCell>{payment.user_profile ? payment.user_profile.email : 'N/A'}</TableCell>
                       <TableCell>{payment.job_title?.title || 'N/A'}</TableCell>
                       <TableCell>{new Date(payment.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right whitespace-nowrap">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleViewPayment(payment.id)}
+                          className="mr-1"
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -287,6 +327,35 @@ const ManagePayments: React.FC = () => {
             <Button variant="destructive" onClick={confirmDeletePayment} disabled={loading}>
               {loading ? 'Deleting...' : 'Delete'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Payment Details Dialog */}
+      <Dialog open={isViewPaymentDialogOpen} onOpenChange={setIsViewPaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Payment Details</DialogTitle>
+          </DialogHeader>
+          {viewLoading ? (
+            <div className="py-6 text-center">Loading...</div>
+          ) : paymentToView ? (
+            <div className="space-y-2 py-2">
+              <div><Label>ID:</Label> <span className="font-mono">{paymentToView.id}</span></div>
+              <div><Label>Amount:</Label> ${paymentToView.amount.toFixed(2)}</div>
+              <div><Label>Type:</Label> {paymentToView.type}</div>
+              <div><Label>Status:</Label> {paymentToView.status}</div>
+              <div><Label>User:</Label> {paymentToView.user_profile ? paymentToView.user_profile.email : 'N/A'}</div>
+              <div><Label>Related Job:</Label> {paymentToView.job_title?.title || 'N/A'}</div>
+              <div><Label>Description:</Label> {paymentToView.description || 'N/A'}</div>
+              <div><Label>Created At:</Label> {new Date(paymentToView.created_at).toLocaleString()}</div>
+              <div><Label>Updated At:</Label> {new Date(paymentToView.updated_at).toLocaleString()}</div>
+            </div>
+          ) : (
+            <div className="py-6 text-center text-red-500">No payment details found.</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewPaymentDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
