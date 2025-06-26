@@ -98,9 +98,14 @@ const App = () => (
         <Route path="/admin/login" element={<AdminLogin />} />
         
         {/* Protected Admin Routes */}
-        <Route path="/admin/*" element={
-          <AdminProtectedRoute />
-        } />
+        <Route
+          path="/admin/*"
+          element={
+            <AdminProtectedRoute>
+              <AdminDashboardPage />
+            </AdminProtectedRoute>
+          }
+        />
 
             <Route
               path="/chat-system"
