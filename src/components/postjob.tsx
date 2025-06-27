@@ -6,12 +6,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from './Navbar';
 import Footer from '@/components/Footer';
-import { Eye, EyeOff, UploadCloud } from 'lucide-react';
+import { Eye, EyeOff, UploadCloud, Mail, CheckCircle } from 'lucide-react';
 import Nav2 from './Nav2';
+
+const EMAIL_REDIRECT_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:5173/post-job'
+  : 'https://your-production-domain.com/post-job'; // <-- Replace with your real production domain
 
 const PostJobForm: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +27,9 @@ const PostJobForm: React.FC = () => {
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [userSession, setUserSession] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [showEmailConfirmationDialog, setShowEmailConfirmationDialog] = useState(false);
+  const [pendingJobData, setPendingJobData] = useState<any>(null);
+  const [emailConfirmationStatus, setEmailConfirmationStatus] = useState<'pending' | 'confirmed' | 'error'>('pending');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -85,12 +93,36 @@ const PostJobForm: React.FC = () => {
     };
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUserSession(session);
+      
+      // Handle email confirmation
+      if (event === 'SIGNED_IN' && session && pendingJobData) {
+        setEmailConfirmationStatus('confirmed');
+        
+        // Wait a moment for the user to see the confirmation
+        setTimeout(async () => {
+          try {
+            // Now post the job with the confirmed user
+            await postJobWithUser(session.user.id);
+            setShowEmailConfirmationDialog(false);
+            setPendingJobData(null);
+            setEmailConfirmationStatus('pending');
+          } catch (error: any) {
+            console.error('Error posting job after confirmation:', error);
+            setEmailConfirmationStatus('error');
+            toast({
+              title: 'Error',
+              description: 'Failed to post job after email confirmation. Please try again.',
+              variant: 'destructive',
+            });
+          }
+        }, 2000);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [pendingJobData]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -115,6 +147,88 @@ const PostJobForm: React.FC = () => {
     } finally {
         setLoading(false);
     }
+  };
+
+  // Function to post job with confirmed user
+  const postJobWithUser = async (userId: string) => {
+    if (!pendingJobData) return;
+
+    // File upload logic
+    let attachmentUrl: string | null = null;
+    if (pendingJobData.selectedFile) {
+      const fileExtension = pendingJobData.selectedFile.name.split('.').pop();
+      const filePath = `${userId}/${Date.now()}.${fileExtension}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('attachments')
+        .upload(filePath, pendingJobData.selectedFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw new Error(`File upload failed: ${uploadError.message}`);
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('attachments')
+        .getPublicUrl(filePath);
+
+      if (publicUrlData) {
+        attachmentUrl = publicUrlData.publicUrl;
+      }
+    }
+
+    // Create the job
+    const { data: jobData, error: jobError } = await supabase
+      .from('jobs')
+      .insert([{
+        title: pendingJobData.title,
+        description: pendingJobData.description,
+        category: pendingJobData.category,
+        budget: parseFloat(pendingJobData.budget),
+        min_budget: pendingJobData.min_budget ? parseFloat(pendingJobData.min_budget) : null,
+        max_budget: pendingJobData.max_budget ? parseFloat(pendingJobData.max_budget) : null,
+        client_id: userId,
+        status: 'open',
+        attachment_url: attachmentUrl,
+      }])
+      .select()
+      .single();
+
+    if (jobError) throw jobError;
+
+    // Send notifications to freelancers
+    const { data: freelancers, error: freelancersError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_type', 'freelancer');
+
+    if (freelancersError) console.error("Error fetching freelancers for notification:", freelancersError.message);
+
+    if (freelancers && freelancers.length > 0) {
+      const notifications = freelancers.map(freelancer => ({
+        user_id: freelancer.id,
+        type: 'job_posted',
+        message: `New job posted: "${pendingJobData.title}" - $${pendingJobData.budget}`,
+        job_id: jobData.id,
+        read: false,
+      }));
+
+      await supabase.from('notifications').insert(notifications);
+    }
+
+    toast({
+      title: 'Job Posted Successfully!',
+      description: 'Your job has been posted and freelancers will be notified. You can now view bids.',
+    });
+
+    navigate('/job-posted-notification', {
+      state: {
+        jobId: jobData.id,
+        isNewUser: true,
+      },
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -184,6 +298,17 @@ const PostJobForm: React.FC = () => {
 
       if (!userSession) {
         if (authTab === 'signup') {
+          // Store job data for later posting
+          setPendingJobData({
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            budget: formData.budget,
+            min_budget: formData.min_budget,
+            max_budget: formData.max_budget,
+            selectedFile: selectedFile,
+          });
+
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
@@ -194,7 +319,7 @@ const PostJobForm: React.FC = () => {
                 last_name: formData.name.split(' ').slice(1).join(' ') || '',
                 phone: formData.phone,
               },
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
+              emailRedirectTo: EMAIL_REDIRECT_URL,
             },
           });
 
@@ -205,14 +330,9 @@ const PostJobForm: React.FC = () => {
               throw signUpError;
           }
 
-          toast({
-            title: 'Account Created & Confirmation Sent!',
-            description: 'We sent a confirmation link to your email. After confirming, please sign in. Your job will be automatically posted upon your first sign-in after confirmation.',
-          });
-
-          navigate('/signin', {
-            state: { email: formData.email, message: 'Please confirm your email and sign in to see your job posted.' },
-          });
+          // Show popup dialog instead of navigating away
+          setShowEmailConfirmationDialog(true);
+          setLoading(false);
           return;
         } else {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -226,91 +346,85 @@ const PostJobForm: React.FC = () => {
         }
       }
 
-      // --- Debugging Logs ---
-      console.log('Attempting file upload...');
-      console.log('Current User ID:', currentUserId);
-      console.log('User Session (at upload time):', userSession);
-      // If currentUserId is null/undefined here, that's likely the issue.
-      // If userSession is also null/undefined, it means the auth state isn't recognized.
+      // For existing users, post job immediately
+      if (currentUserId) {
+        // File upload logic
+        let attachmentUrl: string | null = null;
+        if (selectedFile) {
+          const fileExtension = selectedFile.name.split('.').pop();
+          const filePath = `${currentUserId}/${Date.now()}.${fileExtension}`;
 
-      // --- File Upload Logic ---
-      let attachmentUrl: string | null = null;
-      if (selectedFile) {
-        const fileExtension = selectedFile.name.split('.').pop();
-        const filePath = `${currentUserId}/${Date.now()}.${fileExtension}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('attachments')
+            .upload(filePath, selectedFile, {
+              cacheControl: '3600',
+              upsert: false,
+            });
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('attachments') // Correct bucket name
-          .upload(filePath, selectedFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+          if (uploadError) {
+            throw new Error(`File upload failed: ${uploadError.message}`);
+          }
 
-        if (uploadError) {
-          // Changed from new new Error to new Error
-          throw new Error(`File upload failed: ${uploadError.message}`);
+          const { data: publicUrlData } = supabase.storage
+            .from('attachments')
+            .getPublicUrl(filePath);
+
+          if (publicUrlData) {
+            attachmentUrl = publicUrlData.publicUrl;
+          }
         }
 
-        const { data: publicUrlData } = supabase.storage
-          .from('attachments') // Correct bucket name
-          .getPublicUrl(filePath);
+        // Create the job
+        const { data: jobData, error: jobError } = await supabase
+          .from('jobs')
+          .insert([{
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            budget: parseFloat(formData.budget),
+            min_budget: formData.min_budget ? parseFloat(formData.min_budget) : null,
+            max_budget: formData.max_budget ? parseFloat(formData.max_budget) : null,
+            client_id: currentUserId,
+            status: 'open',
+            attachment_url: attachmentUrl,
+          }])
+          .select()
+          .single();
 
-        if (publicUrlData) {
-          attachmentUrl = publicUrlData.publicUrl;
-        } else {
-          throw new Error('Failed to get public URL for the uploaded file.');
+        if (jobError) throw jobError;
+
+        // Send notifications to freelancers
+        const { data: freelancers, error: freelancersError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_type', 'freelancer');
+
+        if (freelancersError) console.error("Error fetching freelancers for notification:", freelancersError.message);
+
+        if (freelancers && freelancers.length > 0) {
+          const notifications = freelancers.map(freelancer => ({
+            user_id: freelancer.id,
+            type: 'job_posted',
+            message: `New job posted: "${formData.title}" - $${formData.budget}`,
+            job_id: jobData.id,
+            read: false,
+          }));
+
+          await supabase.from('notifications').insert(notifications);
         }
+
+        toast({
+          title: 'Job Posted Successfully',
+          description: 'Your job has been posted and freelancers will be notified.',
+        });
+
+        navigate('/job-posted-notification', {
+          state: {
+            jobId: jobData.id,
+            isNewUser: false,
+          },
+        });
       }
-
-      // Create the job
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .insert([{
-          title: formData.title,
-          description: formData.description,
-          category: formData.category,
-          budget: parseFloat(formData.budget),
-          min_budget: formData.min_budget ? parseFloat(formData.min_budget) : null,
-          max_budget: formData.max_budget ? parseFloat(formData.max_budget) : null,
-          client_id: currentUserId,
-          status: 'open',
-          attachment_url: attachmentUrl,
-        }])
-        .select()
-        .single();
-
-      if (jobError) throw jobError;
-
-      const { data: freelancers, error: freelancersError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_type', 'freelancer');
-
-      if (freelancersError) console.error("Error fetching freelancers for notification:", freelancersError.message);
-
-      if (freelancers && freelancers.length > 0) {
-        const notifications = freelancers.map(freelancer => ({
-          user_id: freelancer.id,
-          type: 'job_posted',
-          message: `New job posted: "${formData.title}" - $${formData.budget}`,
-          job_id: jobData.id,
-          read: false,
-        }));
-
-        await supabase.from('notifications').insert(notifications);
-      }
-
-      toast({
-        title: 'Job Posted Successfully',
-        description: 'Your job has been posted and freelancers will be notified.',
-      });
-
-      navigate('/job-posted-notification', {
-        state: {
-          jobId: jobData.id,
-          isNewUser: false,
-        },
-      });
     } catch (error: any) {
       console.error('Error:', error);
       toast({
@@ -320,6 +434,40 @@ const PostJobForm: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!formData.email || !formData.password) {
+      toast({
+        title: 'Error',
+        description: 'Email and password are required to resend confirmation.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: EMAIL_REDIRECT_URL,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Email Resent',
+        description: 'Confirmation email has been resent to your inbox.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to resend confirmation email.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -335,6 +483,83 @@ const PostJobForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {userSession ? <Nav2 /> : <Navbar />}
+      
+      {/* Email Confirmation Dialog */}
+      <Dialog open={showEmailConfirmationDialog} onOpenChange={setShowEmailConfirmationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {emailConfirmationStatus === 'confirmed' ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : (
+                <Mail className="h-5 w-5 text-blue-500" />
+              )}
+              {emailConfirmationStatus === 'confirmed' ? 'Email Confirmed!' : 'Check Your Email'}
+            </DialogTitle>
+            <DialogDescription>
+              {emailConfirmationStatus === 'pending' && (
+                <>
+                  We've sent a confirmation email to <strong>{formData.email}</strong>. 
+                  Please check your inbox and click the confirmation link to verify your account.
+                  <br /><br />
+                  Once confirmed, you'll be automatically signed in and your job will be posted.
+                </>
+              )}
+              {emailConfirmationStatus === 'confirmed' && (
+                <>
+                  Your email has been confirmed! You're now signed in and your job is being posted...
+                </>
+              )}
+              {emailConfirmationStatus === 'error' && (
+                <>
+                  There was an error posting your job after confirmation. Please try again or contact support.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+            {emailConfirmationStatus === 'pending' && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleResendEmail}
+                  className="w-full sm:w-auto"
+                >
+                  Resend Email
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowEmailConfirmationDialog(false);
+                    setPendingJobData(null);
+                    navigate('/signin');
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  Go to Sign In
+                </Button>
+              </>
+            )}
+            {emailConfirmationStatus === 'confirmed' && (
+              <div className="w-full text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Posting your job...</p>
+              </div>
+            )}
+            {emailConfirmationStatus === 'error' && (
+              <Button
+                onClick={() => {
+                  setShowEmailConfirmationDialog(false);
+                  setPendingJobData(null);
+                  setEmailConfirmationStatus('pending');
+                }}
+                className="w-full"
+              >
+                Try Again
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <div className="pt-20 pb-8">
         <div className="container mx-auto px-4">
