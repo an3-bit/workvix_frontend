@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -146,10 +145,19 @@ const BecomeSeller = () => {
           <Button className="bg-white text-skillforge-secondary hover:bg-gray-100 px-8 py-6 text-lg"
             onClick={() => {
               navigate('/join');
-            }
-          }>  
+            }}
+          >  
             Become a Seller Now
           </Button>
+          <div className="mt-4">
+            <Button className="bg-skillforge-primary text-white hover:bg-skillforge-primary/90 px-8 py-6 text-lg"
+              onClick={() => {
+                navigate('/affiliate/register');
+              }}
+            >
+              Become an Affiliate Marketer
+            </Button>
+          </div>
         </div>
       </div>
       

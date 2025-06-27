@@ -95,6 +95,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       ],
     },
     {
+      name: 'Affiliate Marketers',
+      icon: Users,
+      path: '/admin/affiliate-marketers',
+    },
+    {
       name: 'Samples',
       icon: ScrollText,
       path: '/admin/samples',

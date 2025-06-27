@@ -17,6 +17,7 @@ import ManageSamples from '@/components/admin/ManageSamples';
 import ManageNews from '@/components/admin/ManageNews';
 import ManageSupportTickets from '@/components/admin/ManageSupportTickets';
 import SystemSettings from '@/components/admin/SystemSettings'; // Example for settings
+import ManageAffiliateMarketers from './ManageAffiliateMarketers';
 
 
 interface AdminDashboardPageProps {
@@ -74,6 +75,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ adminEmail }) =
 
             {/* Activity Log (read-only) */}
             <Route path="/activity-log" element={<h2 className="text-2xl p-6">Activity Log (Coming Soon!)</h2>} />
+
+            {/* Affiliate Marketers Management */}
+            <Route path="/affiliate-marketers" element={<ManageAffiliateMarketers />} />
 
             {/* Catch-all for unknown admin sub-routes */}
             <Route path="*" element={<h1 className="text-center mt-20 text-3xl font-bold text-gray-700">Admin Sub-Page Not Found</h1>} />

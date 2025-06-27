@@ -46,6 +46,13 @@ const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
 const OrderForm = lazy(() => import("./pages/OrderForm"));
 const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
 const ClientNotification = lazy(() => import("./pages/client/ClientNotification"));
+const AffiliateRegister = lazy(() => import("./pages/AffiliateRegister"));
+const AffiliateDashboard = lazy(() => import("./pages/affiliate/AffiliateDashboard"));
+const AffiliateManageClients = lazy(() => import("./pages/affiliate/ManageClients"));
+const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFreelancers"));
+const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
+const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
+const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -113,6 +120,13 @@ const App = () => (
                 <ChatSystem jobId={null} bidId={null} receiverId={null} />
               }
             />
+            <Route path="/affiliate/register" element={<AffiliateRegister />} />
+            <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+            <Route path="/affiliate/clients" element={<AffiliateManageClients />} />
+            <Route path="/affiliate/freelancers" element={<AffiliateManageFreelancers />} />
+            <Route path="/affiliate/jobs" element={<AffiliateManageJobs />} />
+            <Route path="/affiliate/commissions" element={<AffiliateCommissionSummary />} />
+            <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
