@@ -194,7 +194,11 @@ const PostJobForm: React.FC = () => {
         attachment_url: attachmentUrl,
       }])
       .select()
+<<<<<<< HEAD
       .maybeSingle();
+=======
+      .single();
+>>>>>>> 1125f27 (updates in the postjob page)
 
     if (jobError) throw jobError;
 
@@ -389,7 +393,11 @@ const PostJobForm: React.FC = () => {
             attachment_url: attachmentUrl,
           }])
           .select()
+<<<<<<< HEAD
           .maybeSingle();
+=======
+          .single();
+>>>>>>> 1125f27 (updates in the postjob page)
 
         if (jobError) throw jobError;
 
