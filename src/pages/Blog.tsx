@@ -83,11 +83,21 @@ const Blog = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-skillforge-light to-white py-16">
+      <div className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-16 overflow-hidden">
+        {/* Blurred Circles */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        </div>
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-skillforge-secondary mb-4">Workvix Blog</h1>
-            <p className="text-lg text-gray-700 mb-8">Insights, tips, and strategies for freelancers and businesses</p>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+              Workvix <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Blog</span>
+            </h1>
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+              Insights, tips, and strategies for freelancers and businesses
+            </p>
             
             {/* Search */}
             <div className="relative max-w-md mx-auto">
@@ -133,13 +143,13 @@ const Blog = () => {
                       />
                     </AspectRatio>
                     <div className="absolute top-4 left-4">
-                      <span className="bg-skillforge-primary text-white px-3 py-1 rounded-full text-sm">
+                      <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm shadow-lg">
                         {filteredPosts[0].category}
                       </span>
                     </div>
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-2xl md:text-3xl">{filteredPosts[0].title}</CardTitle>
+                    <CardTitle className="text-2xl md:text-3xl text-gray-900">{filteredPosts[0].title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 text-sm">
                       <img 
                         src={filteredPosts[0].author.avatar} 
@@ -157,7 +167,7 @@ const Blog = () => {
                     <p className="text-gray-700">{filteredPosts[0].excerpt}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="bg-skillforge-secondary hover:bg-skillforge-secondary/90">
+                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                       Read More
                     </Button>
                   </CardFooter>

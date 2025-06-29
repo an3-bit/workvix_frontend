@@ -43,33 +43,43 @@ const AffiliateRegister: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Affiliate Marketer Registration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" value={form.name} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone (optional)</Label>
-              <Input id="phone" name="phone" value={form.phone} onChange={handleChange} />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Registering...' : 'Register'}</Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
+      {/* Blurred Circles */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none z-0">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+      </div>
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="shadow-2xl rounded-2xl border-0">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center mb-2">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate Marketer Registration</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" value={form.name} onChange={handleChange} required className="h-12 text-lg" />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg" />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg" />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone (optional)</Label>
+                <Input id="phone" name="phone" value={form.phone} onChange={handleChange} className="h-12 text-lg" />
+              </div>
+              <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Registering...' : 'Register'}</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

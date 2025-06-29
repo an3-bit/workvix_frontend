@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Menu, X, ChevronLeft, ChevronRight, User, Settings, ArrowRight } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -9,18 +9,21 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { MegaMenuContent } from './MegaMenuContent';
+import { MegaMenuContent } from './MegaMenuContent'; // Assuming this component is correctly defined
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showSecondaryNav, setShowSecondaryNav] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null); // This will control the mega menu
   const [isExploreOpen, setIsExploreOpen] = useState(false);
-  const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false);
+  const [hideSecondaryMenu, setHideSecondaryMenu] = useState(false); // Unused, consider removing if not needed
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const secondaryNavRef = useRef<HTMLDivElement | null>(null);
   const exploreMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const megaMenuTimeoutRef = useRef<number | null>(null); // To manage hover delays
 
   // Enhanced MegaMenu component
   const scrollSecondaryNav = (direction: 'left' | 'right') => {
@@ -36,13 +39,29 @@ const Navbar = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+    // Close search when opening menu
+    if (!isMenuOpen) {
+      setIsSearchOpen(false);
+    }
   };
 
-  // Handle click outside to close mobile menu
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+    // Close menu when opening search
+    if (!isSearchOpen) {
+      setIsMenuOpen(false);
+    }
+  };
+
+  // Handle click outside to close mobile menu and search
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (exploreMenuRef.current && !exploreMenuRef.current.contains(event.target as Node)) {
         setIsExploreOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+        setIsSearchOpen(false);
       }
     };
 
@@ -51,6 +70,19 @@ const Navbar = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen || isSearchOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen, isSearchOpen]);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -103,6 +135,141 @@ const Navbar = () => {
       ]
     },
     {
+      name: "Programming & Tech",
+      sections: [
+        {
+          title: "Web & App Development",
+          items: ["Website Development", "Mobile App Development", "E-commerce Development", "CMS Development", "API Integration"]
+        },
+        {
+          title: "Software & IT",
+          items: ["Custom Software", "DevOps & Cloud", "QA & Testing", "Cybersecurity", "Database Management"]
+        },
+        {
+          title: "Game Development",
+          items: ["Game Design", "Unity & Unreal", "2D/3D Games", "AR/VR Development", "Game Art"]
+        },
+        {
+          title: "Other Tech",
+          items: ["Chatbots", "Scripts & Automation", "Tech Support", "IoT", "Blockchain"]
+        }
+      ]
+    },
+    {
+      name: "Digital Marketing",
+      sections: [
+        {
+          title: "Social Media",
+          items: ["Social Media Marketing", "Influencer Marketing", "Content Marketing", "Community Management", "Social Media Ads"]
+        },
+        {
+          title: "SEO & SEM",
+          items: ["SEO", "SEM", "Local SEO", "E-commerce SEO", "App Store Optimization"]
+        },
+        {
+          title: "Email & Direct Marketing",
+          items: ["Email Marketing", "SMS Marketing", "Newsletter", "Cold Outreach", "Marketing Automation"]
+        },
+        {
+          title: "Other Marketing",
+          items: ["Affiliate Marketing", "Video Marketing", "PR & Outreach", "Market Research", "Brand Strategy"]
+        }
+      ]
+    },
+    {
+      name: "Video & Animation",
+      sections: [
+        {
+          title: "Video Production",
+          items: ["Video Editing", "Short Video Ads", "Animated Explainers", "Product Videos", "Spokesperson Videos"]
+        },
+        {
+          title: "Animation",
+          items: ["2D Animation", "3D Animation", "Whiteboard Animation", "Logo Animation", "GIF Animation"]
+        },
+        {
+          title: "Other Video",
+          items: ["Subtitles & Captions", "Visual Effects", "Video Marketing", "Slideshow Videos", "Book Trailers"]
+        }
+      ]
+    },
+    {
+      name: "Writing & Translation",
+      sections: [
+        {
+          title: "Writing",
+          items: ["Articles & Blog Posts", "Website Content", "Product Descriptions", "Book Writing", "Creative Writing"]
+        },
+        {
+          title: "Translation",
+          items: ["Translation", "Localization", "Transcription", "Proofreading", "Editing"]
+        },
+        {
+          title: "Other Writing",
+          items: ["Resume Writing", "Cover Letters", "Technical Writing", "Press Releases", "Beta Reading"]
+        }
+      ]
+    },
+    {
+      name: "Music & Audio",
+      sections: [
+        {
+          title: "Music Production",
+          items: ["Producers & Composers", "Mixing & Mastering", "Vocal Tuning", "Session Musicians", "Songwriting"]
+        },
+        {
+          title: "Audio Services",
+          items: ["Voice Over", "Podcast Editing", "Audiobook Production", "Sound Design", "Jingles & Intros"]
+        },
+        {
+          title: "Other Audio",
+          items: ["Music Lessons", "DJ Drops & Tags", "Audio Ads", "Meditation Music", "Remixing"]
+        }
+      ]
+    },
+    {
+      name: "Business",
+      sections: [
+        {
+          title: "Business Consulting",
+          items: ["Business Planning", "Strategic Planning", "Market Research", "Financial Analysis", "Business Strategy"]
+        },
+        {
+          title: "Sales & Marketing",
+          items: ["Email Marketing", "Social Media Marketing", "SEO Optimization", "Content Marketing", "Lead Generation"]
+        },
+        {
+          title: "Customer Support",
+          items: ["Customer Service", "Customer Feedback", "Customer Satisfaction", "Customer Retention", "Customer Acquisition"]
+        },
+        {
+          title: "Financial Planning",
+          items: ["Budgeting", "Financial Planning", "Tax Planning", "Retirement Planning", "Investment Planning"]
+        },
+        {
+          title: "Legal Services",
+          items: ["Contract Writing", "Legal Consulting", "Legal Research", "Legal Documentation", "Legal Compliance"]
+        },
+      ]
+    },
+    {
+      name: "Lifestyle",
+      sections: [
+        {
+          title: "Wellness & Fitness",
+          items: ["Fitness Lessons", "Life Coaching", "Nutrition Advice", "Meditation", "Personal Training"]
+        },
+        {
+          title: "Arts & Crafts",
+          items: ["Craft Lessons", "Drawing & Painting", "DIY Projects", "Sewing", "Calligraphy"]
+        },
+        {
+          title: "Other Lifestyle",
+          items: ["Family & Genealogy", "Travel Planning", "Cooking Lessons", "Relationship Advice", "Spiritual & Healing"]
+        }
+      ]
+    },
+    {
       name: "Data & Analytics",
       sections: [
         {
@@ -127,176 +294,68 @@ const Navbar = () => {
         }
       ]
     },
-    { name: "Business ",
-      sections: [
-        {
-          title: "Business Consulting",
-          items: ["Business Planning", "Strategic Planning", "Market Research", "Financial Analysis", "Business Strategy"]
-        },
-        {
-          title: "Sales & Marketing",
-          items: ["Email Marketing", "Social Media Marketing", "SEO Optimization", "Content Marketing", "Lead Generation"]
-        },
-        {
-          title: "Customer Support",
-          items: ["Customer Service", "Customer Feedback", "Customer Satisfaction", "Customer Retention", "Customer Acquisition"]
-        },
-        {
-          title: "Financial Planning",
-          items: ["Budgeting", "Financial Planning", "Tax Planning", "Retirement Planning", "Investment Planning"]
-        },
-        {
-          title: "Legal Services",
-          items: ["Contract Writing", "Legal Consulting", "Legal Research", "Legal Documentation", "Legal Compliance"]
-        },
-      ]
-        },
     {
-      name: "Finance",
+      name: "Photography",
       sections: [
         {
-          title: "Accounting Services",
-          items: ["Bookkeeping", "Financial Statements", "Tax Preparation", "Payroll Services", "Accounts Payable/Receivable"]
+          title: "Photography Services",
+          items: ["Portrait Photography", "Product Photography", "Event Photography", "Photo Editing", "Real Estate Photography"]
         },
         {
-          title: "Financial Analysis",
-          items: ["Financial Modeling", "Budgeting & Forecasting", "Variance Analysis", "Cash Flow Management", "Cost Analysis"]
-        },
-        {
-          title: "Investment Consulting",
-          items: ["Portfolio Management", "Investment Strategy", "Risk Assessment", "Market Research", "Retirement Planning"]
-        },
-        {
-          title: "Tax Consulting",
-          items: ["Tax Planning", "Tax Compliance", "International Taxation", "Sales Tax Consulting", "IRS Representation"]
-        },
-        {
-          title: "Business Valuation",
-          items: ["Business Appraisal", "Mergers & Acquisitions", "Due Diligence", "Valuation Reports", "Exit Strategy"]
+          title: "Other Photography",
+          items: ["Drone Photography", "Pet Photography", "Nature Photography", "Photo Restoration", "Photography Lessons"]
         }
       ]
     },
     {
-      name: "Video & Animation",
+      name: "End-to-End Projects",
       sections: [
         {
-          title: "Video Production",
-          items: ["Video Editing", "Cinematography", "Scriptwriting", "Storyboarding", "Post-Production"]
+          title: "Project Types",
+          items: ["Website Projects", "App Projects", "Branding Projects", "Marketing Projects", "Video Projects"]
         },
         {
-          title: "Animation",
-          items: ["2D Animation", "3D Animation", "Motion Graphics", "Character Animation", "Stop Motion"]
-        },
-        {
-          title: "Live Streaming",
-          items: ["Live Event Streaming", "Webinars", "Virtual Events", "Live Q&A Sessions", "Interactive Streaming"]
-        },
-        {
-          title: "Video Marketing",
-          items: ["Video SEO", "YouTube Marketing", "Social Media Video Ads", "Video Content Strategy", "Video Analytics"]
-        },
-        {
-          title: "Voice Over",
-          items: ["Narration", "Character Voices", "Commercial Voice Overs", "Podcast Voice Overs", "Audiobook Narration"]
+          title: "Other Projects",
+          items: ["Business Plans", "E-commerce Projects", "Consulting Projects", "Design Projects", "Custom Projects"]
         }
-      ]
-    },
-    {
-      name: "Programming & Tech",
-      sections: [
-        {          title: "Software Development",
-          items: ["Custom Software", "Web Applications", "Mobile Apps", "Desktop Applications", "API Development"]
-        },
-        {          title: "Data Science",
-          items: ["Data Analysis", "Machine Learning", "Data Visualization", "Big Data", "AI Development"]
-        },
-        {
-          title: "Cybersecurity",
-          items: ["Penetration Testing", "Network Security", "Application Security", "Incident Response", "Security Audits"]
-        },
-        {
-          title: "Cloud Computing",
-          items: ["AWS", "Azure", "Google Cloud", "Cloud Migration", "Cloud Security"]
-        },
-        {
-          title: "Blockchain",
-          items: ["Smart Contracts", "DApps", "Blockchain Development", "Cryptocurrency Consulting", "NFT Development"]
-        }
-      ]
-    },
-    {
-      name: "Digital Marketing",
-      sections: [
-        {          title: "SEO & SEM",
-          items: ["Search Engine Optimization", "Pay-Per-Click Advertising", "Keyword Research", "Link Building", "Local SEO"]
-        },
-        {          title: "Social Media Marketing",
-          items: ["Social Media Management", "Content Creation", "Influencer Marketing", "Social Media Advertising", "Analytics"]
-        },
-        {
-          title: "Content Marketing",
-          items: ["Blog Writing", "Content Strategy", "Copywriting", "Content Distribution", "Content Optimization"]
-        },
-        {
-          title: "Email Marketing",
-          items: ["Email Campaigns", "Newsletter Design", "List Building", "Email Automation", "Analytics"]
-        },
-        {
-          title: "Affiliate Marketing",
-          items: ["Affiliate Program Setup", "Affiliate Management", "Affiliate Analytics", "Affiliate Training", "Affiliate Tools"]
-        }
-      ]
-    },
-    {
-      name: "Writing & Translation",
-      sections: [
-        {          title: "Writing Services",
-          items: ["Content Writing", "Blog Writing", "Article Writing", "Press Release Writing", "Editorial Writing"]
-        },
-        {          title: "Translation Services",
-          items: ["English to Spanish", "Spanish to English", "French to English", "German to English", "Portuguese to English"]
-        },
-        {
-          title: "Editing & Proofreading",
-          items: ["Grammar Checking", "Spelling Checking", "Punctuation Checking", "Style Checking", "Formatting"]
-        },
-        {
-          title: "Transcription Services",
-          items: ["Audio to Text", "Video to Text", "Document to Text", "Text to Audio", "Text to Video"]
-        },
-        {
-          title: "Creative Writing",
-          items: ["Fiction Writing", "Non-Fiction Writing", "Poetry Writing", "Script Writing", "Storytelling"] 
-        } 
       ]
     },
     {
       name: "AI Services",
       sections: [
         {
-          title: "AI Development",
-          items: ["Custom AI Solutions", "Machine Learning Models", "Natural Language Processing", "Computer Vision", "AI Chatbots"]
-        },
-        {
-          title: "AI Content Creation",
-          items: ["AI-Generated Text", "AI Art Generation", "AI Music Composition", "AI Video Creation", "AI-Powered SEO"]
-        },
-        {
-          title: "AI Consulting",
-          items: ["AI Strategy", "AI Implementation", "AI Training", "AI Ethics Consulting", "AI Performance Optimization"]
-        },
-        {
-          title: "AI Tools & Resources",
-          items: ["AI APIs", "AI Frameworks", "AI Datasets", "AI Libraries", "AI Tutorials"]
-        },
-        {
-          title: "AI Research",
-          items: ["AI Trends Analysis", "AI Market Research", "AI Whitepapers", "AI Case Studies", "AI Conferences"]
+          title: "AI Solutions",
+          items: ["AI Chatbots", "AI Content Creation", "AI Art & Design", "Machine Learning", "Other AI Services"]
         }
       ]
     }
-
   ];
+
+  // Helper to find sections for a given category name
+  const findCategorySections = (categoryName: string) => {
+    const category = mainCategories.find(cat => cat.name === categoryName);
+    return category ? category.sections : [];
+  };
+
+  const handleMouseEnterCategory = (categoryName: string) => {
+    if (megaMenuTimeoutRef.current) {
+      clearTimeout(megaMenuTimeoutRef.current);
+    }
+    setActiveCategory(categoryName);
+  };
+
+  const handleMouseLeaveSecondaryNav = () => {
+    megaMenuTimeoutRef.current = window.setTimeout(() => {
+      setActiveCategory(null);
+    }, 200); // Small delay to allow moving between links without closing
+  };
+
+  const handleMouseEnterMegaMenu = () => {
+    if (megaMenuTimeoutRef.current) {
+      clearTimeout(megaMenuTimeoutRef.current);
+    }
+  };
+
 
   // For the mobile menu, we'll use a simplified version of categories
   const mobileCategories = mainCategories.map(category => ({
@@ -306,227 +365,253 @@ const Navbar = () => {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 w-full bg-white shadow-sm transition-all duration-300 ${showSearchBar ? 'shadow-md' : ''}`}>
-        <div className="container mx-auto px-4">
-          {/* Main Navbar */}
-          <div className="flex justify-between items-center h-16 md:h-20">
-            <div className="flex items-center">
-              {/* Logo */}
-              <Link to="/" className="flex items-center mr-10">
-                <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
-              </Link>
-
-              {/* Search bar that appears on scroll */}
-              {showSearchBar && (
-                <div className="hidden md:flex h-10 max-w-md flex-1 items-center rounded-md border bg-background px-3 animate-fade-in">
-                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-70" />
-                  <input 
-                    type="search" 
-                    placeholder="What service are you looking for today?" 
-                    className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" 
-                  />
-                  <Button size="sm" className="h-7 bg-skillforge-primary">Search</Button>
-                </div>
-              )}
-            </div>
+      {/* Main Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrollPosition > 50 
+          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
+          : 'bg-white'
+      }`}>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className="text-2xl sm:text-3xl font-bold">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
+                  WorkVix
+                </span>
+              </div>
+            </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
-              <div 
-                className="relative"
-                ref={exploreMenuRef}
-                onMouseEnter={() => {
-                  setIsExploreOpen(true);
-                  setHideSecondaryMenu(true);
-                }}
-                onMouseLeave={() => {
-                  
-                  setTimeout(() => setIsExploreOpen(false), 1000);
-                  setTimeout(() => setHideSecondaryMenu(false), 1000);
-                }}
-              >
-                <button 
-                  className="text-gray-600 hover:text-skillforge-primary transition-colors"
-                  onClick={() => {
-                    setIsExploreOpen(!isExploreOpen);
-                    setHideSecondaryMenu(!isExploreOpen);
-                  }}
+            <div className="hidden lg:flex items-center space-x-8">
+              {/* Explore Menu */}
+              <div className="relative" ref={exploreMenuRef}>
+                <button
+                  onMouseEnter={() => setIsExploreOpen(true)}
+                  onMouseLeave={() => setIsExploreOpen(false)}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium"
                 >
-                  Explore
+                  <span>Explore</span>
+                  <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${isExploreOpen ? 'rotate-90' : ''}`} />
                 </button>
                 
                 {isExploreOpen && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <Link
-                      to="/blog"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-skillforge-primary"
-                    >
-                      Blog
-                    </Link>
-                    <Link
-                      to="/explore-skills"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-skillforge-primary"
-                    >
-                      Explore Skills
-                    </Link>
+                  <div
+                    onMouseEnter={() => setIsExploreOpen(true)}
+                    onMouseLeave={() => setIsExploreOpen(false)}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 p-2"
+                  >
+                    <Link to="/blog" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded">Blog</Link>
+                    <Link to="/explore-skills" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded">Explore Skills</Link>
                   </div>
                 )}
               </div>
 
-              <Link to="/premium-services" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-                <span className="text-2xl  text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span> Pro
+              {/* Navigation Links */}
+              <Link to="/join" className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium">
+                Browse Jobs
               </Link>
-              <Link to="/become-seller" className="text-gray-600 hover:text-skillforge-primary transition-colors">
+              <Link to="/premium-services" className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium">
+                WorkVix Pro
+              </Link>
+              <Link to="/become-seller" className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium">
                 Become a Seller
               </Link>
-              <Link to="/signin" className="text-gray-600 hover:text-skillforge-primary transition-colors">
-                Sign In
+            </div>
+
+            {/* Desktop Actions */}
+            <div className="hidden lg:flex items-center space-x-4">
+              {/* Search Button */}
+              <button
+                onClick={toggleSearch}
+                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+
+              {/* Auth Buttons */}
+              <Link to="/signin">
+                <Button variant="ghost" className="text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium">
+                  Sign In
+                </Button>
               </Link>
               <Link to="/join">
-                <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90">Join</Button>
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                  <span>Get Started</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center">
-              <button onClick={toggleMenu} className="text-gray-600 hover:text-skillforge-primary">
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
+            <button
+              onClick={toggleMenu}
+              className="lg:hidden p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        {isSearchOpen && (
+          <div className="border-t border-gray-100 bg-white/95 backdrop-blur-md">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="relative max-w-2xl mx-auto">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search for services, skills, or freelancers..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
+                />
+                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
+        )}
+      </nav>
 
-          {/* Mobile Navigation Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden mt-2 py-2 bg-white shadow-lg rounded-md animate-fade-in">
-              <div className="px-4 py-2">
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          
+          {/* Menu Content */}
+          <div 
+            ref={mobileMenuRef}
+            className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl transform transition-transform duration-300"
+          >
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <div className="text-xl font-bold">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                    WorkVix
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Menu Items */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
-                    type="search"
-                    placeholder="Search services..."
-                    className="h-10 w-full rounded-md border border-input pl-10 pr-3 focus:outline-none focus:ring-1 focus:ring-skillforge-primary"
+                    type="text"
+                    placeholder="Search..."
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
 
-                {/* Explore Dropdown */}
-                <div className="mb-4">
-                  <button 
-                    onClick={() => setIsExploreOpen(!isExploreOpen)}
-                    className="flex items-center justify-between w-full py-2 text-gray-600 hover:text-skillforge-primary"
+                {/* Navigation Links */}
+                <div className="space-y-4">
+                  <Link 
+                    to="/jobs" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
                   >
-                    <span>Explore</span>
-                    {isExploreOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-                  </button>
-                  
-                  {isExploreOpen && (
-                    <div className="pl-4 mt-2 space-y-2">
-                      <Link 
-                        to="/blog" 
-                        className="block py-1 text-sm text-gray-700 hover:text-skillforge-primary"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Blog
-                      </Link>
-                      <Link 
-                        to="/explore-skills" 
-                        className="block py-1 text-sm text-gray-700 hover:text-skillforge-primary"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Explore Skills
-                      </Link>
-                    </div>
-                  )}
+                    Browse Jobs
+                  </Link>
+                  <Link 
+                    to="/explore-skills" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    Explore Skills
+                  </Link>
+                  <Link 
+                    to="/blog" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    Blog
+                  </Link>
                 </div>
 
-                <Link 
-                  to="/premium-services" 
-                  className="block py-2 text-gray-600 hover:text-skillforge-primary"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  WorkVix Premium
-                </Link>
-                <Link 
-                  to="/become-seller" 
-                  className="block py-2 text-gray-600 hover:text-skillforge-primary"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Become a Seller
-                </Link>
-                <Link 
-                  to="/signin" 
-                  className="block py-2 text-gray-600 hover:text-skillforge-primary"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link 
-                  to="/join" 
-                  className="block"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Button className="w-full bg-skillforge-primary hover:bg-skillforge-primary/90 mt-2">
-                    Join
-                  </Button>
-                </Link>
+                {/* Divider */}
+                <div className="border-t border-gray-100" />
+
+                {/* Auth Section */}
+                <div className="space-y-4">
+                  <Link 
+                    to="/signin" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full text-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:border-blue-600 hover:text-blue-600 transition-all duration-200 font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/join" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full text-center py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    Get Started
+                  </Link>
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Categories Navigation (Desktop) */}
-          <div className="hidden md:block border-t">
-            {!hideSecondaryMenu && (
-              <NavigationMenu className="w-full">
-                <NavigationMenuList className="flex justify-between py-2">
-                  {mainCategories.map((category) => (
-                    <NavigationMenuItem key={category.name}>
-                      <NavigationMenuTrigger 
-                        className="text-sm font-normal bg-transparent hover:bg-transparent hover:text-skillforge-primary z-[40]"
-                        onMouseEnter={() => setActiveCategory(category.name)}
-                      >
-                        {category.name}
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent className="z-[40]">
-                        <MegaMenuContent sections={category.sections} />
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-              </NavigationMenu>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Fixed secondary navigation that can appear on scroll */}
-      {showSecondaryNav && !hideSecondaryMenu && (
-        <div 
-          ref={secondaryNavRef}
-          className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md transform transition-all duration-300 animate-fade-in"
-          style={{ top: '80px' }} 
-        >
-          <div className="container mx-auto px-4">
-            <div className="hidden md:flex items-center justify-between py-3 overflow-x-auto">
-              <NavigationMenu className="w-full">
-                <NavigationMenuList className="flex space-x-6 w-full justify-between">
-                  {mainCategories.map((category) => (
-                    <NavigationMenuItem key={category.name}>
-                      <NavigationMenuTrigger 
-                        className="whitespace-nowrap px-1 text-sm font-medium text-gray-700 hover:text-skillforge-primary transition-colors border-b-2 border-transparent hover:border-skillforge-primary bg-transparent hover:bg-transparent z-[30]"
-                        onMouseEnter={() => setActiveCategory(category.name)}
-                      >
-                        {category.name}
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent className="z-[30]">
-                        <MegaMenuContent sections={category.sections} />
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-              </NavigationMenu>
             </div>
           </div>
         </div>
       )}
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-16 sm:h-20" />
+
+      {/* Secondary Navigation Bar with Mega Menus */}
+      <nav 
+        className="w-full bg-white border-b border-gray-100 shadow-sm z-40 sticky top-16 sm:top-20"
+        onMouseLeave={handleMouseLeaveSecondaryNav}
+      >
+        <div
+          ref={secondaryNavRef}
+          className="relative flex overflow-x-auto no-scrollbar whitespace-nowrap px-2 sm:px-8 py-2 gap-2 sm:gap-4 lg:justify-center"
+        >
+          {/* Trending (no dropdown) */}
+          <div className="relative">
+            <button className="flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition focus:outline-none">
+              <span className="mr-1">Trending</span> <span role="img" aria-label="fire">🔥</span>
+            </button>
+          </div>
+
+          {/* Iterate through mainCategories to create secondary nav links */}
+          {mainCategories.map((category) => (
+            <div key={category.name} className="relative">
+              <button
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none 
+                  ${activeCategory === category.name ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}
+                onMouseEnter={() => handleMouseEnterCategory(category.name)}
+              >
+                {category.name}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Mega Menu Content - This will appear based on activeCategory */}
+        {activeCategory && (
+          <div
+            className="absolute left-0 right-0 top-full bg-white border-t border-gray-200 shadow-lg py-6"
+            onMouseEnter={handleMouseEnterMegaMenu}
+            onMouseLeave={handleMouseLeaveSecondaryNav}
+          >
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <MegaMenuContent sections={findCategorySections(activeCategory)} />
+            </div>
+          </div>
+        )}
+      </nav>
     </>
   );
 };

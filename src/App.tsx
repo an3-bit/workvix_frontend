@@ -14,11 +14,11 @@ import ResetPassword from "./pages/reset_password/resetpassword";
 import ChatPage from "./pages/ChatPage";
 import ClientChatPage from "./pages/client/ClientChatPage";
 import BidsDetailsPage from "./pages/BidsDetailsPage";
-import ChatInterface from "./components/ChartInterface";
-import ChatSystem from "./components/chatsystem";
+import ChatSystem from "./components/chat/ChatSystem";
 import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminLogin from "./components/admin/AdminLogin";
+import { AffiliateLayout } from "./pages/affiliate/AffiliateDashboard";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +43,7 @@ const FreelancerProfile = lazy(() => import("./pages/freelancer/FreelancerProfil
 const Blog = lazy(() => import("./pages/Blog"));
 const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
+const ClientMyJobs = lazy(() => import("./pages/client/MyJobs"));
 const OrderForm = lazy(() => import("./pages/OrderForm"));
 const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
 const ClientNotification = lazy(() => import("./pages/client/ClientNotification"));
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/freelancer/profile" element={<FreelancerProfile />} />
             <Route path="/client" element={<ClientDashboard />} />
             <Route path="/client/bids" element={<ClientBidsPage />} />
+            <Route path="/client/jobs" element={<ClientMyJobs />} />
             <Route path="/order/:bidId" element={<OrderForm />} />
             <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
             <Route path="/client/notifications" element={<ClientNotification />} />
@@ -100,7 +102,7 @@ const App = () => (
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/client/chat" element={<ClientChatPage />} />
             <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
-            <Route path="/chat-interface" element={<ChatInterface />} />
+            <Route path="/chat-interface" element={<ChatSystem jobId={null} bidId={null} receiverId={null} />} />
              {/* Admin Specific Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         
@@ -109,7 +111,7 @@ const App = () => (
           path="/admin/*"
           element={
             <AdminProtectedRoute>
-              <AdminDashboardPage />
+              <AdminDashboardPage adminEmail="" />
             </AdminProtectedRoute>
           }
         />
@@ -121,11 +123,14 @@ const App = () => (
               }
             />
             <Route path="/affiliate/register" element={<AffiliateRegister />} />
-            <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
-            <Route path="/affiliate/clients" element={<AffiliateManageClients />} />
-            <Route path="/affiliate/freelancers" element={<AffiliateManageFreelancers />} />
-            <Route path="/affiliate/jobs" element={<AffiliateManageJobs />} />
-            <Route path="/affiliate/commissions" element={<AffiliateCommissionSummary />} />
+            <Route path="/affiliate" element={<AffiliateLayout active="" />}>
+              <Route path="dashboard" element={<AffiliateDashboard />} />
+              <Route path="clients" element={<AffiliateManageClients />} />
+              <Route path="freelancers" element={<AffiliateManageFreelancers />} />
+              <Route path="jobs" element={<AffiliateManageJobs />} />
+              <Route path="commissions" element={<AffiliateCommissionSummary />} />
+              <Route index element={<AffiliateDashboard />} />
+            </Route>
             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
           </Routes>
         </Suspense>

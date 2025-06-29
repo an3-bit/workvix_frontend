@@ -1,70 +1,147 @@
-
-import { Search } from 'lucide-react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Search, ArrowRight, Star, Users, Clock, Shield } from 'lucide-react';
 
-
-const Hero = () => {
-  const navigate = useNavigate();
+const Hero: React.FC = () => {
   return (
-    <section className="relative bg-skillforge-secondary pt-16 pb-20 md:pb-32 overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center z-0 opacity-20" 
-        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=2000&q=80)' }}
+    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
+      {/* Background Image */}
+      <img 
+        src="https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg" 
+        alt="Freelancer working" 
+        className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay pointer-events-none z-0" 
       />
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-3xl mx-auto text-center mb-10">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 animate-fade-in">
-            Our freelancers will take it from here
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5 z-10">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+      </div>
+      <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Main Heading */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">
+            Find the Perfect{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              Freelancer
+            </span>
+            <br />
+            for Your Project
           </h1>
-          <p className="text-xl text-gray-200 mb-10 animate-fade-in">
-            Find the perfect talent to bring your projects to life
+
+          {/* Subtitle */}
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Connect with talented professionals worldwide. From web development to graphic design, 
+            get your projects done quickly and professionally.
           </p>
-          
-          {/* Search Form */}
-          <div className="flex flex-col md:flex-row w-full max-w-2xl mx-auto animate-fade-in">
-            <div className="flex flex-1 rounded-md overflow-hidden shadow-lg">
+
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="What service are you looking for today?"
-                className="w-full py-3 px-4 outline-none text-gray-700 flex-grow"
+                className="w-full h-14 pl-12 pr-32 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none text-lg shadow-lg"
               />
-              <Button className="px-6 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-none">
-                <Search className="h-5 w-5" />
+              <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 px-6 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                Search
               </Button>
             </div>
           </div>
-          
-          {/* Popular Searches */}
-          <div className="flex flex-wrap justify-center gap-2 mt-6 text-sm text-gray-300 animate-fade-in">
-            <span className="font-medium">Popular:</span>
-            <a href="#" className="hover:text-white transition-colors">Website Design</a>
-            <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">Logo Design</a>
-            <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">WordPress</a>
-            <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">Voice Over</a>
-          </div>
-          {/* Call-to-Action Button */}
-          {/* Call-to-Action Buttons (horizontal alignment) */}
-<div className="flex justify-center gap-4 mt-8 animate-fade-in">
-  <Button
-    className="px-8 py-3 bg-skillforge-primary hover:bg-skillforge-primary/90 rounded-md text-white"
-    onClick={() => navigate('/post-job')}
-  >
-    Post a Job
-  </Button>
-  <Button
-    className="px-8 py-3 bg-orange-500 hover:bg-orange-600 rounded-md text-white"
-    onClick={() => navigate('/become-seller')}
-  >
-    Find a Job
-  </Button>
-</div>
 
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <Link to="/post-job">
+              <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                Post a Job
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/join">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300">
+                Browse Jobs
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
+            <div className="text-center">
+              <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2">50K+</div>
+              <div className="text-sm md:text-base text-gray-600">Active Freelancers</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">10K+</div>
+              <div className="text-sm md:text-base text-gray-600">Projects Completed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">98%</div>
+              <div className="text-sm md:text-base text-gray-600">Success Rate</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-2">24/7</div>
+              <div className="text-sm md:text-base text-gray-600">Support</div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Verified Professionals</h3>
+              <p className="text-gray-600 text-center text-sm">
+                All freelancers are verified and reviewed for quality assurance
+              </p>
+            </div>
+            <div className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <Clock className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Fast Delivery</h3>
+              <p className="text-gray-600 text-center text-sm">
+                Get your projects completed quickly with our efficient system
+              </p>
+            </div>
+            <div className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Payments</h3>
+              <p className="text-gray-600 text-center text-sm">
+                Safe and secure payment system with escrow protection
+              </p>
+            </div>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-12 pt-8 border-t border-gray-200">
+            <p className="text-gray-500 text-sm mb-4">Trusted by thousands of clients worldwide</p>
+            <div className="flex flex-wrap justify-center items-center gap-6 opacity-60">
+              <div className="flex items-center space-x-1">
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <span className="text-sm text-gray-600 ml-2">4.9/5 Rating</span>
+              </div>
+              <div className="text-sm text-gray-600">•</div>
+              <div className="text-sm text-gray-600">50,000+ Happy Clients</div>
+              <div className="text-sm text-gray-600">•</div>
+              <div className="text-sm text-gray-600">24/7 Customer Support</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-gray-400 rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
     </section>

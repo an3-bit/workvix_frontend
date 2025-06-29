@@ -14,14 +14,22 @@ const BecomeSeller = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-skillforge-primary/10 to-skillforge-secondary/5 py-16 md:py-24">
+      <div className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-16 md:py-24 overflow-hidden">
+        {/* Blurred Circles */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        </div>
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6">Start Earning With Your Skills Today</h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-8">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+              Start Earning With Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Skills</span> Today
+            </h1>
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Join thousands of skilled professionals who are building successful businesses on workvix.
             </p>
-            <Button className="bg-skillforge-primary hover:bg-skillforge-primary/90 text-white px-8 py-6 text-lg"
+            <Button className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={() => {
                 navigate('/join');
               }}
@@ -136,21 +144,27 @@ const BecomeSeller = () => {
       </div>
       
       {/* CTA */}
-      <div className="py-16 bg-skillforge-secondary text-white">
-        <div className="container mx-auto px-4 text-center">
+      <div className="relative py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white overflow-hidden">
+        {/* Blurred Circles */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        </div>
+        <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-2xl md:text-4xl font-bold mb-6">Ready to Start Your Journey?</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             Join our community of skilled professionals and start growing your business today.
           </p>
-          <Button className="bg-white text-skillforge-secondary hover:bg-gray-100 px-8 py-6 text-lg"
+          <Button className="h-14 px-8 text-lg rounded-full bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={() => {
               navigate('/join');
             }}
-          >  
+          >
             Become a Seller Now
           </Button>
           <div className="mt-4">
-            <Button className="bg-skillforge-primary text-white hover:bg-skillforge-primary/90 px-8 py-6 text-lg"
+            <Button className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={() => {
                 navigate('/affiliate/register');
               }}
