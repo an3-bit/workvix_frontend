@@ -56,7 +56,7 @@ const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
 const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
 const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
 const ServicesPage = lazy(() => import("./components/services"));
-const Projects = lazy(() => import("./pages/Projects"));
+const Projects = lazy(() => import("./pages/projects"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
