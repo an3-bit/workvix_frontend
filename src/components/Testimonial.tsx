@@ -48,13 +48,13 @@ const Testimonial = () => {
   const currentTestimonial = testimonials[currentIndex];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-green-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
             What success on{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500">
               WorkVix
             </span>{" "}
             looks like
@@ -146,7 +146,7 @@ const Testimonial = () => {
               </div>
               
               {/* Visual Section */}
-              <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-green-600 via-orange-600 to-yellow-400 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10" />
                 
                 {/* Background Pattern */}

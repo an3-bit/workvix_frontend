@@ -206,7 +206,7 @@ const Nav2 = () => {
           {/* Logo */}
           <button 
             onClick={handleLogoClick}
-            className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
+            className="text-2xl font-bold text-green-600 hover:text-orange-500 transition-colors"
           >
              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
           </button>
@@ -218,16 +218,16 @@ const Nav2 = () => {
                 <>
                   <Link 
                     to="/jobs" 
-                    className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                      location.pathname === '/jobs' ? 'text-blue-600 font-medium' : ''
+                    className={`text-gray-700 hover:text-green-600 transition-colors ${
+                      location.pathname === '/jobs' ? 'text-green-600 font-medium' : ''
                     }`}
                   >
                     Jobs
                   </Link>
                   <Link 
                     to="/bids" 
-                    className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                      location.pathname === '/bids' ? 'text-blue-600 font-medium' : ''
+                    className={`text-gray-700 hover:text-green-600 transition-colors ${
+                      location.pathname === '/bids' ? 'text-green-600 font-medium' : ''
                     }`}
                   >
                     My Bids
@@ -238,8 +238,8 @@ const Nav2 = () => {
               {shouldShowBids() && (
                 <Link 
                   to="/client/bids" 
-                  className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                    location.pathname === '/client/bids' ? 'text-blue-600 font-medium' : ''
+                  className={`text-gray-700 hover:text-green-600 transition-colors ${
+                    location.pathname === '/client/bids' ? 'text-green-600 font-medium' : ''
                   }`}
                 >
                   Bids
@@ -253,8 +253,8 @@ const Nav2 = () => {
             <div className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/orders" 
-                className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                  location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                className={`text-gray-700 hover:text-green-600 transition-colors ${
+                  location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
                 }`}
               >
                 Orders
@@ -267,8 +267,8 @@ const Nav2 = () => {
             <div className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/orders" 
-                className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                  location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                className={`text-gray-700 hover:text-green-600 transition-colors ${
+                  location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
                 }`}
               >
                 Orders
@@ -286,7 +286,7 @@ const Nav2 = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for services..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 />
               </div>
             </form>
@@ -327,7 +327,7 @@ const Nav2 = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-blue-600 text-white">
+                        <AvatarFallback className="bg-green-600 text-white">
                           {getInitials(userProfile)}
                         </AvatarFallback>
                       </Avatar>

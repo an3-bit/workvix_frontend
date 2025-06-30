@@ -131,16 +131,16 @@ const Categories = () => {
                 shadow-sm hover:shadow-lg transition-all duration-300 
                 border border-gray-100 hover:border-gray-200
                 transform hover:-translate-y-1
-                ${category.hoverColor}
+                ${hoveredIndex === index ? 'bg-green-600 text-white' : category.hoverColor}
               `}>
                 <div className={`
                   w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 
-                  rounded-full ${category.color} 
+                  rounded-full ${hoveredIndex === index ? 'bg-green-600' : category.color} 
                   flex items-center justify-center mb-3 sm:mb-4
                   group-hover:scale-110 transition-transform duration-300
                 `}>
                   <category.icon 
-                    className={`category-icon h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 ${category.textColor}`}
+                    className={`category-icon h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 ${hoveredIndex === index ? 'text-white' : category.textColor}`}
                   />
                 </div>
                 <h3 className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg mb-2 group-hover:text-gray-700 transition-colors">
@@ -160,8 +160,8 @@ const Categories = () => {
           <Link 
             to="/explore-skills"
             className="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 
-                     bg-gradient-to-r from-blue-600 to-purple-600 
-                     hover:from-blue-700 hover:to-purple-700 
+                     bg-gradient-to-r from-green-600 to-orange-500 
+                     hover:from-green-700 hover:to-orange-600 
                      text-white font-medium rounded-lg 
                      transition-all duration-300 transform hover:scale-105
                      shadow-lg hover:shadow-xl"

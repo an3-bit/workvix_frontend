@@ -65,7 +65,7 @@ const Featured = () => {
           </div>
           <Link 
             to="/jobs"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+            className="inline-flex items-center text-green-600 hover:text-green-700 font-medium transition-colors duration-200"
           >
             <span className="text-sm sm:text-base">See All Services</span>
             <ArrowRight className="h-4 w-4 ml-2" />
@@ -102,7 +102,7 @@ const Featured = () => {
                 {/* Content */}
                 <div className="p-4 sm:p-5 lg:p-6">
                   {/* Title */}
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
                     <Link to={`/service/${service.id}`}>
                       {service.title}
                     </Link>
@@ -140,7 +140,7 @@ const Featured = () => {
                       </div>
                       <Link 
                         to={`/service/${service.id}`}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 transform hover:scale-105"
+                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 transform hover:scale-105"
                       >
                         View Details
                       </Link>
@@ -157,8 +157,8 @@ const Featured = () => {
           <Link 
             to="/jobs"
             className="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 
-                     bg-gradient-to-r from-blue-600 to-purple-600 
-                     hover:from-blue-700 hover:to-purple-700 
+                     bg-gradient-to-r from-green-600 to-orange-500 
+                     hover:from-green-700 hover:to-orange-600 
                      text-white font-medium rounded-lg 
                      transition-all duration-300 transform hover:scale-105
                      shadow-lg hover:shadow-xl"

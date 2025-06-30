@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 
 const Promotion = () => {
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 text-white relative overflow-hidden">
+    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-green-900 via-orange-900 to-yellow-100 text-white relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
-        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        <div className="absolute top-0 left-0 w-72 h-72 bg-green-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-orange-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -24,10 +24,10 @@ const Promotion = () => {
             </div>
             
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 lg:mb-6">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-orange-400">
                 WorkVix
               </span>
-              <span className="text-white">Pro</span>
+              <span className="text-white"> Pro</span>
             </h2>
             
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold mb-6 lg:mb-8 text-gray-200">
@@ -41,25 +41,25 @@ const Promotion = () => {
             {/* Features List */}
             <ul className="space-y-4 mb-8 lg:mb-10">
               <li className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
                   <Check className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-gray-200 text-sm sm:text-base">Exclusive access to top-rated talent</span>
               </li>
               <li className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
                   <Check className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-gray-200 text-sm sm:text-base">Dedicated account management</span>
               </li>
               <li className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
                   <Check className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-gray-200 text-sm sm:text-base">Enterprise-grade security and tools</span>
               </li>
               <li className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
                   <Check className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-gray-200 text-sm sm:text-base">Consolidated billing and reporting</span>
@@ -69,13 +69,13 @@ const Promotion = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link to="/premium-services">
-                <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium px-8 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <Button className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium px-8 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                   <span className="text-sm sm:text-base">Learn More</span>
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
               <Link to="/become-seller">
-                <Button variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-gray-900 font-medium px-8 py-3 rounded-lg transition-all duration-300">
+                <Button  className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-gray-900 font-medium px-8 py-3 rounded-lg transition-all duration-300">
                   <span className="text-sm sm:text-base">Get Started</span>
                 </Button>
               </Link>
@@ -101,7 +101,7 @@ const Promotion = () => {
                       <div className="text-gray-200 text-sm">Tailored for your business needs</div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Users className="h-5 w-5 text-blue-400" />
+                      <Users className="h-5 w-5 text-green-400" />
                       <Shield className="h-5 w-5 text-green-400" />
                       <Zap className="h-5 w-5 text-yellow-400" />
                     </div>
@@ -111,7 +111,7 @@ const Promotion = () => {
             </div>
             
             {/* Floating Badge */}
-            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl shadow-lg transform rotate-3">
+            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-green-600 to-orange-500 text-white p-4 rounded-xl shadow-lg transform rotate-3">
               <div className="text-center">
                 <div className="font-bold text-lg">Pro</div>
                 <div className="text-xs opacity-90">Premium</div>
