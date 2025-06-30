@@ -62,10 +62,14 @@ const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
 =======
 const ServicesPage = lazy(() => import("./components/services"));
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 5a4df94 (new service page and updates on services and hero section.)
 =======
 const Projects = lazy(() => import("./pages/Projects"));
 >>>>>>> 29548a0 (New updates on projects page)
+=======
+const Projects = lazy(() => import("./pages/projects"));
+>>>>>>> 87ff80f (affilliate marketer)
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
