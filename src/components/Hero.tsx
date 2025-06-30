@@ -2,28 +2,36 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Search, ArrowRight, Star, Users, Clock, Shield } from 'lucide-react';
+import { useCountUp } from '@/hooks/useCountUp';
 
 const Hero: React.FC = () => {
+  // Animated stats
+  const freelancers = useCountUp({ end: 50, duration: 2000, start: 0, loop: true });
+  const projects = useCountUp({ end: 10, duration: 2000, start: 0, loop: true });
+  const success = useCountUp({ end: 98, duration: 2000, start: 0, loop: true });
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center bg-transparent overflow-hidden">
       {/* Background Image */}
       <img 
         src="https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg" 
         alt="Freelancer working" 
-        className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay pointer-events-none z-0" 
+        className="absolute inset-0 w-full h-full object-cover opacity-70 pointer-events-none z-0" 
       />
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-60 z-10"></div>
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5 z-10">
-        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
-        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+      <div className="absolute inset-0 opacity-5 z-20">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full opacity-5 filter blur-xl animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full opacity-5 filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full opacity-5 filter blur-xl animate-pulse animation-delay-4000"></div>
       </div>
-      <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-30 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto">
           {/* Main Heading */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
             Find the Perfect{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">
               Freelancer
             </span>
             <br />
@@ -31,7 +39,7 @@ const Hero: React.FC = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow">
             Connect with talented professionals worldwide. From web development to graphic design, 
             get your projects done quickly and professionally.
           </p>
@@ -39,13 +47,13 @@ const Hero: React.FC = () => {
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-300" />
               <input
                 type="text"
                 placeholder="What service are you looking for today?"
-                className="w-full h-14 pl-12 pr-32 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none text-lg shadow-lg"
+                className="w-full h-14 pl-12 pr-32 rounded-full border-2 border-gray-200 focus:border-blue-400 focus:outline-none text-lg shadow-lg bg-white bg-opacity-90 text-gray-900 placeholder-gray-500"
               />
-              <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 px-6 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 px-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg">
                 Search
               </Button>
             </div>
@@ -54,35 +62,39 @@ const Hero: React.FC = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link to="/post-job">
-              <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300">
                 Post a Job
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link to="/join">
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300">
+              <Button size="lg"  className="h-14 px-8 text-lg rounded-full border-2 border-white text-white hover:border-blue-300 hover:bg-white hover:bg-opacity-10 transition-all duration-300 font-bold">
                 Browse Jobs
               </Button>
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2">50K+</div>
-              <div className="text-sm md:text-base text-gray-600">Active Freelancers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">10K+</div>
-              <div className="text-sm md:text-base text-gray-600">Projects Completed</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">98%</div>
-              <div className="text-sm md:text-base text-gray-600">Success Rate</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-2">24/7</div>
-              <div className="text-sm md:text-base text-gray-600">Support</div>
+          <div className="relative h-28 overflow-hidden max-w-4xl mx-auto mb-12">
+            <div className="absolute w-full">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow">{freelancers}K+</div>
+                  <div className="text-sm md:text-base text-blue-200">Active Freelancers</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow">{projects}K+</div>
+                  <div className="text-sm md:text-base text-purple-200">Projects Completed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow">{success}%</div>
+                  <div className="text-sm md:text-base text-green-200">Success Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow">24/7</div>
+                  <div className="text-sm md:text-base text-orange-200">Support</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -118,21 +130,20 @@ const Hero: React.FC = () => {
           </div>
 
           {/* Trust Indicators */}
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <p className="text-gray-500 text-sm mb-4">Trusted by thousands of clients worldwide</p>
-            <div className="flex flex-wrap justify-center items-center gap-6 opacity-60">
+          <div className="mt-12 pt-8 border-t border-gray-200 border-opacity-30">
+            <p className="text-white text-base mb-4 drop-shadow font-semibold">Trusted by thousands of clients worldwide</p>
+            <div className="flex flex-wrap justify-center items-center gap-6 opacity-90">
               <div className="flex items-center space-x-1">
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span className="text-sm text-gray-600 ml-2">4.9/5 Rating</span>
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-300 " />
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-300 " />
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-300 " />
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-300 " />
+                <span className="text-white ml-2 font-semibold drop-shadow">4.9/5 Rating</span>
               </div>
-              <div className="text-sm text-gray-600">•</div>
-              <div className="text-sm text-gray-600">50,000+ Happy Clients</div>
-              <div className="text-sm text-gray-600">•</div>
-              <div className="text-sm text-gray-600">24/7 Customer Support</div>
+              <div className="text-white text-opacity-70 font-semibold">•</div>
+              <div className="text-white font-semibold drop-shadow">50,000+ Happy Clients</div>
+              <div className="text-white text-opacity-70 font-semibold">•</div>
+              <div className="text-white font-semibold drop-shadow">24/7 Customer Support</div>
             </div>
           </div>
         </div>
