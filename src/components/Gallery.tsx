@@ -92,8 +92,8 @@ const Gallery = () => {
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Made on{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            Made on{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500">
               WorkVix
             </span>
           </h2>
@@ -115,8 +115,8 @@ const Gallery = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   selectedCategory === category
-                    ? "bg-blue-600 text-white shadow-lg"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-green-600 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-700 hover:bg-green-100"
                 }`}
               >
                 {category}
@@ -158,7 +158,7 @@ const Gallery = () => {
 
                 {/* Price Badge */}
                 <div className="absolute top-3 right-3">
-                  <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  <span className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
                     {project.price}
                   </span>
                 </div>
@@ -166,7 +166,7 @@ const Gallery = () => {
 
               {/* Content */}
               <div className="p-4 sm:p-5">
-                <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-2 line-clamp-1 group-hover:text-green-600 transition-colors">
                   {project.title}
                 </h3>
                 
@@ -201,12 +201,7 @@ const Gallery = () => {
         <div className="text-center mt-12 lg:mt-16">
           <Link 
             to="/jobs"
-            className="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 
-                     bg-gradient-to-r from-blue-600 to-purple-600 
-                     hover:from-blue-700 hover:to-purple-700 
-                     text-white font-medium rounded-lg 
-                     transition-all duration-300 transform hover:scale-105
-                     shadow-lg hover:shadow-xl"
+            className="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             <span className="text-sm sm:text-base">Explore More Projects</span>
             <ArrowRight className="h-4 w-4 ml-2" />

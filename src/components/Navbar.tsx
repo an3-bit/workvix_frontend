@@ -24,6 +24,9 @@ const Navbar = () => {
   const exploreMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const megaMenuTimeoutRef = useRef<number | null>(null); // To manage hover delays
+  const heroRef = useRef<HTMLElement | null>(null);
+  const categoriesRef = useRef<HTMLElement | null>(null);
+  const prevShowSecondaryNav = useRef(false);
 
   // Enhanced MegaMenu component
   const scrollSecondaryNav = (direction: 'left' | 'right') => {
@@ -106,6 +109,51 @@ const Navbar = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Show secondary nav only when Hero is out of view and Categories is in view
+  useEffect(() => {
+    heroRef.current = document.getElementById('hero-section') as HTMLElement;
+    categoriesRef.current = document.getElementById('categories-section') as HTMLElement;
+    const heroSection = heroRef.current;
+    const categoriesSection = categoriesRef.current;
+    if (!heroSection || !categoriesSection) return;
+
+    let heroInView = true;
+    let categoriesInView = false;
+
+    const observer = new window.IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === heroSection) {
+            heroInView = entry.isIntersecting;
+          } else if (entry.target === categoriesSection) {
+            categoriesInView = entry.isIntersecting;
+          }
+        });
+        setShowSecondaryNav(!heroInView && categoriesInView);
+      },
+      {
+        root: null,
+        threshold: 0.1,
+      }
+    );
+    observer.observe(heroSection);
+    observer.observe(categoriesSection);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Always scroll secondary nav to left when it appears (with timeout for rendering)
+  useEffect(() => {
+    if (showSecondaryNav && secondaryNavRef.current) {
+      setTimeout(() => {
+        if (secondaryNavRef.current) {
+          secondaryNavRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        }
+      }, 20);
+    }
+  }, [showSecondaryNav]);
 
   // Main navigation categories data
   const mainCategories = [
@@ -376,7 +424,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 group">
               <div className="text-2xl sm:text-3xl font-bold">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500 group-hover:from-green-700 group-hover:to-orange-600 transition-all duration-300">
                   WorkVix
                 </span>
               </div>
@@ -389,7 +437,7 @@ const Navbar = () => {
                 <button
                   onMouseEnter={() => setIsExploreOpen(true)}
                   onMouseLeave={() => setIsExploreOpen(false)}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium"
                 >
                   <span>Explore</span>
                   <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${isExploreOpen ? 'rotate-90' : ''}`} />
@@ -401,20 +449,20 @@ const Navbar = () => {
                     onMouseLeave={() => setIsExploreOpen(false)}
                     className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 p-2"
                   >
-                    <Link to="/blog" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded">Blog</Link>
-                    <Link to="/explore-skills" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded">Explore Skills</Link>
+                    <Link to="/blog" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Blog</Link>
+                    <Link to="/explore-skills" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Explore Skills</Link>
                   </div>
                 )}
               </div>
 
               {/* Navigation Links */}
-              <Link to="/join" className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium">
+              <Link to="/join" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
                 Browse Jobs
               </Link>
-              <Link to="/premium-services" className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium">
+              <Link to="/premium-services" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
                 WorkVix Pro
               </Link>
-              <Link to="/become-seller" className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium">
+              <Link to="/become-seller" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
                 Become a Seller
               </Link>
             </div>
@@ -424,19 +472,19 @@ const Navbar = () => {
               {/* Search Button */}
               <button
                 onClick={toggleSearch}
-                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
               >
                 <Search className="h-5 w-5" />
               </button>
 
               {/* Auth Buttons */}
               <Link to="/signin">
-                <Button variant="ghost" className="text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-medium">
+                <Button variant="ghost" className="text-gray-700 hover:text-green-600 hover:bg-green-50 font-medium">
                   Sign In
                 </Button>
               </Link>
               <Link to="/join">
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <Button className="bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                   <span>Get Started</span>
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -446,7 +494,7 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMenu}
-              className="lg:hidden p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              className="lg:hidden p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -462,9 +510,9 @@ const Navbar = () => {
                 <input
                   type="text"
                   placeholder="Search for services, skills, or freelancers..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm sm:text-base"
                 />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600">
+                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-600">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -491,13 +539,13 @@ const Navbar = () => {
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
                 <div className="text-xl font-bold">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500">
                     WorkVix
                   </span>
                 </div>
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                  className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -511,7 +559,7 @@ const Navbar = () => {
                   <input
                     type="text"
                     placeholder="Search..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                   />
                 </div>
 
@@ -520,21 +568,21 @@ const Navbar = () => {
                   <Link 
                     to="/jobs" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                    className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
                   >
                     Browse Jobs
                   </Link>
                   <Link 
                     to="/explore-skills" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                    className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
                   >
                     Explore Skills
                   </Link>
                   <Link 
                     to="/blog" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                    className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
                   >
                     Blog
                   </Link>
@@ -548,14 +596,14 @@ const Navbar = () => {
                   <Link 
                     to="/signin" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:border-blue-600 hover:text-blue-600 transition-all duration-200 font-medium"
+                    className="block w-full text-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:border-green-600 hover:text-green-600 transition-all duration-200 font-medium"
                   >
                     Sign In
                   </Link>
                   <Link 
                     to="/join" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    className="block w-full text-center py-3 px-4 bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
                   >
                     Get Started
                   </Link>
@@ -570,48 +618,50 @@ const Navbar = () => {
       <div className="h-16 sm:h-20" />
 
       {/* Secondary Navigation Bar with Mega Menus */}
-      <nav 
-        className="w-full bg-white border-b border-gray-100 shadow-sm z-40 sticky top-16 sm:top-20"
-        onMouseLeave={handleMouseLeaveSecondaryNav}
-      >
-        <div
-          ref={secondaryNavRef}
-          className="relative flex overflow-x-auto no-scrollbar whitespace-nowrap px-2 sm:px-8 py-2 gap-2 sm:gap-4 lg:justify-center"
+      {showSecondaryNav && (
+        <nav 
+          className="w-full bg-white border-b border-gray-100 shadow-sm z-40 sticky top-16 sm:top-20"
+          onMouseLeave={handleMouseLeaveSecondaryNav}
         >
-          {/* Trending (no dropdown) */}
-          <div className="relative">
-            <button className="flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition focus:outline-none">
-              <span className="mr-1">Trending</span> <span role="img" aria-label="fire">🔥</span>
-            </button>
-          </div>
-
-          {/* Iterate through mainCategories to create secondary nav links */}
-          {mainCategories.map((category) => (
-            <div key={category.name} className="relative">
-              <button
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none 
-                  ${activeCategory === category.name ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}
-                onMouseEnter={() => handleMouseEnterCategory(category.name)}
-              >
-                {category.name}
+          <div
+            ref={secondaryNavRef}
+            className="relative flex overflow-x-auto no-scrollbar whitespace-nowrap px-2 sm:px-8 py-2 gap-2 sm:gap-4 lg:justify-center"
+          >
+            {/* Trending (no dropdown) */}
+            <div className="relative">
+              <button className="flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition focus:outline-none">
+                <span className="mr-1">Trending</span> <span role="img" aria-label="fire">🔥</span>
               </button>
             </div>
-          ))}
-        </div>
 
-        {/* Mega Menu Content - This will appear based on activeCategory */}
-        {activeCategory && (
-          <div
-            className="absolute left-0 right-0 top-full bg-white border-t border-gray-200 shadow-lg py-6"
-            onMouseEnter={handleMouseEnterMegaMenu}
-            onMouseLeave={handleMouseLeaveSecondaryNav}
-          >
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <MegaMenuContent sections={findCategorySections(activeCategory)} />
-            </div>
+            {/* Iterate through mainCategories to create secondary nav links */}
+            {mainCategories.map((category) => (
+              <div key={category.name} className="relative">
+                <button
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none 
+                    ${activeCategory === category.name ? 'bg-green-100 text-green-700' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'}`}
+                  onMouseEnter={() => handleMouseEnterCategory(category.name)}
+                >
+                  {category.name}
+                </button>
+              </div>
+            ))}
           </div>
-        )}
-      </nav>
+
+          {/* Mega Menu Content - This will appear based on activeCategory */}
+          {activeCategory && (
+            <div
+              className="absolute left-0 right-0 top-full bg-white border-t border-gray-200 shadow-lg py-6"
+              onMouseEnter={handleMouseEnterMegaMenu}
+              onMouseLeave={handleMouseLeaveSecondaryNav}
+            >
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <MegaMenuContent sections={findCategorySections(activeCategory)} />
+              </div>
+            </div>
+          )}
+        </nav>
+      )}
     </>
   );
 };
