@@ -47,7 +47,7 @@ const AffiliateNavBar = () => {
         title: 'Signed out successfully',
         description: 'You have been logged out of your account.',
       });
-      navigate('/affiliate-register');
+      navigate('/affiliate/register');
     } catch (error) {
       toast({
         title: 'Error',

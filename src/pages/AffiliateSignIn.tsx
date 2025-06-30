@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,21 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 
-const AffiliateRegister: React.FC = () => {
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
+const AffiliateSignIn: React.FC = () => {
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        navigate('/affiliate/dashboard');
-      }
-    };
-    checkAuth();
-  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,41 +21,42 @@ const AffiliateRegister: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
-        options: {
-          data: {
-            name: form.name,
-            phone: form.phone,
-            role: 'affiliate_marketer',
-          },
-        },
       });
       if (error) throw error;
       const user = data.user;
-      if (!user) throw new Error('User registration failed.');
-      // Split name into first and last name
-      const [firstName, ...lastNameParts] = form.name.trim().split(' ');
-      const lastName = lastNameParts.join(' ');
-      // Insert into profiles table
-      const now = new Date().toISOString();
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: user.id,
-        email: form.email,
-        first_name: firstName,
-        last_name: lastName,
-        phone: form.phone,
-        created_at: now,
-        updated_at: now,
-        user_type: 'affiliate_marketer',
-        online: true,
-      });
-      if (profileError) throw profileError;
-      toast({ title: 'Registration successful', description: 'Check your email to confirm your account.' });
+      if (!user) throw new Error('Authentication failed.');
+      // Check user_type
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .single();
+      if (profileError && profileError.code !== 'PGRST116') throw profileError;
+      if (!profile) {
+        // Insert profile if it doesn't exist
+        const now = new Date().toISOString();
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          first_name: '',
+          last_name: '',
+          phone: '',
+          created_at: now,
+          updated_at: now,
+          user_type: 'affiliate_marketer',
+          online: true,
+        });
+        if (insertError) throw insertError;
+      } else if (profile.user_type !== 'affiliate_marketer') {
+        throw new Error('This sign-in is for affiliate marketers only.');
+      }
+      toast({ title: 'Welcome back!', description: 'You have been signed in successfully.' });
       navigate('/affiliate/dashboard');
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: 'Sign in error', description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -83,15 +74,12 @@ const AffiliateRegister: React.FC = () => {
         <Card className="shadow-2xl rounded-2xl border-0">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center mb-2">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate Marketer Registration</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate Marketer Sign In</span>
             </CardTitle>
+            <p className="text-center text-gray-600 mt-2">Sign in to access your affiliate dashboard and manage your referrals.</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" value={form.name} onChange={handleChange} required className="h-12 text-lg" />
-              </div>
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg" />
@@ -100,11 +88,7 @@ const AffiliateRegister: React.FC = () => {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg" />
               </div>
-              <div>
-                <Label htmlFor="phone">Phone (optional)</Label>
-                <Input id="phone" name="phone" value={form.phone} onChange={handleChange} className="h-12 text-lg" />
-              </div>
-              <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Registering...' : 'Register'}</Button>
+              <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</Button>
             </form>
             <Button
               variant="outline"
@@ -114,9 +98,9 @@ const AffiliateRegister: React.FC = () => {
               Back to Home
             </Button>
             <div className="mt-4 text-center">
-              <span className="text-gray-600">Already registered?</span>
-              <Button variant="link" className="ml-2 text-blue-600" onClick={() => navigate('/affiliate/signin')}>
-                Sign in
+              <span className="text-gray-600">Don't have an account?</span>
+              <Button variant="link" className="ml-2 text-blue-600" onClick={() => navigate('/affiliate/register')}>
+                Register
               </Button>
             </div>
           </CardContent>
@@ -126,4 +110,4 @@ const AffiliateRegister: React.FC = () => {
   );
 };
 
-export default AffiliateRegister; 
+export default AffiliateSignIn; 
