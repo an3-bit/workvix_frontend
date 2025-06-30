@@ -88,49 +88,32 @@ const Navbar = () => {
   }, [isMenuOpen, isSearchOpen]);
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrollPosition(currentScrollY);
-      setShowSearchBar(currentScrollY > 100);
-
-      if (currentScrollY < lastScrollY) {
-        setShowSecondaryNav(true);
-      } else if (currentScrollY > lastScrollY) {
-        setShowSecondaryNav(false);
-      }
-
-      lastScrollY = currentScrollY;
+      setScrollPosition(window.scrollY);
+      setShowSearchBar(window.scrollY > 100);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
-  // Show secondary nav only when Hero is out of view and Categories is in view
+  // Show secondary nav only when Hero is out of view (regardless of Categories)
   useEffect(() => {
     heroRef.current = document.getElementById('hero-section') as HTMLElement;
-    categoriesRef.current = document.getElementById('categories-section') as HTMLElement;
     const heroSection = heroRef.current;
-    const categoriesSection = categoriesRef.current;
-    if (!heroSection || !categoriesSection) return;
+    if (!heroSection) return;
 
     let heroInView = true;
-    let categoriesInView = false;
 
     const observer = new window.IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.target === heroSection) {
             heroInView = entry.isIntersecting;
-          } else if (entry.target === categoriesSection) {
-            categoriesInView = entry.isIntersecting;
           }
         });
-        setShowSecondaryNav(!heroInView && categoriesInView);
+        setShowSecondaryNav(!heroInView);
       },
       {
         root: null,
@@ -138,7 +121,6 @@ const Navbar = () => {
       }
     );
     observer.observe(heroSection);
-    observer.observe(categoriesSection);
     return () => {
       observer.disconnect();
     };
