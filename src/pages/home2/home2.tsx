@@ -1,358 +1,188 @@
 import React from 'react';
-import { Search, Star,  Heart, Play, Bookmark, Mail, Bell} from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import Nav2 from '@/components/Nav2';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const Dashboard = () => {
- const recommendedServices = [
-  {
-    id: 1,
-    title: "I will be a wordpress website developer and responsive",
-    seller: "Susana D",
-    level: "Level 2",
-    rating: 4.9,
-    reviews: 34,
-    price: 60,
-    image: "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg",
-    tag: "RESPONSIVE WEBSITES"
-  },
-  {
-    id: 2,
-    title: "I will be your virtual assistant for data entry, data mining, copy...",
-    seller: "Sabina Asheer",
-    level: "Level 2",
-    rating: 4.8,
-    reviews: 761,
-    price: 20,
-    image: "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg",
-    tag: "Virtual Assistant"
-  },
-  {
-    id: 3,
-    title: "I will build wordpress website development, design, redesign...",
-    seller: "Lumen",
-    level: "Level 1",
-    rating: 4.9,
-    reviews: 200,
-    price: 100,
-    image: "https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg",
-    tag: "SERIOUS PROFESSIONAL"
-  },
-  {
-    id: 4,
-    title: "I will be your virtual assistant for data entry typing and...",
-    seller: "Habiba",
-    level: "",
-    rating: 4.9,
-    reviews: 362,
-    price: 30,
-    image: "https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg",
-    tag: "PRO"
-  }
-];
-
-const inspirationCategories = [
-  {
-    title: "Architecture & Interior Design",
-    image: "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg",
-    category: "Design"
-  },
-  {
-    title: "Illustration",
-    image: "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg",
-    category: "Art"
-  },
-  {
-    title: "Business Cards & Stationery",
-    image: "https://images.pexels.com/photos/8490095/pexels-photo-8490095.jpeg",
-    category: "Design"
-  },
-  {
-    title: "Children's Book Illustration",
-    image: "https://images.pexels.com/photos/256431/pexels-photo-256431.jpeg",
-    category: "Illustration"
-  },
-  {
-    title: "Album Cover Design",
-    image: "https://images.pexels.com/photos/164695/pexels-photo-164695.jpeg",
-    category: "Design"
-  },
-  {
-    title: "Packaging & Label Design",
-    image: "https://images.pexels.com/photos/2608496/pexels-photo-2608496.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    category: "Design"
-  }
-];
-
-
-  const quickActions = [
-    { icon: "🎯", title: "Keep browsing", desc: "Continue exploring services" },
-    { icon: "📊", title: "Data Entry", desc: "Professional data entry services" },
-    { icon: "📋", title: "Copy Paste", desc: "Quick copy paste tasks" },
-    { icon: "⌨️", title: "Data Typing", desc: "Fast and accurate typing" }
-  ];
- 
-
-
-     
-
-   
-
+const Home2: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      
-      {/* <Navbar /> */}
-      <Nav2 />
-      
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">SkillForge</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link to="/signin">
+                <Button variant="outline">Sign In</Button>
+              </Link>
+              <Link to="/join">
+                <Button>Get Started</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-
-   {/* Hero Section - WorkVix Go */}
-<section
-  className="bg-cover bg-center py-20 relative"
-  style={{
-    backgroundImage: "url('https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260')",
-  }}
-   
->
-  {/* Overlay */}
-  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-black/20 z-0"></div>
-
-  {/* Content */}
-  <div className="container mx-auto px-4 relative z-10 text-white">
-    <div className="flex flex-col lg:flex-row items-start justify-between">
-      {/* Left Content */}
-      <div className="max-w-2xl mb-10">
-        <h2 className="text-4xl font-bold mb-4">Meet WorkVix Go</h2>
-        <p className="text-lg opacity-90 mb-8">
-          Choose a freelancer's personal AI model and instantly generate work in their distinct style.
-        </p>
-        {/* Feature Cards */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Card 1 */}
-          <div className="bg-white text-black rounded-xl p-6 shadow-md w-full lg:w-80">
-            <p className="text-xs text-gray-500 font-semibold mb-2">RECOMMENDED FOR YOU</p>
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">📝</div>
-              <div>
-                <h3 className="font-bold mb-1">Post a project brief</h3>
-                <p className="text-sm text-gray-600">Get tailored offers for your needs.</p>
-              </div>
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Find the Perfect Freelancer for Your Project
+            </h2>
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Connect with talented freelancers and get your projects done quickly and professionally. 
+              From web development to graphic design, we have experts for every need.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <Link to="/jobs">
+                <Button size="lg" className="px-8">
+                  Browse Jobs
+                </Button>
+              </Link>
+              <Link to="/post-job">
+                <Button size="lg" variant="outline" className="px-8">
+                  Post a Job
+                </Button>
+              </Link>
             </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-white text-black rounded-xl p-6 shadow-md w-full lg:w-80">
-            <p className="text-xs text-gray-500 font-semibold mb-2">RECOMMENDED FOR YOU</p>
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">📱</div>
-              <div>
-                <h3 className="font-bold mb-1">Download the WorkVix app</h3>
-                <p className="text-sm text-gray-600">Stay productive, anywhere you go.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-white text-black rounded-xl p-6 shadow-md w-full lg:w-80">
-            <p className="text-xs text-gray-500 font-semibold mb-2">PROFILE PROGRESS</p>
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">👤</div>
-              <div>
-                <h3 className="font-bold mb-1">You’ve added 35% of your profile</h3>
-                <p className="text-sm text-gray-600">Complete it to get tailored suggestions.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Button */}
-      <div className="self-start">
-        <button className="bg-white text-black hover:bg-gray-100 px-6 py-3 rounded-full font-semibold shadow-md">
-          Start generating →
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-
-      {/* Quick Actions */}
-      <section className="py-8 bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4">
-          <h3 className="text-lg font-semibold mb-6">Based on what you might be looking for</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
-              <div key={index} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-                <span className="text-2xl">{action.icon}</span>
-                <div>
-                  <h4 className="font-medium text-gray-900">{action.title}</h4>
-                  <p className="text-sm text-gray-600">{action.desc}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
-      {/* Recommended Services */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Recommended for You</h2>
-            <div className="text-sm text-gray-600">PEOPLE'S FAVORITES</div>
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose SkillForge?
+            </h3>
+            <p className="text-lg text-gray-600">
+              Everything you need to get your projects done right
+            </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recommendedServices.map((service) => (
-              <div key={service.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <img 
-                    src={service.image} 
-                    alt={service.title}
-                    className="w-full h-40 object-cover"
-                    loading="lazy"
-                  />
-                  <div className="absolute top-2 left-2">
-                    <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                      {service.tag}
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                   </div>
-                  <button className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md hover:bg-gray-50">
-                    <Heart className="h-4 w-4 text-gray-600" />
-                  </button>
-                </div>
-                
-                <div className="p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{service.seller}</p>
-                      {service.level && (
-                        <p className="text-xs text-gray-600">{service.level}</p>
-                      )}
-                    </div>
+                  Talented Freelancers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Access a global network of skilled professionals ready to take on your projects.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                  
-                  <h3 className="text-sm text-gray-800 mb-3 line-clamp-2 leading-tight">
-                    {service.title}
-                  </h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium text-gray-900">{service.rating}</span>
-                      <span className="text-sm text-gray-600">({service.reviews})</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">From</p>
-                      <p className="text-lg font-bold text-gray-900">${service.price}</p>
-                    </div>
+                  Secure Payments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Safe and secure payment system with escrow protection for both parties.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                   </div>
-                </div>
-              </div>
-            ))}
+                  Fast Delivery
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Get your projects completed quickly with our efficient project management system.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Inspiration Gallery */}
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Get inspired by work done on WorkVix</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {inspirationCategories.map((item, index) => (
-              <div key={index} className="group cursor-pointer">
-                <div className="relative overflow-hidden rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow">
-                  <img 
-                    src={item.image} 
-                    alt={item.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity"></div>
-                  <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Bookmark className="h-4 w-4 text-gray-600" />
-                  </button>
-                </div>
-                <div className="mt-3">
-                  <h3 className="font-medium text-gray-900">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.category}</p>
-                </div>
-              </div>
-            ))}
+      {/* CTA Section */}
+      <section className="py-16 bg-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h3 className="text-3xl font-bold text-white mb-4">
+            Ready to Get Started?
+          </h3>
+          <p className="text-xl text-blue-100 mb-8">
+            Join thousands of clients and freelancers who trust SkillForge
+          </p>
+          <div className="flex justify-center space-x-4">
+            <Link to="/join">
+              <Button size="lg" variant="secondary" className="px-8">
+                Join Now
+              </Button>
+            </Link>
+            <Link to="/jobs">
+              <Button size="lg" variant="outline" className="px-8 text-white border-white hover:bg-white hover:text-blue-600">
+                Browse Jobs
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer Categories */}
-      <footer className="bg-white border-t border-gray-200 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-green-600">Graphics & Design</a></li>
-                <li><a href="#" className="hover:text-green-600">Digital Marketing</a></li>
-                <li><a href="#" className="hover:text-green-600">Writing & Translation</a></li>
-                <li><a href="#" className="hover:text-green-600">Video & Animation</a></li>
+              <h4 className="text-lg font-semibold mb-4">SkillForge</h4>
+              <p className="text-gray-400">
+                Connecting talented freelancers with amazing projects.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4">For Clients</h5>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/jobs" className="hover:text-white">Browse Jobs</Link></li>
+                <li><Link to="/post-job" className="hover:text-white">Post a Job</Link></li>
+                <li><Link to="/premium-services" className="hover:text-white">Premium Services</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">For Clients</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-green-600">How WorkVix Works</a></li>
-                <li><a href="#" className="hover:text-green-600">Customer Success Stories</a></li>
-                <li><a href="#" className="hover:text-green-600">Trust & Safety</a></li>
-                <li><a href="#" className="hover:text-green-600">Quality Guide</a></li>
+              <h5 className="font-semibold mb-4">For Freelancers</h5>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/jobs" className="hover:text-white">Find Work</Link></li>
+                <li><Link to="/become-seller" className="hover:text-white">Become a Seller</Link></li>
+                <li><Link to="/freelancer/portfolio" className="hover:text-white">Portfolio</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">For Freelancers</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-green-600">Become a WorkVix Freelancer</a></li>
-                <li><a href="#" className="hover:text-green-600">Become an Agency</a></li>
-                <li><a href="#" className="hover:text-green-600">Freelancer Events</a></li>
-                <li><a href="#" className="hover:text-green-600">Community Hub</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-4">Business Solutions</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-green-600">WorkVix Pro</a></li>
-                <li><a href="#" className="hover:text-green-600">Project Management Service</a></li>
-                <li><a href="#" className="hover:text-green-600">ClearVoice Content Marketing</a></li>
-                <li><a href="#" className="hover:text-green-600">Working Not Working</a></li>
+              <h5 className="font-semibold mb-4">Support</h5>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
+                <li><Link to="/chat" className="hover:text-white">Help Center</Link></li>
+                <li><Link to="/signin" className="hover:text-white">Contact Us</Link></li>
               </ul>
             </div>
           </div>
-          
-          <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
-              <span className="text-sm text-gray-600">© WorkVix International Ltd. 2025</span>
-            </div>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-gray-600">
-                <span className="sr-only">Facebook</span>
-                📘
-              </a>
-              <a href="#" className="text-gray-400 hover:text-gray-600">
-                <span className="sr-only">Twitter</span>
-                🐦
-              </a>
-              <a href="#" className="text-gray-400 hover:text-gray-600">
-                <span className="sr-only">LinkedIn</span>
-                💼
-              </a>
-            </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 SkillForge. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -360,6 +190,4 @@ const inspirationCategories = [
   );
 };
 
-export default Dashboard;
-
-
+export default Home2; 

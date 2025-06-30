@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, User, DollarSign, Clock, Package, FileText, Check, X, Bell } from 'lucide-react';
+import { Send, User, DollarSign, Clock, Package, FileText, Check, X, Bell, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input'; // Assuming you have an Input component
@@ -93,6 +93,8 @@ const ClientChatPage: React.FC = () => {
     delivery_time: '',
     description: ''
   });
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -367,42 +369,74 @@ setOrders(clientOrders);
     scrollToBottom();
   };
 
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setAttachedFile(e.target.files[0]);
+    } else {
+      setAttachedFile(null);
+    }
+  };
+
+  const clearAttachedFile = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat || !currentUser) return;
+    if (!newMessage.trim() && !attachedFile) return;
+    if (!selectedChat || !currentUser) return;
 
     setSending(true);
     try {
+      let attachmentUrl: string | null = null;
+      if (attachedFile) {
+        const fileExtension = attachedFile.name.split('.').pop();
+        const filePath = `${selectedChat.id}/${currentUser.id}/${Date.now()}.${fileExtension}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('chat-attachments')
+          .upload(filePath, attachedFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+        if (uploadError) {
+          throw new Error(`File upload failed: ${uploadError.message}`);
+        }
+        const { data: publicUrlData } = supabase.storage
+          .from('chat-attachments')
+          .getPublicUrl(filePath);
+        if (publicUrlData) {
+          attachmentUrl = publicUrlData.publicUrl;
+        } else {
+          throw new Error('Failed to get public URL for the uploaded file.');
+        }
+      }
       const { data: message, error } = await supabase
         .from('messages')
         .insert([{
           chat_id: selectedChat.id,
           sender_id: currentUser.id,
-          content: newMessage
+          content: newMessage,
+          attachment_url: attachmentUrl,
         }])
         .select()
         .single();
-
       if (error) throw error;
-
       if (message) {
-        // Optimistically update UI (real-time subscription will re-verify)
         setSelectedChat(prev => prev ? {
           ...prev,
           messages: [...prev.messages, message]
         } : null);
-
         setNewMessage('');
+        clearAttachedFile();
         scrollToBottom();
-
-        // Update chat's updated_at (this might also trigger a real-time update in list)
         await supabase
           .from('chats')
           .update({ updated_at: new Date().toISOString() })
           .eq('id', selectedChat.id);
-
-        // Create notification for the other user
         const recipientId = currentUser.id === selectedChat.client_id ? selectedChat.freelancer_id : selectedChat.client_id;
-        if (recipientId) { // Ensure recipient ID exists
+        if (recipientId) {
           await supabase
             .from('notifications')
             .insert([{
@@ -414,11 +448,11 @@ setOrders(clientOrders);
             }]);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send message.',
+        description: error.message || 'Failed to send message.',
         variant: 'destructive',
       });
     } finally {
@@ -846,25 +880,42 @@ setOrders(clientOrders);
                         </div>
                       )}
 
-                      <div className="flex gap-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileAttach}
+                          className="hidden"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-gray-500 hover:text-gray-700"
+                          disabled={sending}
+                        >
+                          <Paperclip className="h-5 w-5" />
+                        </Button>
                         <Textarea
+                          placeholder="Type your message..."
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type your message here..."
-                          className="flex-1 min-h-[60px]"
-                          onKeyDown={(e) => {
+                          className="flex-1 resize-none"
+                          rows={1}
+                          onKeyPress={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
                               handleSendMessage();
                             }
                           }}
+                          disabled={sending}
                         />
-                        <Button 
+                        <Button
                           onClick={handleSendMessage}
-                          disabled={sending || !newMessage.trim()}
-                          className="h-[60px]"
+                          disabled={sending || (!newMessage.trim() && !attachedFile)}
                         >
-                          <Send className="h-4 w-4" />
+                          {sending ? 'Sending...' : <Send className="h-5 w-5" />}
                         </Button>
                       </div>
                     </div>

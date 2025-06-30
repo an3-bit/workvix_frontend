@@ -15,6 +15,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit, Trash, Briefcase, Eye, Download } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { useParams } from 'react-router-dom'; // Import useParams to get URL parameters
 
 interface Job {
   id: string;
@@ -66,40 +67,51 @@ const ManageJobs: React.FC = () => {
 
   const [isViewDetailsDialogOpen, setIsViewDetailsDialogOpen] = useState(false);
 
+  // Get the 'status' parameter from the URL
+  const { status } = useParams<{ status?: string }>();
+  const [filterStatus, setFilterStatus] = useState<string | undefined>(status);
+
+  // Update filterStatus when the URL parameter changes
+  useEffect(() => {
+    setFilterStatus(status);
+  }, [status]);
+
 
   useEffect(() => {
-    fetchJobs();
+    fetchJobs(filterStatus); // Pass the filterStatus to fetchJobs
     fetchFreelancers();
-  }, []);
+  }, [filterStatus]); // Re-fetch jobs when filterStatus changes
 
-  const fetchJobs = async () => {
+
+  const fetchJobs = async (statusFilter?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('jobs')
         .select(`
-          *,
-          client:client_id(first_name, last_name, email),
-          freelancer:freelancer_id(first_name, last_name, email)
-        `)
-        .order('created_at', { ascending: false });
+          id, title, description, category, budget, min_budget, max_budget, client_id, freelancer_id, status, created_at, attachment_url,
+          profiles!fk_jobs_client (first_name, last_name, email),
+          freelancer:freelancer_id (first_name, last_name, email)
+        `); // Select both client and freelancer details
+
+      if (statusFilter && statusFilter !== 'all') { // Apply filter if it's not 'all' and exists
+        if (statusFilter === 'open') {
+          // Open jobs are those with status 'open' AND freelancer_id is null
+          query = query.eq('status', 'open').is('freelancer_id', null);
+        } else if (statusFilter === 'assigned') {
+          // Assigned jobs are those with status 'assigned' AND freelancer_id is not null
+          query = query.eq('status', 'assigned').not('freelancer_id', 'is', null);
+        } else {
+          // For other specific statuses (completed, disputed, cancelled)
+          query = query.eq('status', statusFilter);
+        }
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Map and sanitize freelancer property to match Job interface
-      setJobs(
-        (data as any[]).map((job) => ({
-          ...job,
-          freelancer:
-            job.freelancer &&
-            typeof job.freelancer === 'object' &&
-            'first_name' in job.freelancer &&
-            'last_name' in job.freelancer &&
-            'email' in job.freelancer
-              ? job.freelancer
-              : null,
-        }))
-      );
+      setJobs(data as Job[]);
     } catch (err: any) {
       console.error('Error fetching jobs:', err.message);
       setError('Failed to fetch jobs: ' + err.message);
@@ -116,9 +128,13 @@ const ManageJobs: React.FC = () => {
   const fetchFreelancers = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email')
-        .eq('user_type', 'freelancer');
+        .from('payments')
+        .select(`
+          *,
+          user_profile:user_id(id, email, first_name, last_name, user_type),
+          job_title:related_job(title)
+        `)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setAvailableFreelancers(data as Profile[]);
@@ -145,23 +161,30 @@ const ManageJobs: React.FC = () => {
     setLoading(true);
     try {
       const updateData: { freelancer_id?: string | null; status?: Job['status'] } = {};
-      
-      // Only update freelancer_id if a freelancer is selected
+
+      // Handle freelancer assignment/unassignment
       if (selectedFreelancerId) {
         updateData.freelancer_id = selectedFreelancerId;
-        // Automatically set status to 'assigned' if a freelancer is chosen and status is 'open'
-        if (selectedJob.status === 'open') {
+        // If an open job is assigned a freelancer, change status to 'assigned'
+        if (selectedJob.status === 'open' && newJobStatus === 'open') { // Only change if status hasn't been manually overridden
           updateData.status = 'assigned';
         }
       } else {
-        // If freelancer is unselected, set to null and status to 'open'
+        // If freelancer is explicitly unselected or no freelancer was selected and user wants to unassign
         updateData.freelancer_id = null;
-        updateData.status = 'open';
+        // If status was assigned and now freelancer is unassigned, set status to open
+        if (selectedJob.status === 'assigned' && newJobStatus === 'assigned') { // Only change if status hasn't been manually overridden
+          updateData.status = 'open';
+        }
       }
 
-      // Allow manual status override if selected and different
+      // Allow manual status override if selected and different from previous state
       if (newJobStatus && newJobStatus !== selectedJob.status) {
         updateData.status = newJobStatus;
+        // If status is manually set to 'open', also ensure freelancer is unassigned
+        if (newJobStatus === 'open') {
+          updateData.freelancer_id = null;
+        }
       }
       
       const { error } = await supabase
@@ -176,7 +199,7 @@ const ManageJobs: React.FC = () => {
         description: `Job "${selectedJob.title}" has been updated.`,
       });
       setIsAllocateDialogOpen(false);
-      fetchJobs(); // Refresh the job list
+      fetchJobs(filterStatus); // Refresh the job list with current filter
     } catch (err: any) {
       console.error('Error updating job:', err.message);
       toast({
@@ -214,7 +237,7 @@ const ManageJobs: React.FC = () => {
       });
       setIsConfirmDeleteDialogOpen(false);
       setJobToDelete(null);
-      fetchJobs();
+      fetchJobs(filterStatus); // Refresh with current filter
     } catch (err: any) {
       console.error('Error deleting job:', err.message);
       toast({
@@ -232,6 +255,20 @@ const ManageJobs: React.FC = () => {
     setIsViewDetailsDialogOpen(true);
   };
 
+  const filteredJobs = jobs.filter(job => {
+    if (!filterStatus || filterStatus === 'all') {
+      return true;
+    }
+    if (filterStatus === 'open') {
+      return job.status === 'open' && !job.freelancer_id;
+    }
+    if (filterStatus === 'assigned') {
+      return job.status === 'assigned' && job.freelancer_id;
+    }
+    return job.status === filterStatus;
+  });
+
+
   if (loading) {
     return <div className="p-6 text-center">Loading jobs...</div>;
   }
@@ -244,12 +281,14 @@ const ManageJobs: React.FC = () => {
     <div className="p-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Jobs</CardTitle>
-          <Button onClick={fetchJobs} variant="outline">Refresh Jobs</Button>
+          <CardTitle className="text-2xl font-bold text-gray-800">
+            Manage Jobs {filterStatus && filterStatus !== 'all' ? `(${filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)} Jobs)` : ''}
+          </CardTitle>
+          <Button onClick={() => fetchJobs(filterStatus)} variant="outline">Refresh Jobs</Button>
         </CardHeader>
         <CardContent>
-          {jobs.length === 0 ? (
-            <p className="text-center text-gray-500">No jobs found.</p>
+          {filteredJobs.length === 0 ? (
+            <p className="text-center text-gray-500">No {filterStatus && filterStatus !== 'all' ? filterStatus : ''} jobs found.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -265,14 +304,14 @@ const ManageJobs: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {jobs.map((job) => (
+                  {filteredJobs.map((job) => (
                     <TableRow key={job.id}>
                       <TableCell className="font-medium">{job.title}</TableCell>
                       <TableCell>{job.category}</TableCell>
                       <TableCell>${job.budget}</TableCell>
                       <TableCell>{job.client?.first_name} {job.client?.last_name} ({job.client?.email})</TableCell>
                       <TableCell>
-                        {job.freelancer ? `${job.freelancer.first_name} ${job.freelancer.last_name}` : 'Unassigned'}
+                        {job.freelancer ? `${job.freelancer.first_name} ${job.freelancer.last_name} (${job.freelancer.email})` : 'Unassigned'}
                       </TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -286,27 +325,27 @@ const ManageJobs: React.FC = () => {
                         </span>
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleViewDetails(job)}
                           className="mr-1"
                           title="View Details"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleAllocateJob(job)}
                           className="mr-1"
                           title="Allocate/Update Job"
                         >
                           <Briefcase className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
+                        <Button
+                          variant="destructive"
+                          size="sm"
                           onClick={() => handleDeleteJob(job)}
                           title="Delete Job"
                         >
@@ -428,10 +467,10 @@ const ManageJobs: React.FC = () => {
             {selectedJob?.attachment_url && (
               <div>
                 <Label className="font-semibold">Attachment:</Label>
-                <a 
-                  href={selectedJob.attachment_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={selectedJob.attachment_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-blue-600 hover:underline flex items-center mt-1"
                 >
                   <Download className="h-4 w-4 mr-2" /> Download File ({selectedJob.attachment_url.split('/').pop()})

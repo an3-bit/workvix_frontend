@@ -17,20 +17,28 @@ const ExploreSkills: React.FC = () => {
     <div className="flex flex-col min-h-screen">
         <Navbar />
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-900 text-white">
-        <div className="container mx-auto px-4 py-12 md:py-16">
+      <div className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900 overflow-hidden">
+        {/* Blurred Circles */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+        </div>
+        <div className="container mx-auto px-4 py-12 md:py-16 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Explore Skills</h1>
-            <p className="text-xl mb-8">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+              Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Skills</span>
+            </h1>
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Discover the perfect skill or service for your project needs
             </p>
             <div className="relative max-w-xl mx-auto">
               <input
                 type="text"
                 placeholder="Search for any skill or service..."
-                className="w-full py-3 px-6 pr-12 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full py-3 px-6 pr-12 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none text-lg shadow-lg"
               />
-              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600">
+              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600">
                 <Search className="h-5 w-5" />
               </button>
             </div>
@@ -41,11 +49,11 @@ const ExploreSkills: React.FC = () => {
       
 
       {/* Trending skills */}
-      <div className="bg-gray-50 py-12">
+      <div className="bg-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold">Trending Skills</h2>
-            <Link to="/trending" className="text-emerald-600 hover:text-emerald-700 flex items-center">
+            <Link to="/trending" className="text-blue-600 hover:text-purple-600 flex items-center font-medium">
               View all <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </div>
@@ -61,12 +69,12 @@ const ExploreSkills: React.FC = () => {
               "E-commerce Development"
             ].map((skill, i) => (
               <Link to={`/services/${skill.toLowerCase().replace(/ /g, '-')}`} key={i}>
-                <div className="bg-white hover:shadow-md rounded-lg p-4 border border-gray-200 transition">
+                <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 hover:shadow-md rounded-lg p-4 border border-gray-200 transition">
                   <div className="flex items-center mb-3">
-                    <div className="p-2 rounded-full bg-emerald-100 mr-3">
-                      <TrendingUp className="h-5 w-5 text-emerald-600" />
+                    <div className="p-2 rounded-full bg-blue-100 mr-3">
+                      <TrendingUp className="h-5 w-5 text-blue-600" />
                     </div>
-                    <span className="text-sm text-emerald-600 font-medium">Trending</span>
+                    <span className="text-sm text-blue-600 font-medium">Trending</span>
                   </div>
                   <h3 className="font-medium">{skill}</h3>
                 </div>

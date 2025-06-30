@@ -11,80 +11,49 @@ const Nav2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [user, setUser] = useState<unknown>(null);
+  const [userProfile, setUserProfile] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
 
-  useEffect(() => {
-    checkUser();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        fetchUserProfile(session.user.id);
-        fetchNotificationCounts(session.user.id);
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        setNotificationCount(0);
-        setMessageCount(0);
-      }
-      setLoading(false);
-    });
+  // Type guards
+  const isUserProfile = (profile: unknown): profile is { user_type?: string; first_name?: string; last_name?: string } => {
+    return typeof profile === 'object' && profile !== null;
+  };
+  const isUser = (u: unknown): u is { id?: string; email?: string } => {
+    return typeof u === 'object' && u !== null;
+  };
 
-    return () => subscription.unsubscribe();
+  useEffect(() => {
+    const fetchUserAndNotifications = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        setUser(user);
+        await fetchUserProfile(user.id);
+        fetchNotifications(user.id);
+        setupRealtime(user.id);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+      }
+    };
+    fetchUserAndNotifications();
+    return () => {
+      supabase.removeAllChannels();
+    };
   }, []);
 
   useEffect(() => {
-    if (user?.id) {
-      // Set up realtime subscriptions for notifications and messages
-      const notificationsChannel = supabase
-        .channel('notifications_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, (payload) => {
-          console.log('Realtime notification event:', payload);
-          fetchNotificationCounts(user.id);
-        })
-        .subscribe();
-
-      const messagesChannel = supabase
-        .channel('messages_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages'
-        }, () => {
-          fetchNotificationCounts(user.id);
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(notificationsChannel);
-        supabase.removeChannel(messagesChannel);
-      };
+    if (isUser(user) && user.id) {
+      fetchNotifications(user.id);
     }
-  }, [user?.id]);
-
-  const checkUser = async () => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        setUser(currentUser);
-        await fetchUserProfile(currentUser.id);
-        await fetchNotificationCounts(currentUser.id);
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [location, user]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -93,46 +62,46 @@ const Nav2 = () => {
         .select('*')
         .eq('id', userId)
         .single();
-
       setUserProfile(profile);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setLoading(false);
     }
   };
 
-  const fetchNotificationCounts = async (userId: string) => {
-    try {
-      // Get notification count using the database function
-      const { data: notificationData, error: notificationError } = await supabase
-        .rpc('get_notification_count', { user_uuid: userId });
-
-      if (!notificationError && notificationData !== null) {
-        setNotificationCount(notificationData);
-      }
-
-      // Get message count using the database function
-      const { data: messageData, error: messageError } = await supabase
-        .rpc('get_unread_message_count', { user_uuid: userId });
-
-      if (!messageError && messageData !== null) {
-        setMessageCount(messageData);
-      }
-    } catch (error) {
-      console.error('Error fetching notification counts:', error);
+  const fetchNotifications = async (uid: string) => {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id, read')
+      .eq('user_id', uid);
+    if (!error) {
+      setNotificationCount(data.filter((n: { read: boolean }) => !n.read).length);
     }
+  };
+
+  const setupRealtime = (uid: string) => {
+    const channel = supabase
+      .channel('notifications_nav2')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${uid}`
+      }, () => {
+        fetchNotifications(uid);
+      })
+      .subscribe();
   };
 
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
       setUser(null);
       setUserProfile(null);
       setNotificationCount(0);
       setMessageCount(0);
       navigate('/');
-      
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
@@ -148,11 +117,10 @@ const Nav2 = () => {
   };
 
   const handleLogoClick = () => {
-    if (user) {
-      // Redirect to appropriate dashboard based on user type
-      if (userProfile?.user_type === 'freelancer') {
+    if (isUserProfile(userProfile)) {
+      if (userProfile.user_type === 'freelancer') {
         navigate('/freelancer');
-      } else if (userProfile?.user_type === 'client') {
+      } else if (userProfile.user_type === 'client') {
         navigate('/client');
       } else {
         navigate('/dashboard');
@@ -165,68 +133,57 @@ const Nav2 = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-
-    // Navigate to jobs page with search query
     navigate(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  const getInitials = (profile: any) => {
-    if (profile?.first_name && profile?.last_name) {
+  const getInitials = (profile: unknown) => {
+    if (isUserProfile(profile) && profile.first_name && profile.last_name) {
       return `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase();
     }
-    if (profile?.first_name) {
+    if (isUserProfile(profile) && profile.first_name) {
       return profile.first_name.charAt(0).toUpperCase();
     }
-    if (user?.email) {
+    if (isUser(user) && user.email) {
       return user.email.charAt(0).toUpperCase();
     }
     return 'U';
   };
 
   const getUserDisplayName = () => {
-    if (userProfile?.first_name && userProfile?.last_name) {
+    if (isUserProfile(userProfile) && userProfile.first_name && userProfile.last_name) {
       return `${userProfile.first_name} ${userProfile.last_name}`;
     }
-    if (userProfile?.first_name) {
+    if (isUserProfile(userProfile) && userProfile.first_name) {
       return userProfile.first_name;
     }
-    return user?.email || 'User';
+    if (isUser(user) && user.email) {
+      return user.email || 'User';
+    }
+    return 'User';
   };
 
   const handleNotificationClick = async () => {
-    // Mark notifications as read when clicked
-    if (user?.id && notificationCount > 0) {
-      try {
-        await supabase
-          .from('notifications')
-          .update({ read: true })
-          .eq('user_id', user.id)
-          .eq('read', false);
-        
-        setNotificationCount(0);
-      } catch (error) {
-        console.error('Error marking notifications as read:', error);
+    if (isUserProfile(userProfile)) {
+      if (userProfile.user_type === 'freelancer') {
+        navigate('/freelancer/notifications');
+      } else if (userProfile.user_type === 'client') {
+        navigate('/client/notifications');
+      } else {
+        navigate('/freelancer/notifications'); // fallback
       }
-    }
-
-    // Navigate to appropriate notifications page
-    if (userProfile?.user_type === 'freelancer') {
-      navigate('/freelancer/notifications');
-    } else if (userProfile?.user_type === 'client') {
-      navigate('/client/notifications');
     } else {
-      navigate('/freelancer/notifications'); // fallback
+      navigate('/freelancer/notifications');
     }
   };
 
   const shouldShowJobs = () => {
     return location.pathname === '/freelancer' || 
-           (userProfile?.user_type === 'freelancer' && ['/jobs', '/bids'].includes(location.pathname));
+           (isUserProfile(userProfile) && userProfile.user_type === 'freelancer' && ['/jobs', '/bids'].includes(location.pathname));
   };
 
   const shouldShowBids = () => {
     return location.pathname === '/client' || 
-           (userProfile?.user_type === 'client' && location.pathname === '/client/bids');
+           (isUserProfile(userProfile) && userProfile.user_type === 'client' && location.pathname === '/client/bids');
   };
 
   if (loading) {
@@ -249,28 +206,28 @@ const Nav2 = () => {
           {/* Logo */}
           <button 
             onClick={handleLogoClick}
-            className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
+            className="text-2xl font-bold text-green-600 hover:text-orange-500 transition-colors"
           >
              <span className="text-2xl font-bold text-skillforge-primary">work<span className="text-orange-500 text-workvix-primary">vix</span></span>
           </button>
 
           {/* Navigation Links */}
-          {user && (
+          {isUser(user) && (
             <div className="hidden md:flex items-center space-x-6">
               {shouldShowJobs() && (
                 <>
                   <Link 
                     to="/jobs" 
-                    className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                      location.pathname === '/jobs' ? 'text-blue-600 font-medium' : ''
+                    className={`text-gray-700 hover:text-green-600 transition-colors ${
+                      location.pathname === '/jobs' ? 'text-green-600 font-medium' : ''
                     }`}
                   >
                     Jobs
                   </Link>
                   <Link 
                     to="/bids" 
-                    className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                      location.pathname === '/bids' ? 'text-blue-600 font-medium' : ''
+                    className={`text-gray-700 hover:text-green-600 transition-colors ${
+                      location.pathname === '/bids' ? 'text-green-600 font-medium' : ''
                     }`}
                   >
                     My Bids
@@ -281,8 +238,8 @@ const Nav2 = () => {
               {shouldShowBids() && (
                 <Link 
                   to="/client/bids" 
-                  className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                    location.pathname === '/client/bids' ? 'text-blue-600 font-medium' : ''
+                  className={`text-gray-700 hover:text-green-600 transition-colors ${
+                    location.pathname === '/client/bids' ? 'text-green-600 font-medium' : ''
                   }`}
                 >
                   Bids
@@ -292,12 +249,12 @@ const Nav2 = () => {
           )}
 
           {/* orders */}
-          {user && userProfile?.user_type === 'client' && (
+          {isUser(user) && isUserProfile(userProfile) && userProfile.user_type === 'client' && (
             <div className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/orders" 
-                className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                  location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                className={`text-gray-700 hover:text-green-600 transition-colors ${
+                  location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
                 }`}
               >
                 Orders
@@ -306,12 +263,12 @@ const Nav2 = () => {
           )}
 
            {/* orders */}
-          {user && userProfile?.user_type === 'freelancer' && (
+          {isUser(user) && isUserProfile(userProfile) && userProfile.user_type === 'freelancer' && (
             <div className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/orders" 
-                className={`text-gray-700 hover:text-blue-600 transition-colors ${
-                  location.pathname === '/orders' ? 'text-blue-600 font-medium' : ''
+                className={`text-gray-700 hover:text-green-600 transition-colors ${
+                  location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
                 }`}
               >
                 Orders
@@ -329,7 +286,7 @@ const Nav2 = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for services..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 />
               </div>
             </form>
@@ -337,7 +294,7 @@ const Nav2 = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {user ? (
+            {isUser(user) ? (
               <>
                 {/* Notifications */}
                 <button 
@@ -370,7 +327,7 @@ const Nav2 = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-blue-600 text-white">
+                        <AvatarFallback className="bg-green-600 text-white">
                           {getInitials(userProfile)}
                         </AvatarFallback>
                       </Avatar>
@@ -380,12 +337,12 @@ const Nav2 = () => {
                     <div className="flex flex-col space-y-1 p-2">
                       <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
+                        {isUser(user) && user.email}
                       </p>
                     </div>
                     <DropdownMenuItem 
                       onClick={() => {
-                        if (userProfile?.user_type === 'freelancer') {
+                        if (isUserProfile(userProfile) && userProfile.user_type === 'freelancer') {
                           navigate('/freelancer/profile');
                         } else {
                           navigate('/dashboard');
@@ -397,9 +354,9 @@ const Nav2 = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => {
-                        if (userProfile?.user_type === 'freelancer') {
+                        if (isUserProfile(userProfile) && userProfile.user_type === 'freelancer') {
                           navigate('/freelancer');
-                        } else if (userProfile?.user_type === 'client') {
+                        } else if (isUserProfile(userProfile) && userProfile.user_type === 'client') {
                           navigate('/client');
                         } else {
                           navigate('/dashboard');

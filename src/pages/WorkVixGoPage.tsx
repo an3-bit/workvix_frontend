@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,22 +66,30 @@ const WorkVixGoPage = () => {
       <div className="pt-20 pb-12">
         <div className="container mx-auto px-4">
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center bg-skillforge-primary text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Zap className="h-4 w-4 mr-2" />
-              New: WorkVix Go
+          <div className="relative text-center mb-16 bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-16 md:py-24 overflow-hidden rounded-2xl">
+            {/* Blurred Circles */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+              <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+              <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
             </div>
-            <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Get Your Project Done <span className="text-skillforge-primary">Lightning Fast</span>
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Skip the hassle of posting jobs and reviewing proposals. Get matched with pre-vetted experts 
-              and start your project in minutes, not days.
-            </p>
-            <Button size="lg" className="bg-skillforge-primary hover:bg-skillforge-primary/90">
-              Try WorkVix Go
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
+            <div className="relative z-10">
+              <div className="inline-flex items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Zap className="h-4 w-4 mr-2" />
+                New: WorkVix Go
+              </div>
+              <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                Get Your Project Done <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Lightning Fast</span>
+              </h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                Skip the hassle of posting jobs and reviewing proposals. Get matched with pre-vetted experts 
+                and start your project in minutes, not days.
+              </p>
+              <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                Try WorkVix Go
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            </div>
           </div>
 
           {/* Features */}
@@ -157,7 +164,7 @@ const WorkVixGoPage = () => {
                 <p className="mb-6 opacity-90">
                   Join thousands of businesses who trust WorkVix Go for their most important projects.
                 </p>
-                <Button size="lg" className="bg-white text-skillforge-primary hover:bg-gray-100">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
                   Start Your Project Now
                 </Button>
               </div>

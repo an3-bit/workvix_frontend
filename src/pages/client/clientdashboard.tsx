@@ -186,6 +186,12 @@ const ClientDashboard = () => {
       link: "/post-job"
     },
     { 
+      icon: <Briefcase className="h-6 w-6" />, 
+      title: "My Jobs", 
+      desc: "Manage your jobs",
+      link: "/client/jobs"
+    },
+    { 
       icon: <Users className="h-6 w-6" />, 
       title: "View Bids", 
       desc: "Review proposals",
@@ -196,12 +202,6 @@ const ClientDashboard = () => {
       title: "Payments", 
       desc: "Manage transactions",
       link: "/checkout"
-    },
-    { 
-      icon: <Briefcase className="h-6 w-6" />, 
-      title: "My Projects", 
-      desc: "Track progress",
-      link: "/orders"
     }
   ];
 
