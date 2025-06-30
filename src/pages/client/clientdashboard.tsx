@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Users, TrendingUp, DollarSign, Star, Bell, Briefcase, Calendar, AlertCircle } from 'lucide-react';
+import { Search, Users, TrendingUp, DollarSign, Star, Bell, Briefcase, Calendar, AlertCircle, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
+import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, ResponsiveContainer } from 'recharts';
 
 interface Job {
   id: string;
@@ -54,6 +55,10 @@ const ClientDashboard = () => {
     completedJobs: 0,
     inProgressJobs: 0
   });
+  const [clientProfile, setClientProfile] = useState<any>(null);
+  const [spendingData, setSpendingData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -74,12 +79,22 @@ const ClientDashboard = () => {
   }, []);
 
   const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/signin');
         return;
       }
+
+      // Fetch client profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      setClientProfile(profileData);
 
       // Fetch jobs
       const { data: jobsData } = await supabase
@@ -105,6 +120,18 @@ const ClientDashboard = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
+
+      // Fetch spending data (monthly aggregation)
+      let spending = [];
+      try {
+        const { data: spendingAgg } = await supabase
+          .rpc('get_client_monthly_spending', { client_id: user.id });
+        if (spendingAgg && Array.isArray(spendingAgg)) spending = spendingAgg;
+      } catch (e) {
+        // If the function/view does not exist, keep spending empty
+        spending = [];
+      }
+      setSpendingData(spending);
 
       // Type the data properly
       const typedJobs = (jobsData || []).map(job => ({
@@ -133,8 +160,10 @@ const ClientDashboard = () => {
         completedJobs: typedJobs.filter(job => job.status === 'completed').length,
         inProgressJobs: typedJobs.filter(job => job.status === 'in_progress').length
       });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load dashboard data.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,11 +236,60 @@ const ClientDashboard = () => {
 
   const recentJobs = jobs.slice(0, 3);
 
+  // Format helpers
+  const formatCurrency = (num: number) => num?.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }) || '$0';
+  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleString();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
       
       <div className="pt-20 pb-8">
+        {/* Profile Card */}
+        <section className="container mx-auto px-4 mb-6">
+          <div className="flex items-center gap-4 bg-white rounded-lg shadow p-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-3xl">
+              {clientProfile?.avatar_url ? (
+                <img src={clientProfile.avatar_url} alt="avatar" className="w-16 h-16 rounded-full object-cover" />
+              ) : (
+                <UserCircle className="w-12 h-12" />
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="text-lg font-bold">{clientProfile?.first_name || 'Client'} {clientProfile?.last_name || ''}</div>
+              <div className="text-gray-500">{clientProfile?.email}</div>
+            </div>
+            <Link to="/profile">
+              <Button variant="outline">Profile Settings</Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Loading and Error States */}
+        {loading && <div className="text-center py-8">Loading...</div>}
+        {error && <div className="text-center text-red-500 py-4">{error}</div>}
+
+        {/* Spending Chart */}
+        <section className="container mx-auto px-4 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Spending Overview</h3>
+            {spendingData.length === 0 ? (
+              <div className="text-gray-400 text-center py-4">No spending data yet.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={spendingData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={formatCurrency} />
+                  <Tooltip formatter={formatCurrency} />
+                  <Legend />
+                  <Line type="monotone" dataKey="spending" stroke="#6366f1" strokeWidth={2} name="Spending" />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </section>
+
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-12 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 z-0"></div>
@@ -336,6 +414,31 @@ const ClientDashboard = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Recent Jobs List */}
+        <section className="container mx-auto px-4 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Recent Jobs</h3>
+            {recentJobs.length === 0 ? (
+              <div className="text-gray-400 text-center py-4">No jobs posted yet.</div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {recentJobs.map(job => (
+                  <li key={job.id} className="py-3 flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{job.title}</div>
+                      <div className="text-xs text-gray-500">{formatDate(job.created_at)} • {job.status}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">{formatCurrency(job.budget)}</div>
+                      <Link to={`/client/jobs/${job.id}`} className="text-blue-600 hover:underline text-sm ml-4">View</Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
       </div>
