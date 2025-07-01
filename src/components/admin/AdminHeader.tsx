@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { LogOut, Bell, UserCircle, Search, MessageSquare, Sun, MoonStar } from 'lucide-react';
 =======
 import { LogOut, Bell, UserCircle, Search, MessageSquare } from 'lucide-react';
@@ -9,6 +10,9 @@ import { LogOut, Bell, UserCircle, Search, MessageSquare } from 'lucide-react';
 =======
 import { LogOut, Bell, UserCircle, Search, MessageSquare, Sun, MoonStar } from 'lucide-react';
 >>>>>>> 7438431 (admin dashboard)
+=======
+import { LogOut, Bell, UserCircle, Search, MessageSquare } from 'lucide-react';
+>>>>>>> 24970ef (admin dashboard)
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';

@@ -229,6 +229,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
           </li>
         ))}
       </ul>
+      <button
+        onClick={handleLogout}
+        className="mt-8 flex items-center justify-center gap-2 p-3 w-full rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold shadow-lg hover:from-red-600 hover:to-pink-600 transition"
+      >
+        <LogOut className="h-5 w-5" />
+        <span>Logout</span>
+      </button>
     </nav>
   );
 };
