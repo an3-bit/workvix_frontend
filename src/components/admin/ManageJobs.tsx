@@ -300,7 +300,7 @@ const ManageJobs: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-background">
       {/* Sidebar */}
       <aside className={`transition-all duration-200 bg-white border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 flex flex-col items-center md:items-stretch min-h-screen`}> {/* min-h-screen for sidebar */}
         <button

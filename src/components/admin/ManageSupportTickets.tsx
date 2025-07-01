@@ -203,22 +203,22 @@ const ManageSupportTickets: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-6 text-center">Loading support tickets...</div>;
+    return <div className="p-6 text-center text-foreground">Loading support tickets...</div>;
   }
 
   if (error) {
-    return <div className="p-6 text-center font-bold">Your support tickets will appear here.</div>;
+    return <div className="p-6 text-center font-bold text-foreground">Your support tickets will appear here.</div>;
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background">
       {/* User-facing support ticket submission form */}
       <div className="mb-8">
         <SubmitSupportTicket />
       </div>
-      <Card>
+      <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Support Tickets</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Manage Support Tickets</CardTitle>
           <Button onClick={fetchTickets} variant="outline" className="flex items-center space-x-2">
             <RefreshCcw className="h-4 w-4" />
             <span>Refresh Tickets</span>
@@ -226,32 +226,32 @@ const ManageSupportTickets: React.FC = () => {
         </CardHeader>
         <CardContent>
           {tickets.length === 0 ? (
-            <p className="text-center text-gray-500">No support tickets found.</p>
+            <p className="text-center text-muted-foreground">No support tickets found.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-foreground">Subject</TableHead>
+                    <TableHead className="text-foreground">User</TableHead>
+                    <TableHead className="text-foreground">Status</TableHead>
+                    <TableHead className="text-foreground">Priority</TableHead>
+                    <TableHead className="text-foreground">Assigned To</TableHead>
+                    <TableHead className="text-foreground">Created</TableHead>
+                    <TableHead className="text-right text-foreground">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {tickets.map((ticket) => (
                     <TableRow key={ticket.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">{ticket.subject}</TableCell>
-                      <TableCell>{ticket.user_profile?.first_name || 'N/A'} ({ticket.user_profile?.user_type || 'N/A'})</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate text-foreground">{ticket.subject}</TableCell>
+                      <TableCell className="text-foreground">{ticket.user_profile?.first_name || 'N/A'} ({ticket.user_profile?.user_type || 'N/A'})</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          ticket.status === 'open' ? 'bg-blue-100 text-blue-800' :
+                          ticket.status === 'open' ? 'bg-primary/10 text-primary' :
                           ticket.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
                           ticket.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-muted text-foreground'
                         }`}>
                           {ticket.status.replace('_', ' ').charAt(0).toUpperCase() + ticket.status.replace('_', ' ').slice(1)}
                         </span>
@@ -260,14 +260,14 @@ const ManageSupportTickets: React.FC = () => {
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                           ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-muted text-foreground'
                         }`}>
                           {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
                         </span>
                       </TableCell>
-                      <TableCell>{ticket.assigned_admin_profile?.first_name || 'Unassigned'}</TableCell>
-                      <TableCell>{new Date(ticket.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
+                      <TableCell className="text-foreground">{ticket.assigned_admin_profile?.first_name || 'Unassigned'}</TableCell>
+                      <TableCell className="text-foreground">{new Date(ticket.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap text-foreground">
                         <Button 
                           variant="outline" 
                           size="sm" 

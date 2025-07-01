@@ -181,10 +181,10 @@ const ManageCoupons: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <Card>
+    <div className="p-6 bg-background">
+      <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Coupons</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Manage Coupons</CardTitle>
           <div className="space-x-2">
             <Button onClick={fetchCoupons} variant="outline" className="flex items-center space-x-2">
               <RefreshCcw className="h-4 w-4" />
