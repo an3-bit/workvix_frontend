@@ -64,7 +64,7 @@ const ManagePayments: React.FC = () => {
         .select(`
           *,
           user_profile:user_id(id, email, first_name, last_name, user_type),
-          job_title:related_job(title)
+          job_title:related_job_id(title)
         `)
         .order('created_at', { ascending: false });
 

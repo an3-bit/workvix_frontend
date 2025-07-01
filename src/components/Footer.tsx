@@ -35,7 +35,7 @@ const categories = [
       { name: "Trust & Safety", href: "/trust" },
       { name: "Selling on WorkVix", href: "/become-seller" },
       { name: "Buying on WorkVix", href: "/how-it-works" },
-      { name: "Affiliate Program", href: "/affiliate" },
+      { name: "Affiliate Program", href: "/affiliate/register" },
     ],
   },
   {

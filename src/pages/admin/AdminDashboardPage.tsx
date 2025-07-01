@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom'; // Removed useNavigate as it's not directly used here for navigation logic
+import { Routes, Route, Navigate } from 'react-router-dom'; // Removed useNavigate as it's not directly used here for navigation logic
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import OverviewDashboard from '@/components/admin/OverviewDashboard';
@@ -18,6 +18,8 @@ import ManageNews from '@/components/admin/ManageNews';
 import ManageSupportTickets from '@/components/admin/ManageSupportTickets';
 import SystemSettings from '@/components/admin/SystemSettings'; // Example for settings
 import ManageAffiliateMarketers from './ManageAffiliateMarketers';
+import { Menu } from 'lucide-react';
+import ActivityLog from '@/components/admin/ActivityLog';
 
 
 interface AdminDashboardPageProps {
@@ -27,62 +29,73 @@ interface AdminDashboardPageProps {
 const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ adminEmail }) => {
   // State to track the active sidebar link, not strictly needed with NavLink but good for complex logic
   const [activePath, setActivePath] = useState(window.location.pathname);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleNavLinkClick = (path: string) => {
     setActivePath(path);
-    // NavLink handles navigation, so no need for navigate(path) here
+    setSidebarOpen(false); // Close sidebar on mobile after navigation
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar onNavLinkClick={handleNavLinkClick} />
-      <div className="flex-1 flex flex-col">
-        <AdminHeader adminEmail={adminEmail} />
-        <main className="flex-1 overflow-y-auto p-4">
-          <Routes>
-            {/* Main Dashboard Overview */}
-            <Route path="/" element={<OverviewDashboard />} />
-
-            {/* Job Management */}
-            <Route path="/jobs/*" element={<ManageJobs />} /> {/* Wildcard for /jobs/all, /jobs/open etc. if ManageJobs handles sub-views internally */}
-            {/* If you wanted separate components for job statuses:
-            <Route path="/jobs/all" element={<ManageJobs status="all" />} />
-            <Route path="/jobs/open" element={<ManageJobs status="open" />} />
-            ... */}
-
-            {/* User Management */}
-            <Route path="/users/clients" element={<ManageClients />} />
-            <Route path="/users/freelancers" element={<ManageFreelancers />} />
-            <Route path="/users/applications" element={<ManageFreelancerApplications />} />
-            <Route path="/users/talent-pools" element={<h2 className="text-2xl p-6">Talent Pools (View Freelancers, Filtered)</h2>} /> {/* Placeholder */}
-
-            {/* Core Features Management */}
-            <Route path="/messages" element={<ManageMessages />} />
-            <Route path="/feedback" element={<ManageFeedback />} />
-            <Route path="/coupons" element={<ManageCoupons />} />
-            <Route path="/samples" element={<ManageSamples />} />
-            <Route path="/news" element={<ManageNews />} />
-            <Route path="/support-tickets" element={<ManageSupportTickets />} />
-            
-            {/* Payments Management */}
-            <Route path="/payments/*" element={<ManagePayments />} /> {/* Wildcard for sub-pages like /payments/all, /payments/payouts etc. */}
-
-            {/* Settings */}
-            <Route path="/settings/system" element={<SystemSettings />} />
-            <Route path="/settings/orders-payments" element={<h2 className="text-2xl p-6">Orders & Payments Settings (Coming Soon!)</h2>} />
-            <Route path="/settings/themes" element={<h2 className="text-2xl p-6">Theme Settings (Coming Soon!)</h2>} />
-            <Route path="/settings/email" element={<h2 className="text-2xl p-6">Email Settings (Coming Soon!)</h2>} />
-
-            {/* Activity Log (read-only) */}
-            <Route path="/activity-log" element={<h2 className="text-2xl p-6">Activity Log (Coming Soon!)</h2>} />
-
-            {/* Affiliate Marketers Management */}
-            <Route path="/affiliate-marketers" element={<ManageAffiliateMarketers />} />
-
-            {/* Catch-all for unknown admin sub-routes */}
-            <Route path="*" element={<h1 className="text-center mt-20 text-3xl font-bold text-gray-700">Admin Sub-Page Not Found</h1>} />
-          </Routes>
-        </main>
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex w-full min-h-screen">
+        {/* Sidebar for desktop, drawer for mobile */}
+        <div className="hidden md:block fixed top-0 left-0 h-full z-30">
+          <AdminSidebar onNavLinkClick={handleNavLinkClick} />
+        </div>
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-40 flex md:hidden">
+            <div className="fixed inset-0 bg-black bg-opacity-40" onClick={() => setSidebarOpen(false)}></div>
+            <div className="relative z-50 w-64 max-w-full h-full bg-gray-900 shadow-xl">
+              <AdminSidebar onNavLinkClick={handleNavLinkClick} />
+            </div>
+          </div>
+        )}
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col min-h-screen md:ml-64">
+          {/* Header with menu button for mobile */}
+          <div className="sticky top-0 z-30">
+            <div className="md:hidden flex items-center bg-white border-b border-gray-100 shadow-sm h-16 px-4">
+              <button
+                className="p-2 rounded-md text-gray-700 hover:bg-gray-200 focus:outline-none mr-2"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <span className="text-xl font-bold text-blue-600">Admin Panel</span>
+            </div>
+            <div className="hidden md:block">
+              <AdminHeader adminEmail={adminEmail} />
+            </div>
+          </div>
+          <main className="flex-1 overflow-y-auto p-2 sm:p-4 w-full">
+            <Routes>
+              <Route path="/" element={<OverviewDashboard />} />
+              <Route path="/jobs" element={<ManageJobs />} />
+              <Route path="/users/clients" element={<ManageClients />} />
+              <Route path="/users/freelancers" element={<ManageFreelancers />} />
+              <Route path="/users/applications" element={<ManageFreelancerApplications />} />
+              <Route path="/users/talent-pools" element={<h2 className="text-2xl p-6">Talent Pools (View Freelancers, Filtered)</h2>} />
+              <Route path="/messages" element={<ManageMessages />} />
+              <Route path="/feedback" element={<ManageFeedback />} />
+              <Route path="/coupons" element={<ManageCoupons />} />
+              <Route path="/samples" element={<ManageSamples />} />
+              <Route path="/news" element={<ManageNews />} />
+              <Route path="/support-tickets" element={<ManageSupportTickets />} />
+              <Route path="/payments/*" element={<ManagePayments />} />
+              <Route path="/settings" element={<SystemSettings />} />
+              <Route path="/settings/system" element={<Navigate to="/settings" replace />} />
+              <Route path="/settings/orders-payments" element={<Navigate to="/settings" replace />} />
+              <Route path="/settings/themes" element={<Navigate to="/settings" replace />} />
+              <Route path="/settings/email" element={<Navigate to="/settings" replace />} />
+              <Route path="/settings/notifications" element={<Navigate to="/settings" replace />} />
+              <Route path="/activity-log" element={<ActivityLog />} />
+              <Route path="/affiliate-marketers" element={<ManageAffiliateMarketers />} />
+            </Routes>
+          </main>
+        </div>
       </div>
     </div>
   );

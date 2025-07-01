@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, List, MessageSquare, Star, DollarSign,
   Gift, Briefcase, FileText, Activity, Rss, Settings, Users,
   ClipboardList, Package, ScrollText, Building2, User2, BookUser,
-  SquareKanban, FileBadge, LifeBuoy, ChevronDown, ChevronUp // Added ChevronDown and ChevronUp
+  SquareKanban, FileBadge, LifeBuoy, ChevronDown, ChevronUp, LogOut
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminSidebarProps {
   onNavLinkClick: (path: string) => void;
@@ -14,6 +16,8 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Function to toggle the open/close state of a menu
   const toggleMenu = (name: string) => {
@@ -40,6 +44,25 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
     });
   }, [location.pathname]); // Re-run when the path changes
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      navigate('/admin/login');
+    } catch (error: any) {
+      console.error('Logout error:', error.message);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to log out.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const menuItems = [
     {
       name: 'Overview',
@@ -50,13 +73,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       name: 'Jobs',
       icon: Briefcase,
       path: '/admin/jobs',
-      subItems: [
-        { name: 'All Jobs', path: '/admin/jobs/all' },
-        { name: 'Open Jobs', path: '/admin/jobs/open' },
-        { name: 'Assigned Jobs', path: '/admin/jobs/assigned' },
-        { name: 'Completed Jobs', path: '/admin/jobs/completed' },
-        { name: 'Disputed Jobs', path: '/admin/jobs/disputed' },
-      ],
     },
     {
       name: 'Messages',
@@ -123,22 +139,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       name: 'Settings',
       icon: Settings,
       path: '/admin/settings',
-      subItems: [
-        { name: 'System Settings', path: '/admin/settings/system' },
-        { name: 'Orders & Payments', path: '/admin/settings/orders-payments' },
-        { name: 'Theme Settings', path: '/admin/settings/themes' },
-        { name: 'Email Settings', path: '/admin/settings/email' },
-      ],
     },
   ];
 
   return (
-    <nav className="w-64 bg-gray-900 text-white p-4 flex flex-col overflow-y-auto custom-scrollbar">
+    <nav className="w-64 bg-gray-900 text-white p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-gray-800 shadow-lg">
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-extrabold text-blue-400">Workvix</h2>
-        <p className="text-xs text-gray-400 mt-1">Admin Panel</p>
+        <h2 className="text-3xl font-extrabold text-white">Workvix</h2>
       </div>
-      <ul className="space-y-1">
+      <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)]">
         {menuItems.map((item) => (
           <li key={item.name}>
             {item.subItems ? (
@@ -208,6 +217,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
           </li>
         ))}
       </ul>
+      <button
+        onClick={handleLogout}
+        className="mt-8 flex items-center justify-center gap-2 p-3 w-full rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold shadow-lg hover:from-red-600 hover:to-pink-600 transition"
+      >
+        <LogOut className="h-5 w-5" />
+        <span>Logout</span>
+      </button>
     </nav>
   );
 };

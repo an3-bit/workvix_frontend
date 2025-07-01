@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Edit, Trash, RefreshCcw, MessageSquare, Tag } from 'lucide-react';
+import SubmitSupportTicket from '@/components/SubmitSupportTicket';
 
 interface SupportTicket {
   id: string;
@@ -88,19 +89,21 @@ const ManageSupportTickets: React.FC = () => {
   const fetchAdmins = async () => {
     try {
       const { data, error } = await supabase
-        .from('support_users' as any)
+        .from('profiles')
         .select(`
-          user_id,
+          id,
           email,
-          profiles:user_id (first_name, last_name)
-        `);
+          first_name,
+          last_name
+        `)
+        .eq('user_type', 'admin');
 
       if (error) throw error;
       const adminProfiles = (data as any[]).map(admin => ({
-        id: admin.user_id,
+        id: admin.id,
         email: admin.email,
-        first_name: admin.profiles?.first_name || 'Admin',
-        last_name: admin.profiles?.last_name || '',
+        first_name: admin.first_name || 'Admin',
+        last_name: admin.last_name || '',
       }));
       setAvailableAdmins(adminProfiles as AdminProfile[]);
     } catch (err: any) {
@@ -209,6 +212,10 @@ const ManageSupportTickets: React.FC = () => {
 
   return (
     <div className="p-6">
+      {/* User-facing support ticket submission form */}
+      <div className="mb-8">
+        <SubmitSupportTicket />
+      </div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-gray-800">Manage Support Tickets</CardTitle>
