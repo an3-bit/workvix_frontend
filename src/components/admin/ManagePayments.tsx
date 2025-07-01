@@ -280,7 +280,11 @@ const ManagePayments: React.FC = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="p-4 sm:p-6 lg:p-8 pb-16">
+=======
+    <div className="p-4 sm:p-6 lg:p-8">
+>>>>>>> 7438431 (admin dashboard)
       <div className="flex items-center gap-4 mb-4">
         <Switch checked={useSample} onCheckedChange={setUseSample} id="sample-toggle" />
         <label htmlFor="sample-toggle" className="text-xs text-foreground cursor-pointer">Use Sample Data</label>

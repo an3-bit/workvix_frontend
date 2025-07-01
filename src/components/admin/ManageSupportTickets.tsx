@@ -293,16 +293,24 @@ const ManageSupportTickets: React.FC = () => {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <div className="max-w-5xl mx-auto w-full py-8">
       <Card className="bg-card shadow-lg rounded-lg mb-8 w-full">
 =======
     <div className="p-6">
+=======
+    <div className="p-6 bg-background">
+>>>>>>> 7438431 (admin dashboard)
       {/* User-facing support ticket submission form */}
       <div className="mb-8">
         <SubmitSupportTicket />
       </div>
+<<<<<<< HEAD
       <Card>
 >>>>>>> a02f476 (admin dashboard)
+=======
+      <Card className="bg-card">
+>>>>>>> 7438431 (admin dashboard)
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-foreground">Manage Support Tickets</CardTitle>
           <Button onClick={fetchTickets} variant="outline" className="flex items-center space-x-2">

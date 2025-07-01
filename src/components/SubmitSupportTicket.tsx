@@ -63,6 +63,7 @@ const SubmitSupportTicket: React.FC = () => {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-card p-6 rounded-lg shadow-md space-y-4">
       <h2 className="text-2xl font-bold mb-2 text-foreground">Submit a Support Ticket</h2>
       <div>
@@ -73,18 +74,27 @@ const SubmitSupportTicket: React.FC = () => {
 =======
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md space-y-4">
       <h2 className="text-2xl font-bold mb-2">Submit a Support Ticket</h2>
+=======
+    <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-card p-6 rounded-lg shadow-md space-y-4">
+      <h2 className="text-2xl font-bold mb-2 text-foreground">Submit a Support Ticket</h2>
+>>>>>>> 7438431 (admin dashboard)
       <div>
-        <label className="block font-medium mb-1">Subject</label>
+        <label className="block font-medium mb-1 text-foreground">Subject</label>
         <input
           type="text"
+<<<<<<< HEAD
           className="w-full border rounded px-3 py-2"
 >>>>>>> a02f476 (admin dashboard)
+=======
+          className="w-full border rounded px-3 py-2 bg-background text-foreground"
+>>>>>>> 7438431 (admin dashboard)
           value={subject}
           onChange={e => setSubject(e.target.value)}
           required
         />
       </div>
       <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
         <label className="block font-medium mb-1 text-foreground">Description</label>
         <textarea
@@ -94,12 +104,18 @@ const SubmitSupportTicket: React.FC = () => {
         <textarea
           className="w-full border rounded px-3 py-2 min-h-[100px]"
 >>>>>>> a02f476 (admin dashboard)
+=======
+        <label className="block font-medium mb-1 text-foreground">Description</label>
+        <textarea
+          className="w-full border rounded px-3 py-2 min-h-[100px] bg-background text-foreground"
+>>>>>>> 7438431 (admin dashboard)
           value={description}
           onChange={e => setDescription(e.target.value)}
           required
         />
       </div>
       <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
         <label className="block font-medium mb-1 text-foreground">Priority</label>
         <select
@@ -109,6 +125,11 @@ const SubmitSupportTicket: React.FC = () => {
         <select
           className="w-full border rounded px-3 py-2"
 >>>>>>> a02f476 (admin dashboard)
+=======
+        <label className="block font-medium mb-1 text-foreground">Priority</label>
+        <select
+          className="w-full border rounded px-3 py-2 bg-background text-foreground"
+>>>>>>> 7438431 (admin dashboard)
           value={priority}
           onChange={e => setPriority(e.target.value)}
         >
@@ -120,10 +141,14 @@ const SubmitSupportTicket: React.FC = () => {
       <button
         type="submit"
 <<<<<<< HEAD
+<<<<<<< HEAD
         className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
 =======
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
 >>>>>>> a02f476 (admin dashboard)
+=======
+        className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
+>>>>>>> 7438431 (admin dashboard)
         disabled={loading}
       >
         {loading ? 'Submitting...' : 'Submit Ticket'}

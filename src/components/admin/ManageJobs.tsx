@@ -301,10 +301,14 @@ const ManageJobs: React.FC = () => {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <div className="p-6 bg-background min-h-screen pb-8">
 =======
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
 >>>>>>> a02f476 (admin dashboard)
+=======
+    <div className="flex flex-col md:flex-row min-h-screen bg-background">
+>>>>>>> 7438431 (admin dashboard)
       {/* Sidebar */}
       <aside className={`transition-all duration-200 bg-white border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 flex flex-col items-center md:items-stretch min-h-screen`}> {/* min-h-screen for sidebar */}
         <button

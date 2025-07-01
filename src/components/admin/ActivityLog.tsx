@@ -63,6 +63,7 @@ const ActivityLog: React.FC = () => {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <>
       <div className="p-6 bg-background pb-16">
         <Card className="bg-card">
@@ -173,49 +174,67 @@ const ActivityLog: React.FC = () => {
                     <Bar dataKey="count" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>
+=======
+    <div className="p-6 bg-background">
+      <Card className="bg-card">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-2xl font-bold text-foreground">Activity Log</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">Loading activity log...</div>
+          ) : activities.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No activity found.</div>
+          ) : (
+            <>
+              {/* Charts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <h3 className="font-semibold mb-2">Activity by Day</h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={activityByDay} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <XAxis dataKey="day" fontSize={12} />
+                      <YAxis allowDecimals={false} fontSize={12} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Activity by Type</h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={activityByType}
+                        dataKey="count"
+                        nameKey="type"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label
+                      >
+                        {activityByType.map((entry, idx) => (
+                          <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+>>>>>>> 7438431 (admin dashboard)
               </div>
-              <div>
-                <h3 className="font-semibold mb-2">Activity by Type</h3>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={activityByType}
-                      dataKey="count"
-                      nameKey="type"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      {activityByType.map((entry, idx) => (
-                        <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activities.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{entry.type}</TableCell>
-                      <TableCell>{entry.description}</TableCell>
-                      <TableCell>{entry.user_email}</TableCell>
-                      <TableCell>{new Date(entry.created_at).toLocaleString()}</TableCell>
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Timestamp</TableHead>
                     </TableRow>
+<<<<<<< HEAD
                   ))}
                 </TableBody>
               </Table>
@@ -225,6 +244,26 @@ const ActivityLog: React.FC = () => {
       </CardContent>
     </Card>
 >>>>>>> a02f476 (admin dashboard)
+=======
+                  </TableHeader>
+                  <TableBody>
+                    {activities.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>{entry.type}</TableCell>
+                        <TableCell>{entry.description}</TableCell>
+                        <TableCell>{entry.user_email}</TableCell>
+                        <TableCell>{new Date(entry.created_at).toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+>>>>>>> 7438431 (admin dashboard)
   );
 };
 

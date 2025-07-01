@@ -181,7 +181,11 @@ const ManageCoupons: React.FC = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="p-6 bg-background pb-16">
+=======
+    <div className="p-6 bg-background">
+>>>>>>> 7438431 (admin dashboard)
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-foreground">Manage Coupons</CardTitle>

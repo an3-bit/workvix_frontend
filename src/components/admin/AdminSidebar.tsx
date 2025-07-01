@@ -144,6 +144,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <nav className="w-64 bg-sidebar-background text-sidebar-foreground p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-sidebar-border shadow-lg">
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-extrabold text-sidebar-foreground">Workvix</h2>
@@ -151,8 +152,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)] pb-8">
 =======
     <nav className="w-64 bg-gray-900 text-white p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-gray-800 shadow-lg">
+=======
+    <nav className="w-64 bg-sidebar-background text-sidebar-foreground p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-sidebar-border shadow-lg">
+>>>>>>> 7438431 (admin dashboard)
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-extrabold text-white">Workvix</h2>
+        <h2 className="text-3xl font-extrabold text-sidebar-foreground">Workvix</h2>
       </div>
       <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)]">
 >>>>>>> a02f476 (admin dashboard)
@@ -225,13 +229,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
           </li>
         ))}
       </ul>
-      <button
-        onClick={handleLogout}
-        className="mt-8 flex items-center justify-center gap-2 p-3 w-full rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold shadow-lg hover:from-red-600 hover:to-pink-600 transition"
-      >
-        <LogOut className="h-5 w-5" />
-        <span>Logout</span>
-      </button>
     </nav>
   );
 };

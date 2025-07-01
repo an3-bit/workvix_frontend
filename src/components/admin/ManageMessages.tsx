@@ -109,6 +109,7 @@ const ManageMessages: React.FC = () => {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <div className="p-6 bg-background min-h-screen pb-8">
       <Card className="bg-card shadow-2xl rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6">
@@ -125,6 +126,15 @@ const ManageMessages: React.FC = () => {
             <span className="text-2xl font-extrabold text-gray-900 tracking-tight">Recent Messages</span>
             <span className="text-base font-normal text-gray-500 hidden sm:inline">(Most Recent First, showing up to 20)</span>
 >>>>>>> a02f476 (admin dashboard)
+=======
+    <div className="p-0 sm:p-6 min-h-screen bg-background">
+      <Card className="bg-card shadow-2xl rounded-2xl">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="h-8 w-8 text-primary drop-shadow-lg" />
+            <span className="text-2xl font-extrabold text-foreground tracking-tight">Recent Messages</span>
+            <span className="text-base font-normal text-muted-foreground hidden sm:inline">(Most Recent First, showing up to 20)</span>
+>>>>>>> 7438431 (admin dashboard)
           </div>
           <Button onClick={fetchMessages} variant="outline" className="flex items-center space-x-2 mt-2 sm:mt-0">
             <RefreshCcw className="h-4 w-4" />
@@ -142,12 +152,16 @@ const ManageMessages: React.FC = () => {
                   <TableHeader>
                     <TableRow>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7438431 (admin dashboard)
                       <TableHead className="text-foreground">Sender</TableHead>
                       <TableHead className="text-foreground">Content</TableHead>
                       <TableHead className="text-foreground">Job Title</TableHead>
                       <TableHead className="text-foreground">Attachment</TableHead>
                       <TableHead className="text-foreground">Date</TableHead>
                       <TableHead className="text-right text-foreground">Actions</TableHead>
+<<<<<<< HEAD
 =======
                       <TableHead>Sender</TableHead>
                       <TableHead>Content</TableHead>
@@ -156,10 +170,13 @@ const ManageMessages: React.FC = () => {
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
 >>>>>>> a02f476 (admin dashboard)
+=======
+>>>>>>> 7438431 (admin dashboard)
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {messages.map((message, idx) => (
+<<<<<<< HEAD
 <<<<<<< HEAD
                       <TableRow key={message.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-muted' : 'bg-card'} hover:bg-muted/60 hover:shadow-md animate-fade-in-row`}>
                         <TableCell>
@@ -170,23 +187,34 @@ const ManageMessages: React.FC = () => {
                             'bg-muted text-foreground border-border'
 =======
                       <TableRow key={message.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50/60 hover:shadow-md animate-fade-in-row`}>
+=======
+                      <TableRow key={message.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-muted' : 'bg-card'} hover:bg-muted/60 hover:shadow-md animate-fade-in-row`}>
+>>>>>>> 7438431 (admin dashboard)
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm border inline-flex items-center gap-1 ${
-                            message.sender_profile?.user_type === 'admin' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                            message.sender_profile?.user_type === 'admin' ? 'bg-primary/10 text-primary border-primary/20' :
                             message.sender_profile?.user_type === 'client' ? 'bg-green-100 text-green-800 border-green-200' :
                             message.sender_profile?.user_type === 'freelancer' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+<<<<<<< HEAD
                             'bg-gray-100 text-gray-800 border-gray-200'
 >>>>>>> a02f476 (admin dashboard)
+=======
+                            'bg-muted text-foreground border-border'
+>>>>>>> 7438431 (admin dashboard)
                           }`}>
                             {message.sender_profile?.first_name || 'N/A'}
                             <span className="ml-1">({message.sender_profile?.user_type || 'N/A'})</span>
                           </span>
                         </TableCell>
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <TableCell className="max-w-[200px] truncate text-foreground">
 =======
                         <TableCell className="max-w-[200px] truncate">
 >>>>>>> a02f476 (admin dashboard)
+=======
+                        <TableCell className="max-w-[200px] truncate text-foreground">
+>>>>>>> 7438431 (admin dashboard)
                           {message.content || 'N/A'}
                           {message.read ? (
                             <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Read</span>
@@ -195,10 +223,14 @@ const ManageMessages: React.FC = () => {
                           )}
                         </TableCell>
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <TableCell className="text-foreground">{message.chat_info?.job?.title || 'N/A'}</TableCell>
 =======
                         <TableCell>{message.chat_info?.job?.title || 'N/A'}</TableCell>
 >>>>>>> a02f476 (admin dashboard)
+=======
+                        <TableCell className="text-foreground">{message.chat_info?.job?.title || 'N/A'}</TableCell>
+>>>>>>> 7438431 (admin dashboard)
                         <TableCell>
                           {message.attachment_url ? (
                             <a href={message.attachment_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center">
@@ -207,12 +239,17 @@ const ManageMessages: React.FC = () => {
                           ) : 'No'}
                         </TableCell>
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <TableCell className="text-foreground">{new Date(message.created_at).toLocaleString()}</TableCell>
                         <TableCell className="text-right text-foreground">
 =======
                         <TableCell>{new Date(message.created_at).toLocaleString()}</TableCell>
                         <TableCell className="text-right">
 >>>>>>> a02f476 (admin dashboard)
+=======
+                        <TableCell className="text-foreground">{new Date(message.created_at).toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-foreground">
+>>>>>>> 7438431 (admin dashboard)
                           <Button 
                             variant="destructive" 
                             size="sm" 
@@ -232,6 +269,7 @@ const ManageMessages: React.FC = () => {
               <div className="flex flex-col gap-4 sm:hidden">
                 {messages.map((message) => (
 <<<<<<< HEAD
+<<<<<<< HEAD
                   <div key={message.id} className="bg-card rounded-xl shadow-md p-4 flex flex-col gap-2 animate-fade-in-row">
                     <div className="flex items-center justify-between">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm border inline-flex items-center gap-1 ${
@@ -241,17 +279,25 @@ const ManageMessages: React.FC = () => {
                         'bg-muted text-foreground border-border'
 =======
                   <div key={message.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col gap-2 animate-fade-in-row">
+=======
+                  <div key={message.id} className="bg-card rounded-xl shadow-md p-4 flex flex-col gap-2 animate-fade-in-row">
+>>>>>>> 7438431 (admin dashboard)
                     <div className="flex items-center justify-between">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm border inline-flex items-center gap-1 ${
-                        message.sender_profile?.user_type === 'admin' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                        message.sender_profile?.user_type === 'admin' ? 'bg-primary/10 text-primary border-primary/20' :
                         message.sender_profile?.user_type === 'client' ? 'bg-green-100 text-green-800 border-green-200' :
                         message.sender_profile?.user_type === 'freelancer' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+<<<<<<< HEAD
                         'bg-gray-100 text-gray-800 border-gray-200'
 >>>>>>> a02f476 (admin dashboard)
+=======
+                        'bg-muted text-foreground border-border'
+>>>>>>> 7438431 (admin dashboard)
                       }`}>
                         {message.sender_profile?.first_name || 'N/A'}
                         <span className="ml-1">({message.sender_profile?.user_type || 'N/A'})</span>
                       </span>
+<<<<<<< HEAD
 <<<<<<< HEAD
                       <span className="text-xs text-muted-foreground">{new Date(message.created_at).toLocaleString()}</span>
                     </div>
@@ -263,6 +309,12 @@ const ManageMessages: React.FC = () => {
                     <div className="flex flex-col gap-1">
                       <span className="text-gray-900 font-medium break-words">{message.content || 'N/A'}</span>
 >>>>>>> a02f476 (admin dashboard)
+=======
+                      <span className="text-xs text-muted-foreground">{new Date(message.created_at).toLocaleString()}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-foreground font-medium break-words">{message.content || 'N/A'}</span>
+>>>>>>> 7438431 (admin dashboard)
                       {message.read ? (
                         <span className="mt-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold w-max">Read</span>
                       ) : (
@@ -270,10 +322,14 @@ const ManageMessages: React.FC = () => {
                       )}
                     </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
 =======
                     <div className="flex items-center gap-2 text-xs text-gray-600">
 >>>>>>> a02f476 (admin dashboard)
+=======
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+>>>>>>> 7438431 (admin dashboard)
                       <span>Job: {message.chat_info?.job?.title || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -282,10 +338,14 @@ const ManageMessages: React.FC = () => {
                           <Download className="h-4 w-4 mr-1" /> File
                         </a>
 <<<<<<< HEAD
+<<<<<<< HEAD
                       ) : <span className="text-muted-foreground">No Attachment</span>}
 =======
                       ) : <span className="text-gray-400">No Attachment</span>}
 >>>>>>> a02f476 (admin dashboard)
+=======
+                      ) : <span className="text-muted-foreground">No Attachment</span>}
+>>>>>>> 7438431 (admin dashboard)
                     </div>
                     <div className="flex gap-2 mt-2">
                       <Button
