@@ -300,7 +300,11 @@ const ManageJobs: React.FC = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="p-6 bg-background min-h-screen pb-8">
+=======
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+>>>>>>> a02f476 (admin dashboard)
       {/* Sidebar */}
       <aside className={`transition-all duration-200 bg-white border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 flex flex-col items-center md:items-stretch min-h-screen`}> {/* min-h-screen for sidebar */}
         <button
@@ -553,6 +557,7 @@ const ManageJobs: React.FC = () => {
           </Dialog>
         </div>
       </main>
+<<<<<<< HEAD
       <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
         <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
         <div className="flex items-center gap-4">
@@ -561,6 +566,8 @@ const ManageJobs: React.FC = () => {
           <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-blue-700 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/></svg></a>
         </div>
       </footer>
+=======
+>>>>>>> a02f476 (admin dashboard)
     </div>
   );
 };
