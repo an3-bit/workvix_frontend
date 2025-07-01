@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Users, Briefcase, MessageSquare } from 'lucide-react';
+import { DollarSign, Users, Briefcase, MessageSquare, User, Star, LifeBuoy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+
+const COLORS = ['#2563eb', '#22c55e'];
 
 const OverviewDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -15,6 +18,7 @@ const OverviewDashboard: React.FC = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [latestMessages, setLatestMessages] = useState<any[]>([]);
   const [latestPayments, setLatestPayments] = useState<any[]>([]);
+  const [userTypeDist, setUserTypeDist] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -90,6 +94,11 @@ const OverviewDashboard: React.FC = () => {
           .order('created_at', { ascending: false })
           .limit(5);
 
+        // User type distribution
+        const userTypeDistPromise = supabase
+          .from('profiles')
+          .select('user_type', { count: 'exact', head: false });
+
         const [
           totalSalesRes,
           monthlySalesRes,
@@ -100,7 +109,8 @@ const OverviewDashboard: React.FC = () => {
           recentFeedbackRes,
           recentTicketsRes,
           latestMessagesRes,
-          latestPaymentsRes
+          latestPaymentsRes,
+          userTypeDistRes
         ] = await Promise.all([
           totalSalesPromise,
           monthlySalesPromise,
@@ -111,7 +121,8 @@ const OverviewDashboard: React.FC = () => {
           recentFeedbackPromise,
           recentTicketsPromise,
           latestMessagesPromise,
-          latestPaymentsPromise
+          latestPaymentsPromise,
+          userTypeDistPromise
         ]);
 
         // Total sales (sum of all completed job_payment amounts)
@@ -160,6 +171,13 @@ const OverviewDashboard: React.FC = () => {
         // Latest messages
         setLatestMessages(latestMessagesRes.data || []);
         setLatestPayments(latestPaymentsRes.data || []);
+
+        // User type distribution
+        const dist = [
+          { name: 'Clients', value: (userTypeDistRes.data || []).filter((u: any) => u.user_type === 'client').length },
+          { name: 'Freelancers', value: (userTypeDistRes.data || []).filter((u: any) => u.user_type === 'freelancer').length },
+        ];
+        setUserTypeDist(dist);
       } catch (err: any) {
         setError('Failed to load dashboard data.');
         console.error(err);
@@ -181,85 +199,115 @@ const OverviewDashboard: React.FC = () => {
     <div className="p-6">
       <h2 className="text-3xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
             <DollarSign className="h-4 w-4 text-white opacity-80" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalSales.toLocaleString()}</div>
-            <p className="text-xs text-blue-100">
-              ${monthlySales} in last month
-            </p>
+            <p className="text-xs text-blue-100">${monthlySales} in last month</p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
             <DollarSign className="h-4 w-4 text-white opacity-80" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${monthlySales}</div>
-            <p className="text-xs text-green-100">
-              Total earnings so far this month
-            </p>
+            <div className="text-2xl font-bold">${monthlySales.toLocaleString()}</div>
+            <p className="text-xs text-green-100">{((monthlySales / (totalSales || 1)) * 100).toFixed(1)}% of all time</p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg">
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
             <Users className="h-4 w-4 text-white opacity-80" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalCustomers}</div>
-            <p className="text-xs text-purple-100">
-              Registered clients on Workvix
-            </p>
+            <p className="text-xs text-indigo-100">Clients registered</p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg">
+        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Open Jobs</CardTitle>
-            <Briefcase className="h-4 w-4 text-white opacity-80" />
+            <CardTitle className="text-sm font-medium">Total Freelancers</CardTitle>
+            <User className="h-4 w-4 text-white opacity-80" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{openJobs}</div>
-            <p className="text-xs text-orange-100">
-              Active jobs awaiting freelancers
-            </p>
+            <div className="text-2xl font-bold">{totalFreelancers}</div>
+            <p className="text-xs text-pink-100">Freelancers registered</p>
           </CardContent>
         </Card>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="mb-8 max-w-md mx-auto">
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle>User Type Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={userTypeDist}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {userTypeDist.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card className="shadow-md">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm text-gray-700">
+            <ul className="space-y-4">
               {recentActivity.length === 0 ? (
                 <li>No recent activity found.</li>
               ) : (
                 recentActivity.map((item) => (
-                  <li key={item.type + '-' + item.id}>- {item.text}</li>
+                  <li key={item.id} className="flex items-center space-x-3">
+                    {item.type === 'job' && <Briefcase className="w-5 h-5 text-blue-500" />}
+                    {item.type === 'feedback' && <Star className="w-5 h-5 text-yellow-500" />}
+                    {item.type === 'ticket' && <LifeBuoy className="w-5 h-5 text-pink-500" />}
+                    <span className="flex-1">{item.text}</span>
+                    <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleString()}</span>
+                  </li>
                 ))
               )}
             </ul>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>Latest Messages</CardTitle>
+            <CardTitle>Latest Payments</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm text-gray-700">
-              {latestMessages.length === 0 ? (
-                <li>No messages found.</li>
+            <ul className="divide-y divide-gray-100">
+              {latestPayments.length === 0 ? (
+                <li className="py-2 text-gray-500">No payments found.</li>
               ) : (
-                latestMessages.map((msg) => (
-                  <li key={msg.id}>
-                    - {msg.content ? msg.content.slice(0, 60) : '[No content]'}
-                    <span className="text-xs text-gray-400 ml-2">({new Date(msg.created_at).toLocaleString()})</span>
+                latestPayments.map((p: any) => (
+                  <li key={p.id} className="flex items-center justify-between py-2">
+                    <div className="flex items-center space-x-2">
+                      <CreditCard className="w-4 h-4 text-blue-500" />
+                      <span className="font-medium">${p.amount}</span>
+                      <span className={`text-xs rounded px-2 py-0.5 ml-2 ${p.status === 'completed' ? 'bg-green-100 text-green-700' : p.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{p.status}</span>
+                    </div>
+                    <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString()}</span>
                   </li>
                 ))
               )}
@@ -267,52 +315,27 @@ const OverviewDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      {/* Payments Table Section */}
-      <div className="mt-8">
-        <Card>
+      <div className="max-w-2xl mx-auto mb-8">
+        <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>Latest Payments</CardTitle>
+            <CardTitle>Latest Messages</CardTitle>
           </CardHeader>
           <CardContent>
-            {latestPayments.length === 0 ? (
-              <div className="text-gray-500">No payments found.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm border">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-2 py-1 text-left">ID</th>
-                      <th className="px-2 py-1 text-left">Amount</th>
-                      <th className="px-2 py-1 text-left">Type</th>
-                      <th className="px-2 py-1 text-left">Status</th>
-                      <th className="px-2 py-1 text-left">User ID</th>
-                      <th className="px-2 py-1 text-left">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {latestPayments.map((p) => (
-                      <tr key={p.id}>
-                        <td className="px-2 py-1 font-mono max-w-[100px] truncate">{p.id.slice(0, 8)}...</td>
-                        <td className="px-2 py-1">${p.amount?.toFixed(2)}</td>
-                        <td className="px-2 py-1">{p.type}</td>
-                        <td className="px-2 py-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            p.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            p.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            p.status === 'failed' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td className="px-2 py-1">{p.user_id}</td>
-                        <td className="px-2 py-1">{new Date(p.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <ul className="divide-y divide-gray-100">
+              {latestMessages.length === 0 ? (
+                <li className="py-2 text-gray-500">No messages found.</li>
+              ) : (
+                latestMessages.map((m: any) => (
+                  <li key={m.id} className="flex items-center justify-between py-2">
+                    <div className="flex items-center space-x-2">
+                      <MessageSquare className="w-4 h-4 text-blue-500" />
+                      <span className="font-medium">{m.content?.slice(0, 40)}{m.content?.length > 40 ? '...' : ''}</span>
+                    </div>
+                    <span className="text-xs text-gray-400">{new Date(m.created_at).toLocaleDateString()}</span>
+                  </li>
+                ))
+              )}
+            </ul>
           </CardContent>
         </Card>
       </div>

@@ -72,6 +72,8 @@ const SignIn = () => {
             navigate('/client');
           } else if (userRole === 'freelancer') {
             navigate('/freelancer');
+          } else if (userRole === 'affiliate_marketer') {
+            navigate('/affiliate/dashboard');
           } else {
             navigate('/dashboard');
           }
@@ -153,6 +155,8 @@ const SignIn = () => {
         navigate('/client');
       } else if (userRole === 'freelancer') {
         navigate('/freelancer');
+      } else if (userRole === 'affiliate_marketer') {
+        navigate('/affiliate/dashboard');
       } else {
         navigate('/dashboard'); 
       }
