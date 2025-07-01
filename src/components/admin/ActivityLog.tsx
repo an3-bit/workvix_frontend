@@ -64,6 +64,9 @@ const ActivityLog: React.FC = () => {
   return (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e25df71 (admin dashboard)
     <>
       <div className="p-6 bg-background pb-16">
         <Card className="bg-card">
@@ -151,6 +154,7 @@ const ActivityLog: React.FC = () => {
       </div>
     </>
 =======
+<<<<<<< HEAD
     <Card className="max-w-5xl mx-auto mt-8">
       <CardHeader>
         <CardTitle>Activity Log</CardTitle>
@@ -175,6 +179,8 @@ const ActivityLog: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
 =======
+=======
+>>>>>>> e25df71 (admin dashboard)
     <div className="p-6 bg-background">
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
@@ -222,7 +228,10 @@ const ActivityLog: React.FC = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+<<<<<<< HEAD
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> e25df71 (admin dashboard)
               </div>
               {/* Table */}
               <div className="overflow-x-auto">
@@ -235,6 +244,7 @@ const ActivityLog: React.FC = () => {
                       <TableHead>Timestamp</TableHead>
                     </TableRow>
 <<<<<<< HEAD
+<<<<<<< HEAD
                   ))}
                 </TableBody>
               </Table>
@@ -245,6 +255,8 @@ const ActivityLog: React.FC = () => {
     </Card>
 >>>>>>> a02f476 (admin dashboard)
 =======
+=======
+>>>>>>> e25df71 (admin dashboard)
                   </TableHeader>
                   <TableBody>
                     {activities.map((entry) => (
@@ -263,7 +275,11 @@ const ActivityLog: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+<<<<<<< HEAD
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
   );
 };
 

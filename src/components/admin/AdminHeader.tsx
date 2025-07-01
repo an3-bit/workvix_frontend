@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { LogOut, Bell, UserCircle, Search, MessageSquare, Sun, MoonStar } from 'lucide-react';
 =======
 import { LogOut, Bell, UserCircle, Search, MessageSquare } from 'lucide-react';
@@ -13,6 +14,9 @@ import { LogOut, Bell, UserCircle, Search, MessageSquare, Sun, MoonStar } from '
 =======
 import { LogOut, Bell, UserCircle, Search, MessageSquare } from 'lucide-react';
 >>>>>>> 24970ef (admin dashboard)
+=======
+import { LogOut, Bell, UserCircle, Search, MessageSquare, Sun, MoonStar } from 'lucide-react';
+>>>>>>> e25df71 (admin dashboard)
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -31,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useUserProfile } from '../../lib/auth';
 =======
 >>>>>>> a02f476 (admin dashboard)
@@ -39,6 +44,12 @@ import { useTheme } from '@/lib/theme';
 >>>>>>> 7438431 (admin dashboard)
 =======
 >>>>>>> b2a4ea7 (client (profile,dashboard))
+=======
+import { useUserProfile } from '../../lib/auth';
+=======
+import { useTheme } from '@/lib/theme';
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
 
 interface AdminHeaderProps {
   adminEmail: string | null;
@@ -64,8 +75,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> b2a4ea7 (client (profile,dashboard))
+=======
+  const { theme, toggleTheme } = useTheme();
+>>>>>>> e25df71 (admin dashboard)
 
   // Fallbacks for avatar and name
   const avatar = admin?.avatar || '';
@@ -273,13 +288,27 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> b2a4ea7 (client (profile,dashboard))
+=======
+=======
+        {/* Theme Toggle */}
+        <button
+          aria-label="Toggle dark/light mode"
+          className="p-2 rounded-full hover:bg-muted transition"
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? <Sun className="h-6 w-6 text-yellow-400" /> : <MoonStar className="h-6 w-6 text-gray-700" />}
+        </button>
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button aria-label="Profile" className="ml-2">
               <Avatar className="h-8 w-8 border-2 border-border shadow-sm">
+<<<<<<< HEAD
                 {avatar ? (
                   <img src={avatar} alt={name} />
                 ) : (
@@ -291,6 +320,41 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
                       .toUpperCase()
                       .slice(0, 2)}
                   </AvatarFallback>
+=======
+                {admin && admin.avatar ? (
+                  <img src={admin.avatar} alt={admin.name} />
+                ) : (
+                  <AvatarFallback>{(() => {
+                    if (admin && admin.name && admin.name.trim() && admin.name.split(' ').length > 1) {
+                      // Use first and last name initials
+                      return admin.name.split(' ').map(n => n[0] ? n[0][0] : '').join('').toUpperCase();
+                    } else if (admin && admin.name && admin.name.includes('@')) {
+                      // Extract initials from email
+                      const emailName = admin.name.split('@')[0];
+                      const parts = emailName.match(/[a-zA-Z]+/g);
+                      if (parts && parts.length > 1) {
+                        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+                      } else if (emailName.length > 1) {
+                        return `${emailName[0]}${emailName[emailName.length - 1]}`.toUpperCase();
+                      } else {
+                        return emailName[0].toUpperCase();
+                      }
+                    } else if (admin && adminEmail && adminEmail.includes('@')) {
+                      // Fallback to adminEmail
+                      const emailName = adminEmail.split('@')[0];
+                      const parts = emailName.match(/[a-zA-Z]+/g);
+                      if (parts && parts.length > 1) {
+                        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+                      } else if (emailName.length > 1) {
+                        return `${emailName[0]}${emailName[emailName.length - 1]}`.toUpperCase();
+                      } else {
+                        return emailName[0].toUpperCase();
+                      }
+                    } else {
+                      return 'A';
+                    }
+                  })()}</AvatarFallback>
+>>>>>>> 089fd42 (admin dashboard)
                 )}
               </Avatar>
             </button>

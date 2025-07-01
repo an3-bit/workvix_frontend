@@ -110,7 +110,13 @@ const ManageMessages: React.FC = () => {
   return (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e25df71 (admin dashboard)
     <div className="p-6 bg-background min-h-screen pb-8">
+=======
+    <div className="p-0 sm:p-6 min-h-screen bg-background">
+>>>>>>> 089fd42 (admin dashboard)
       <Card className="bg-card shadow-2xl rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6">
           <div className="flex items-center gap-3">

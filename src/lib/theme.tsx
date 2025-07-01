@@ -1,5 +1,8 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e25df71 (admin dashboard)
 // Remove all theme context, provider, and logic. Default to light mode.
 // ... existing code ... 
 =======
@@ -30,7 +33,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .from('profiles')
           .select('theme')
           .eq('id', user.id)
+<<<<<<< HEAD
           .maybeSingle();
+=======
+          .single();
+>>>>>>> e25df71 (admin dashboard)
         if (profile && profile.theme) {
           setThemeState(profile.theme);
           localStorage.setItem('theme', profile.theme);
@@ -72,8 +79,12 @@ export const useTheme = () => {
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
   return ctx;
 }; 
+<<<<<<< HEAD
 >>>>>>> 7438431 (admin dashboard)
 =======
 // Remove all theme context, provider, and logic. Default to light mode.
 // ... existing code ... 
 >>>>>>> b2a4ea7 (client (profile,dashboard))
+=======
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)

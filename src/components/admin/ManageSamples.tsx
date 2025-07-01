@@ -190,7 +190,11 @@ const ManageSamples: React.FC = () => {
     <div className="p-6 bg-background min-h-screen pb-8">
 =======
     <div className="p-6 bg-background">
+<<<<<<< HEAD
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-foreground">Manage Samples</CardTitle>

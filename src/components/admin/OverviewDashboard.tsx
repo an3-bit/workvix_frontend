@@ -381,6 +381,9 @@ const OverviewDashboard: React.FC = () => {
   return (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e25df71 (admin dashboard)
     <>
       <div className="p-6 bg-background pb-16">
         <h2 className="text-3xl font-bold text-foreground mb-6">Dashboard Overview</h2>
@@ -569,6 +572,194 @@ const OverviewDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+=======
+    <div className="p-6 bg-background">
+      <h2 className="text-3xl font-bold text-foreground mb-6">Dashboard Overview</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <DollarSign className="h-4 w-4 text-white opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totalSales.toLocaleString()}</div>
+            <p className="text-xs text-blue-100">${monthlySales} in last month</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
+            <DollarSign className="h-4 w-4 text-white opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${monthlySales.toLocaleString()}</div>
+            <p className="text-xs text-green-100">{((monthlySales / (totalSales || 1)) * 100).toFixed(1)}% of all time</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+            <Users className="h-4 w-4 text-white opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalCustomers}</div>
+            <p className="text-xs text-indigo-100">Clients registered</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-lg hover:scale-[1.03] transition-transform">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Freelancers</CardTitle>
+            <User className="h-4 w-4 text-white opacity-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalFreelancers}</div>
+            <p className="text-xs text-pink-100">Freelancers registered</p>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          <Card className="shadow-md bg-card h-full">
+            <CardHeader>
+              <CardTitle className="text-foreground flex flex-col gap-2">
+                <span>Sales & Revenue</span>
+                <div className="flex flex-col md:flex-row md:items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-foreground">Range:</label>
+                    <Select value={range} onValueChange={setRange}>
+                      <SelectTrigger className="w-40 h-8 bg-background text-foreground border rounded text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background text-foreground">
+                        {RANGE_OPTIONS.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Switch checked={useSample} onCheckedChange={setUseSample} id="sample-toggle" />
+                    <label htmlFor="sample-toggle" className="text-xs text-foreground cursor-pointer">Use Sample Data</label>
+                  </div>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={filteredSalesData} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#8884d8" className="text-xs" />
+                  <YAxis stroke="#8884d8" className="text-xs" />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="sales" fill="#2563eb" name="Sales" />
+                  <Bar dataKey="revenue" fill="#22c55e" name="Revenue" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+        <div>
+          <Card className="shadow-md bg-card h-full">
+            <CardHeader>
+              <CardTitle className="text-foreground">User Type Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={userTypeDist}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
+                    {userTypeDist.map((entry, idx) => (
+                      <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <Card className="shadow-md bg-card h-full">
+            <CardHeader>
+              <CardTitle className="text-foreground">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4">
+                {recentActivity.length === 0 ? (
+                  <li>No recent activity found.</li>
+                ) : (
+                  recentActivity.map((item) => (
+                    <li key={item.id} className="flex items-center space-x-3">
+                      {item.type === 'job' && <Briefcase className="w-5 h-5 text-blue-500" />}
+                      {item.type === 'feedback' && <Star className="w-5 h-5 text-yellow-500" />}
+                      {item.type === 'ticket' && <LifeBuoy className="w-5 h-5 text-pink-500" />}
+                      <span className="flex-1">{item.text}</span>
+                      <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleString()}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="flex flex-col gap-6">
+          <Card className="shadow-md bg-card">
+            <CardHeader>
+              <CardTitle className="text-foreground">Latest Payments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-gray-100">
+                {latestPayments.length === 0 ? (
+                  <li className="py-2 text-gray-500">No payments found.</li>
+                ) : (
+                  latestPayments.map((p: any) => (
+                    <li key={p.id} className="flex items-center justify-between py-2">
+                      <div className="flex items-center space-x-2">
+                        <CreditCard className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium">${p.amount}</span>
+                        <span className={`text-xs rounded px-2 py-0.5 ml-2 ${p.status === 'completed' ? 'bg-green-100 text-green-700' : p.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{p.status}</span>
+                      </div>
+                      <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString()}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card className="shadow-md bg-card">
+            <CardHeader>
+              <CardTitle className="text-foreground">Latest Messages</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-gray-100">
+                {latestMessages.length === 0 ? (
+                  <li className="py-2 text-gray-500">No messages found.</li>
+                ) : (
+                  latestMessages.map((m: any) => (
+                    <li key={m.id} className="flex items-center justify-between py-2">
+                      <div className="flex items-center space-x-2">
+                        <MessageSquare className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium">{m.content?.slice(0, 40)}{m.content?.length > 40 ? '...' : ''}</span>
+                      </div>
+                      <span className="text-xs text-gray-400">{new Date(m.created_at).toLocaleDateString()}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+>>>>>>> 089fd42 (admin dashboard)
         </div>
       </div>
       <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">

@@ -10,12 +10,17 @@ import { RefreshCcw, Save, Settings, User, CreditCard, Bell, Palette, Mail, Menu
 <<<<<<< HEAD
 <<<<<<< HEAD
 import { useLocation } from 'react-router-dom';
+<<<<<<< HEAD
 import { useUserProfile } from '../../lib/auth';
 =======
+<<<<<<< HEAD
 >>>>>>> a02f476 (admin dashboard)
 =======
 import { useLocation } from 'react-router-dom';
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
 
 interface Setting {
   id: string;
@@ -90,13 +95,18 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
 <<<<<<< HEAD
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [updating, setUpdating] = useState(false);
+<<<<<<< HEAD
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
 =======
+<<<<<<< HEAD
 >>>>>>> a02f476 (admin dashboard)
 =======
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [updating, setUpdating] = useState(false);
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
 
   const paymentMethods = [
     { value: 'card', label: 'Card' },
@@ -135,6 +145,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         .eq('id', user.id)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         .maybeSingle();
 =======
         .single();
@@ -142,6 +153,12 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
 =======
         .maybeSingle();
 >>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
+=======
+        .maybeSingle();
+=======
+        .single();
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
       if (profileData) {
         setProfile({
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
@@ -277,7 +294,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
       });
 =======
       await supabase.from('profiles').update(updates).eq('id', user.id);
+<<<<<<< HEAD
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> 089fd42 (admin dashboard)
+>>>>>>> e25df71 (admin dashboard)
       toast({ title: 'Profile Saved', description: 'Profile settings updated.' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message || 'Failed to update profile.', variant: 'destructive' });
@@ -354,6 +375,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   return (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e25df71 (admin dashboard)
     <>
       <div className="flex flex-col md:flex-row min-h-[80vh] bg-background pb-16">
         {/* Sidebar */}
@@ -428,6 +452,200 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                               />
                             )}
                           </div>
+=======
+    <div className="flex flex-col md:flex-row min-h-[80vh] bg-background">
+      {/* Sidebar */}
+      <aside className={`transition-all duration-200 bg-background border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 mb-4 md:mb-0 flex flex-col items-center md:items-stretch border-border`}>
+        <button
+          className="mb-4 p-2 rounded hover:bg-gray-100 focus:outline-none self-end md:self-start"
+          onClick={() => setSidebarOpen((open) => !open)}
+          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <nav className="space-y-2 w-full">
+          {categories.map(cat => (
+            <button
+              key={cat.key}
+              className={`flex items-center w-full px-3 py-2 rounded-lg transition font-medium text-left ${activeCategory === cat.key ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'} ${!sidebarOpen ? 'justify-center' : ''}`}
+              onClick={() => setActiveCategory(cat.key)}
+            >
+              {cat.icon}
+              {sidebarOpen && <span>{cat.label}</span>}
+            </button>
+          ))}
+        </nav>
+      </aside>
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-8 bg-background">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6 flex items-center text-foreground">
+            {categories.find(c => c.key === activeCategory)?.icon}
+            {categories.find(c => c.key === activeCategory)?.label} Settings
+          </h1>
+          {/* Main Content for each section */}
+          {activeCategory === 'system' ? (
+            loading ? (
+              <div className="p-6 text-center">Loading system settings...</div>
+            ) : error ? (
+              <div className="p-6 text-center text-red-600">{error}</div>
+            ) : (
+              <div className="space-y-8">
+                {(groupedSettings['system'] || settings).length === 0 ? (
+                  <p className="text-center text-gray-500">No system settings found.</p>
+                ) : (
+                  <Card className="shadow-md bg-card border border-border">
+                    <CardHeader className="flex flex-row items-center justify-between bg-muted rounded-t-lg">
+                      <CardTitle className="text-xl font-bold text-primary">General System Settings</CardTitle>
+                      <div className="space-x-2">
+                        <Button onClick={fetchSettings} variant="outline" className="flex items-center space-x-2">
+                          <RefreshCcw className="h-4 w-4" />
+                          <span>Refresh</span>
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {(groupedSettings['system'] || settings).map((setting) => (
+                        <div key={setting.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                          <Label htmlFor={setting.setting_key} className="font-semibold block mb-1">
+                            {setting.setting_key.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </Label>
+                          <p className="text-sm text-gray-500 mb-2">{setting.description}</p>
+                          {setting.setting_key.includes('content') || setting.setting_key.includes('description') ? (
+                            <Textarea
+                              id={setting.setting_key}
+                              value={editValues[setting.setting_key] || ''}
+                              onChange={(e) => handleValueChange(setting.setting_key, e.target.value)}
+                              rows={3}
+                            />
+                          ) : (
+                            <Input
+                              id={setting.setting_key}
+                              value={editValues[setting.setting_key] || ''}
+                              onChange={(e) => handleValueChange(setting.setting_key, e.target.value)}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )
+          ) : activeCategory === 'profile' ? (
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Profile Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Profile Preview */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-primary overflow-hidden">
+                    {profile.avatar ? (
+                      <img src={profile.avatar} alt="Avatar" className="h-full w-full object-cover rounded-full" />
+                    ) : (
+                      (() => {
+                        if (profile.firstName && profile.lastName) {
+                          return `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase();
+                        } else if (profile.email) {
+                          const emailName = profile.email.split('@')[0];
+                          // Try to split by non-letters or numbers, fallback to first and last char
+                          const parts = emailName.match(/[a-zA-Z]+/g);
+                          if (parts && parts.length > 1) {
+                            return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+                          } else if (emailName.length > 1) {
+                            return `${emailName[0]}${emailName[emailName.length - 1]}`.toUpperCase();
+                          } else {
+                            return emailName[0].toUpperCase();
+                          }
+                        } else {
+                          return 'A';
+                        }
+                      })()
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-foreground">{profile.firstName} {profile.lastName}</div>
+                    <div className="text-muted-foreground text-sm">{profile.email}</div>
+                  </div>
+                </div>
+                {/* Editable Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>First Name</Label>
+                    <Input value={profile.firstName} onChange={e => setProfile(p => ({ ...p, firstName: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Last Name</Label>
+                    <Input value={profile.lastName} onChange={e => setProfile(p => ({ ...p, lastName: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Email</Label>
+                    <Input value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Phone</Label>
+                    <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Avatar URL</Label>
+                    <Input value={profile.avatar} onChange={e => setProfile(p => ({ ...p, avatar: e.target.value }))} />
+                  </div>
+                </div>
+                <Button onClick={handleSaveProfile} className="mt-4" disabled={updating}>Save Profile</Button>
+                {/* Password Change Section */}
+                <div className="mt-8">
+                  <div className="max-w-md mx-auto bg-card rounded-lg shadow p-6 border border-border">
+                    <h3 className="font-semibold mb-4 text-lg text-primary flex items-center gap-2">
+                      <span>Change Password</span>
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Current Password</Label>
+                        <Input type="password" value={passwords.current} onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} placeholder="Enter current password" />
+                      </div>
+                      <div>
+                        <Label>New Password</Label>
+                        <Input type="password" value={passwords.new} onChange={e => setPasswords(p => ({ ...p, new: e.target.value }))} placeholder="Enter new password" />
+                      </div>
+                      <div>
+                        <Label>Confirm New Password</Label>
+                        <Input type="password" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} placeholder="Confirm new password" />
+                      </div>
+                      <Button onClick={handleChangePassword} className="w-full mt-2" disabled={updating}>Change Password</Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : activeCategory === 'payments' ? (
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Payments & Orders Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                {/* General Payment Settings */}
+                <div className="border-b pb-6">
+                  <h3 className="font-semibold mb-2">General Payment Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Default Payment Gateway</Label>
+                      <select value={payments.gateway} onChange={e => setPayments(p => ({ ...p, gateway: e.target.value }))} className="w-full border rounded px-3 py-2">
+                        <option value="">Select Gateway</option>
+                        <option value="stripe">Stripe</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="manual">Manual</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Supported Payment Methods</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {paymentMethods.map(m => (
+                          <label key={m.value} className="flex items-center space-x-1">
+                            <input type="checkbox" checked={payments.supportedMethods.includes(m.value)} onChange={e => setPayments(p => ({ ...p, supportedMethods: e.target.checked ? [...p.supportedMethods, m.value] : p.supportedMethods.filter(v => v !== m.value) }))} />
+                            <span>{m.label}</span>
+                          </label>
+>>>>>>> 089fd42 (admin dashboard)
                         ))}
                         <div className="flex justify-end mt-4">
                           <Button onClick={handleSaveChanges} disabled={saving} className="flex items-center space-x-2">
@@ -498,6 +716,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                       <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
                     </div>
                   </div>
+<<<<<<< HEAD
                   <input type="file" accept="image/*" onChange={e => setSelectedAvatarFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} className="hidden" id="avatar-upload" />
                   <label htmlFor="avatar-upload" className="ml-2 px-3 py-1 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition">Upload Photo</label>
                   <Button onClick={handleSaveProfile} className="mt-4" disabled={updating}>Save Profile</Button>
@@ -722,6 +941,91 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                 </CardContent>
               </Card>
             ) : null}
+=======
+                </div>
+                <Button onClick={handleSavePayments} className="mt-6">Save Payments Settings</Button>
+              </CardContent>
+            </Card>
+          ) : activeCategory === 'notifications' ? (
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Notifications Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center space-x-3">
+                  <input type="checkbox" checked={notifications.email} onChange={e => setNotifications(n => ({ ...n, email: e.target.checked }))} />
+                  <Label>Email Notifications</Label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input type="checkbox" checked={notifications.sms} onChange={e => setNotifications(n => ({ ...n, sms: e.target.checked }))} />
+                  <Label>SMS Notifications</Label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input type="checkbox" checked={notifications.newsletter} onChange={e => setNotifications(n => ({ ...n, newsletter: e.target.checked }))} />
+                  <Label>Newsletter Subscription</Label>
+                </div>
+                <Button onClick={handleSaveNotifications} className="mt-4">Save Notifications</Button>
+              </CardContent>
+            </Card>
+          ) : activeCategory === 'themes' ? (
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Theme Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label>Mode</Label>
+                  <select value={themes.mode} onChange={e => setThemes(t => ({ ...t, mode: e.target.value }))} className="w-full border rounded px-3 py-2">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>Primary Color</Label>
+                  <Input type="color" value={themes.primaryColor} onChange={e => setThemes(t => ({ ...t, primaryColor: e.target.value }))} className="w-16 h-10 p-0 border-none" />
+                </div>
+                <div>
+                  <Label>Logo URL</Label>
+                  <Input value={themes.logo} onChange={e => setThemes(t => ({ ...t, logo: e.target.value }))} />
+                </div>
+                <Button onClick={handleSaveThemes} className="mt-4">Save Theme</Button>
+              </CardContent>
+            </Card>
+          ) : activeCategory === 'email' ? (
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Email Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label>SMTP Host</Label>
+                  <Input value={emailSettings.smtpHost} onChange={e => setEmailSettings(eS => ({ ...eS, smtpHost: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>SMTP Port</Label>
+                  <Input value={emailSettings.smtpPort} onChange={e => setEmailSettings(eS => ({ ...eS, smtpPort: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Sender Name</Label>
+                  <Input value={emailSettings.senderName} onChange={e => setEmailSettings(eS => ({ ...eS, senderName: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Sender Email</Label>
+                  <Input value={emailSettings.senderEmail} onChange={e => setEmailSettings(eS => ({ ...eS, senderEmail: e.target.value }))} />
+                </div>
+                <Button onClick={handleSaveEmail} className="mt-4">Save Email Settings</Button>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+        {/* Sticky Save Bar (only for system settings) */}
+        {activeCategory === 'system' && (
+          <div className="fixed bottom-0 left-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-white border-t shadow-lg p-4 flex justify-end space-x-2">
+            <Button onClick={handleSaveChanges} disabled={saving} className="flex items-center space-x-2">
+              <Save className="h-4 w-4" />
+              <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
+            </Button>
+>>>>>>> 089fd42 (admin dashboard)
           </div>
         </main>
       </div>
