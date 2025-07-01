@@ -62,31 +62,31 @@ const SubmitSupportTicket: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md space-y-4">
-      <h2 className="text-2xl font-bold mb-2">Submit a Support Ticket</h2>
+    <form onSubmit={handleSubmit} className="max-w-lg mx-auto bg-card p-6 rounded-lg shadow-md space-y-4">
+      <h2 className="text-2xl font-bold mb-2 text-foreground">Submit a Support Ticket</h2>
       <div>
-        <label className="block font-medium mb-1">Subject</label>
+        <label className="block font-medium mb-1 text-foreground">Subject</label>
         <input
           type="text"
-          className="w-full border rounded px-3 py-2"
+          className="w-full border rounded px-3 py-2 bg-background text-foreground"
           value={subject}
           onChange={e => setSubject(e.target.value)}
           required
         />
       </div>
       <div>
-        <label className="block font-medium mb-1">Description</label>
+        <label className="block font-medium mb-1 text-foreground">Description</label>
         <textarea
-          className="w-full border rounded px-3 py-2 min-h-[100px]"
+          className="w-full border rounded px-3 py-2 min-h-[100px] bg-background text-foreground"
           value={description}
           onChange={e => setDescription(e.target.value)}
           required
         />
       </div>
       <div>
-        <label className="block font-medium mb-1">Priority</label>
+        <label className="block font-medium mb-1 text-foreground">Priority</label>
         <select
-          className="w-full border rounded px-3 py-2"
+          className="w-full border rounded px-3 py-2 bg-background text-foreground"
           value={priority}
           onChange={e => setPriority(e.target.value)}
         >
@@ -97,7 +97,7 @@ const SubmitSupportTicket: React.FC = () => {
       </div>
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
         disabled={loading}
       >
         {loading ? 'Submitting...' : 'Submit Ticket'}

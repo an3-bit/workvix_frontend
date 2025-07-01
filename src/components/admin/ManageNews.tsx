@@ -182,10 +182,10 @@ const ManageNews: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <Card>
+    <div className="p-6 bg-background">
+      <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage News & Announcements</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Manage News & Announcements</CardTitle>
           <div className="space-x-2">
             <Button onClick={fetchNews} variant="outline" className="flex items-center space-x-2">
               <RefreshCcw className="h-4 w-4" />

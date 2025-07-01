@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RefreshCcw, Save, Settings, User, CreditCard, Bell, Palette, Mail, Menu } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 interface Setting {
   id: string;
@@ -39,9 +40,10 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   const [saving, setSaving] = useState(false);
   const [activeCategory, setActiveCategory] = useState(initialTab || 'system');
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768); // expanded on desktop, collapsed on mobile
+  const location = useLocation();
 
   // Section forms state
-  const [profile, setProfile] = useState({ name: '', email: '', avatar: '' });
+  const [profile, setProfile] = useState({ name: '', email: '', avatar: '', firstName: '', lastName: '', phone: '' });
   const [payments, setPayments] = useState({
     gateway: '',
     supportedMethods: [],
@@ -63,6 +65,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   const [notifications, setNotifications] = useState({ email: true, sms: false, newsletter: false });
   const [themes, setThemes] = useState({ mode: 'light', primaryColor: '#2563eb', logo: '' });
   const [emailSettings, setEmailSettings] = useState({ smtpHost: '', smtpPort: '', senderName: '', senderEmail: '' });
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [updating, setUpdating] = useState(false);
 
   const paymentMethods = [
     { value: 'card', label: 'Card' },
@@ -85,6 +89,49 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, avatar, phone')
+        .eq('id', user.id)
+        .single();
+      if (profileData) {
+        setProfile({
+          name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
+          email: profileData.email || user.email || '',
+          avatar: profileData.avatar || '',
+          firstName: profileData.first_name || '',
+          lastName: profileData.last_name || '',
+          phone: profileData.phone || '',
+        });
+      } else {
+        setProfile({
+          name: user.user_metadata?.full_name || '',
+          email: user.email || '',
+          avatar: user.user_metadata?.avatar_url || '',
+          firstName: '',
+          lastName: '',
+          phone: '',
+        });
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    // Check for tab query param
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && categories.some(c => c.key === tab)) {
+      setActiveCategory(tab);
+    } else if (initialTab) {
+      setActiveCategory(initialTab);
+    }
+  }, [location.search, initialTab]);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -148,11 +195,50 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   };
 
   // Save handlers (simulate save with toast)
-  const handleSaveProfile = () => toast({ title: 'Profile Saved', description: 'Profile settings updated.' });
+  const handleSaveProfile = async () => {
+    setUpdating(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+      const updates = {
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        email: profile.email,
+        avatar: profile.avatar,
+        phone: profile.phone,
+      };
+      await supabase.from('profiles').update(updates).eq('id', user.id);
+      toast({ title: 'Profile Saved', description: 'Profile settings updated.' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to update profile.', variant: 'destructive' });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleSavePayments = () => toast({ title: 'Payments Saved', description: 'Payment settings updated.' });
   const handleSaveNotifications = () => toast({ title: 'Notifications Saved', description: 'Notification settings updated.' });
   const handleSaveThemes = () => toast({ title: 'Themes Saved', description: 'Theme settings updated.' });
   const handleSaveEmail = () => toast({ title: 'Email Saved', description: 'Email settings updated.' });
+
+  // Change password
+  const handleChangePassword = async () => {
+    if (passwords.new !== passwords.confirm) {
+      toast({ title: 'Error', description: 'New passwords do not match.', variant: 'destructive' });
+      return;
+    }
+    setUpdating(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwords.new });
+      if (error) throw error;
+      toast({ title: 'Password Changed', description: 'Your password has been updated.' });
+      setPasswords({ current: '', new: '', confirm: '' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to change password.', variant: 'destructive' });
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   // Group settings by prefix (e.g., system_, email_, etc.) for future expansion
   const groupedSettings = settings.reduce((acc, setting) => {
@@ -163,9 +249,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   }, {} as Record<string, Setting[]>);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[80vh]">
+    <div className="flex flex-col md:flex-row min-h-[80vh] bg-background">
       {/* Sidebar */}
-      <aside className={`transition-all duration-200 bg-white border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 mb-4 md:mb-0 flex flex-col items-center md:items-stretch`}>
+      <aside className={`transition-all duration-200 bg-background border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 mb-4 md:mb-0 flex flex-col items-center md:items-stretch border-border`}>
         <button
           className="mb-4 p-2 rounded hover:bg-gray-100 focus:outline-none self-end md:self-start"
           onClick={() => setSidebarOpen((open) => !open)}
@@ -187,9 +273,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         </nav>
       </aside>
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 bg-gray-50">
+      <main className="flex-1 p-4 md:p-8 bg-background">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 flex items-center">
+          <h1 className="text-3xl font-bold mb-6 flex items-center text-foreground">
             {categories.find(c => c.key === activeCategory)?.icon}
             {categories.find(c => c.key === activeCategory)?.label} Settings
           </h1>
@@ -204,9 +290,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                 {(groupedSettings['system'] || settings).length === 0 ? (
                   <p className="text-center text-gray-500">No system settings found.</p>
                 ) : (
-                  <Card className="shadow-md">
-                    <CardHeader className="flex flex-row items-center justify-between bg-blue-50 rounded-t-lg">
-                      <CardTitle className="text-xl font-bold text-blue-800">General System Settings</CardTitle>
+                  <Card className="shadow-md bg-card border border-border">
+                    <CardHeader className="flex flex-row items-center justify-between bg-muted rounded-t-lg">
+                      <CardTitle className="text-xl font-bold text-primary">General System Settings</CardTitle>
                       <div className="space-x-2">
                         <Button onClick={fetchSettings} variant="outline" className="flex items-center space-x-2">
                           <RefreshCcw className="h-4 w-4" />
@@ -243,30 +329,95 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
               </div>
             )
           ) : activeCategory === 'profile' ? (
-            <Card className="shadow-md">
-              <CardHeader className="bg-blue-50 rounded-t-lg">
-                <CardTitle className="text-xl font-bold text-blue-800">Profile Settings</CardTitle>
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Profile Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <Label>Name</Label>
-                  <Input value={profile.name} onChange={e => setProfile(p => ({ ...p, name: e.target.value }))} />
+                {/* Profile Preview */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-primary overflow-hidden">
+                    {profile.avatar ? (
+                      <img src={profile.avatar} alt="Avatar" className="h-full w-full object-cover rounded-full" />
+                    ) : (
+                      (() => {
+                        if (profile.firstName && profile.lastName) {
+                          return `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase();
+                        } else if (profile.email) {
+                          const emailName = profile.email.split('@')[0];
+                          // Try to split by non-letters or numbers, fallback to first and last char
+                          const parts = emailName.match(/[a-zA-Z]+/g);
+                          if (parts && parts.length > 1) {
+                            return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+                          } else if (emailName.length > 1) {
+                            return `${emailName[0]}${emailName[emailName.length - 1]}`.toUpperCase();
+                          } else {
+                            return emailName[0].toUpperCase();
+                          }
+                        } else {
+                          return 'A';
+                        }
+                      })()
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-foreground">{profile.firstName} {profile.lastName}</div>
+                    <div className="text-muted-foreground text-sm">{profile.email}</div>
+                  </div>
                 </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} />
+                {/* Editable Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>First Name</Label>
+                    <Input value={profile.firstName} onChange={e => setProfile(p => ({ ...p, firstName: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Last Name</Label>
+                    <Input value={profile.lastName} onChange={e => setProfile(p => ({ ...p, lastName: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Email</Label>
+                    <Input value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Phone</Label>
+                    <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Avatar URL</Label>
+                    <Input value={profile.avatar} onChange={e => setProfile(p => ({ ...p, avatar: e.target.value }))} />
+                  </div>
                 </div>
-                <div>
-                  <Label>Avatar URL</Label>
-                  <Input value={profile.avatar} onChange={e => setProfile(p => ({ ...p, avatar: e.target.value }))} />
+                <Button onClick={handleSaveProfile} className="mt-4" disabled={updating}>Save Profile</Button>
+                {/* Password Change Section */}
+                <div className="mt-8">
+                  <div className="max-w-md mx-auto bg-card rounded-lg shadow p-6 border border-border">
+                    <h3 className="font-semibold mb-4 text-lg text-primary flex items-center gap-2">
+                      <span>Change Password</span>
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Current Password</Label>
+                        <Input type="password" value={passwords.current} onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} placeholder="Enter current password" />
+                      </div>
+                      <div>
+                        <Label>New Password</Label>
+                        <Input type="password" value={passwords.new} onChange={e => setPasswords(p => ({ ...p, new: e.target.value }))} placeholder="Enter new password" />
+                      </div>
+                      <div>
+                        <Label>Confirm New Password</Label>
+                        <Input type="password" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} placeholder="Confirm new password" />
+                      </div>
+                      <Button onClick={handleChangePassword} className="w-full mt-2" disabled={updating}>Change Password</Button>
+                    </div>
+                  </div>
                 </div>
-                <Button onClick={handleSaveProfile} className="mt-4">Save Profile</Button>
               </CardContent>
             </Card>
           ) : activeCategory === 'payments' ? (
-            <Card className="shadow-md">
-              <CardHeader className="bg-blue-50 rounded-t-lg">
-                <CardTitle className="text-xl font-bold text-blue-800">Payments & Orders Settings</CardTitle>
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Payments & Orders Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* General Payment Settings */}
@@ -384,9 +535,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
               </CardContent>
             </Card>
           ) : activeCategory === 'notifications' ? (
-            <Card className="shadow-md">
-              <CardHeader className="bg-blue-50 rounded-t-lg">
-                <CardTitle className="text-xl font-bold text-blue-800">Notifications Settings</CardTitle>
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Notifications Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center space-x-3">
@@ -405,9 +556,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
               </CardContent>
             </Card>
           ) : activeCategory === 'themes' ? (
-            <Card className="shadow-md">
-              <CardHeader className="bg-blue-50 rounded-t-lg">
-                <CardTitle className="text-xl font-bold text-blue-800">Theme Settings</CardTitle>
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Theme Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
@@ -429,9 +580,9 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
               </CardContent>
             </Card>
           ) : activeCategory === 'email' ? (
-            <Card className="shadow-md">
-              <CardHeader className="bg-blue-50 rounded-t-lg">
-                <CardTitle className="text-xl font-bold text-blue-800">Email Settings</CardTitle>
+            <Card className="shadow-md bg-card border border-border">
+              <CardHeader className="bg-muted rounded-t-lg">
+                <CardTitle className="text-xl font-bold text-primary">Email Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>

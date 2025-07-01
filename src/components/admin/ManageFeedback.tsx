@@ -160,12 +160,12 @@ const ManageFeedback: React.FC = () => {
   }
 
   return (
-    <div className="p-0 sm:p-6 min-h-screen bg-gradient-to-br from-white via-blue-50 to-gray-100">
-      <Card className="bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl">
+    <div className="p-0 sm:p-6 min-h-screen bg-background">
+      <Card className="bg-card shadow-2xl rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <MessageSquare className="h-8 w-8 text-blue-600 drop-shadow-lg" />
-            <span className="text-2xl font-extrabold text-gray-900 tracking-tight">Manage Feedback</span>
+            <MessageSquare className="h-8 w-8 text-primary drop-shadow-lg" />
+            <span className="text-2xl font-extrabold text-foreground tracking-tight">Manage Feedback</span>
           </div>
           <Button onClick={fetchFeedback} variant="outline" className="flex items-center space-x-2 mt-2 sm:mt-0">
             <RefreshCcw className="h-4 w-4" />
@@ -182,22 +182,22 @@ const ManageFeedback: React.FC = () => {
                 <Table className="min-w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Comment</TableHead>
-                      <TableHead>Related Job</TableHead>
-                      <TableHead>Resolved</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-foreground">User</TableHead>
+                      <TableHead className="text-foreground">Rating</TableHead>
+                      <TableHead className="text-foreground">Comment</TableHead>
+                      <TableHead className="text-foreground">Related Job</TableHead>
+                      <TableHead className="text-foreground">Resolved</TableHead>
+                      <TableHead className="text-foreground">Date</TableHead>
+                      <TableHead className="text-right text-foreground">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {feedbackList.map((feedback, idx) => (
-                      <TableRow key={feedback.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50/60 hover:shadow-md animate-fade-in-row`}>
-                        <TableCell>{feedback.user_profile?.first_name || 'N/A'} ({feedback.user_profile?.email})</TableCell>
+                      <TableRow key={feedback.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-muted' : 'bg-card'} hover:bg-muted/60 hover:shadow-md animate-fade-in-row`}>
+                        <TableCell className="text-foreground">{feedback.user_profile?.first_name || 'N/A'} ({feedback.user_profile?.email})</TableCell>
                         <TableCell className="flex items-center gap-1">{renderStars(feedback.rating)}</TableCell>
-                        <TableCell className="max-w-[250px] truncate">{feedback.comment}</TableCell>
-                        <TableCell>{feedback.job_title?.title || 'N/A'}</TableCell>
+                        <TableCell className="max-w-[250px] truncate text-foreground">{feedback.comment}</TableCell>
+                        <TableCell className="text-foreground">{feedback.job_title?.title || 'N/A'}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${feedback.is_resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{feedback.is_resolved ? 'Resolved' : 'Unresolved'}</span>
                         </TableCell>

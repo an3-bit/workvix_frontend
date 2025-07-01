@@ -143,9 +143,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
   ];
 
   return (
-    <nav className="w-64 bg-gray-900 text-white p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-gray-800 shadow-lg">
+    <nav className="w-64 bg-sidebar-background text-sidebar-foreground p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-sidebar-border shadow-lg">
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-extrabold text-white">Workvix</h2>
+        <h2 className="text-3xl font-extrabold text-sidebar-foreground">Workvix</h2>
       </div>
       <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)]">
         {menuItems.map((item) => (
@@ -155,8 +155,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
               <div
                 className={`flex items-center justify-between space-x-3 p-3 rounded-md transition-colors duration-200 cursor-pointer ${
                   openMenus[item.name] || item.subItems.some(subItem => location.pathname.startsWith(subItem.path))
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'hover:bg-gray-700 text-gray-300'
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
+                    : 'hover:bg-sidebar-accent text-sidebar-foreground'
                 }`}
                 onClick={() => {
                   toggleMenu(item.name);
@@ -180,8 +180,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
                 className={({ isActive }) =>
                   `flex items-center space-x-3 p-3 rounded-md transition-colors duration-200 ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'hover:bg-gray-700 text-gray-300'
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
+                      : 'hover:bg-sidebar-accent text-sidebar-foreground'
                   }`
                 }
                 onClick={() => onNavLinkClick(item.path)}
@@ -200,10 +200,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
                     <NavLink
                       to={subItem.path}
                       className={({ isActive }) =>
-                        `flex items-center space-x-3 p-2 rounded-md transition-colors duration-200 text-sm ${
+                        `flex items-center space-x-2 p-2 rounded-md transition-colors duration-200 ${
                           isActive
-                            ? 'bg-blue-500 text-white'
-                            : 'hover:bg-gray-700 text-gray-400'
+                            ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow'
+                            : 'hover:bg-sidebar-accent text-sidebar-foreground'
                         }`
                       }
                       onClick={() => onNavLinkClick(subItem.path)}
@@ -217,13 +217,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
           </li>
         ))}
       </ul>
-      <button
-        onClick={handleLogout}
-        className="mt-8 flex items-center justify-center gap-2 p-3 w-full rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold shadow-lg hover:from-red-600 hover:to-pink-600 transition"
-      >
-        <LogOut className="h-5 w-5" />
-        <span>Logout</span>
-      </button>
     </nav>
   );
 };

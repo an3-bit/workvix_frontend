@@ -108,13 +108,13 @@ const ManageMessages: React.FC = () => {
   }
 
   return (
-    <div className="p-0 sm:p-6 min-h-screen bg-gradient-to-br from-white via-blue-50 to-gray-100">
-      <Card className="bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl">
+    <div className="p-0 sm:p-6 min-h-screen bg-background">
+      <Card className="bg-card shadow-2xl rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <MessageCircle className="h-8 w-8 text-blue-600 drop-shadow-lg" />
-            <span className="text-2xl font-extrabold text-gray-900 tracking-tight">Recent Messages</span>
-            <span className="text-base font-normal text-gray-500 hidden sm:inline">(Most Recent First, showing up to 20)</span>
+            <MessageCircle className="h-8 w-8 text-primary drop-shadow-lg" />
+            <span className="text-2xl font-extrabold text-foreground tracking-tight">Recent Messages</span>
+            <span className="text-base font-normal text-muted-foreground hidden sm:inline">(Most Recent First, showing up to 20)</span>
           </div>
           <Button onClick={fetchMessages} variant="outline" className="flex items-center space-x-2 mt-2 sm:mt-0">
             <RefreshCcw className="h-4 w-4" />
@@ -131,29 +131,29 @@ const ManageMessages: React.FC = () => {
                 <Table className="min-w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Sender</TableHead>
-                      <TableHead>Content</TableHead>
-                      <TableHead>Job Title</TableHead>
-                      <TableHead>Attachment</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-foreground">Sender</TableHead>
+                      <TableHead className="text-foreground">Content</TableHead>
+                      <TableHead className="text-foreground">Job Title</TableHead>
+                      <TableHead className="text-foreground">Attachment</TableHead>
+                      <TableHead className="text-foreground">Date</TableHead>
+                      <TableHead className="text-right text-foreground">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {messages.map((message, idx) => (
-                      <TableRow key={message.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50/60 hover:shadow-md animate-fade-in-row`}>
+                      <TableRow key={message.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-muted' : 'bg-card'} hover:bg-muted/60 hover:shadow-md animate-fade-in-row`}>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm border inline-flex items-center gap-1 ${
-                            message.sender_profile?.user_type === 'admin' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                            message.sender_profile?.user_type === 'admin' ? 'bg-primary/10 text-primary border-primary/20' :
                             message.sender_profile?.user_type === 'client' ? 'bg-green-100 text-green-800 border-green-200' :
                             message.sender_profile?.user_type === 'freelancer' ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                            'bg-gray-100 text-gray-800 border-gray-200'
+                            'bg-muted text-foreground border-border'
                           }`}>
                             {message.sender_profile?.first_name || 'N/A'}
                             <span className="ml-1">({message.sender_profile?.user_type || 'N/A'})</span>
                           </span>
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
+                        <TableCell className="max-w-[200px] truncate text-foreground">
                           {message.content || 'N/A'}
                           {message.read ? (
                             <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Read</span>
@@ -161,7 +161,7 @@ const ManageMessages: React.FC = () => {
                             <span className="ml-2 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">Unread</span>
                           )}
                         </TableCell>
-                        <TableCell>{message.chat_info?.job?.title || 'N/A'}</TableCell>
+                        <TableCell className="text-foreground">{message.chat_info?.job?.title || 'N/A'}</TableCell>
                         <TableCell>
                           {message.attachment_url ? (
                             <a href={message.attachment_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center">
@@ -169,8 +169,8 @@ const ManageMessages: React.FC = () => {
                             </a>
                           ) : 'No'}
                         </TableCell>
-                        <TableCell>{new Date(message.created_at).toLocaleString()}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-foreground">{new Date(message.created_at).toLocaleString()}</TableCell>
+                        <TableCell className="text-right text-foreground">
                           <Button 
                             variant="destructive" 
                             size="sm" 
@@ -189,28 +189,28 @@ const ManageMessages: React.FC = () => {
               {/* Mobile Card View */}
               <div className="flex flex-col gap-4 sm:hidden">
                 {messages.map((message) => (
-                  <div key={message.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col gap-2 animate-fade-in-row">
+                  <div key={message.id} className="bg-card rounded-xl shadow-md p-4 flex flex-col gap-2 animate-fade-in-row">
                     <div className="flex items-center justify-between">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm border inline-flex items-center gap-1 ${
-                        message.sender_profile?.user_type === 'admin' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                        message.sender_profile?.user_type === 'admin' ? 'bg-primary/10 text-primary border-primary/20' :
                         message.sender_profile?.user_type === 'client' ? 'bg-green-100 text-green-800 border-green-200' :
                         message.sender_profile?.user_type === 'freelancer' ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                        'bg-gray-100 text-gray-800 border-gray-200'
+                        'bg-muted text-foreground border-border'
                       }`}>
                         {message.sender_profile?.first_name || 'N/A'}
                         <span className="ml-1">({message.sender_profile?.user_type || 'N/A'})</span>
                       </span>
-                      <span className="text-xs text-gray-500">{new Date(message.created_at).toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">{new Date(message.created_at).toLocaleString()}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-gray-900 font-medium break-words">{message.content || 'N/A'}</span>
+                      <span className="text-foreground font-medium break-words">{message.content || 'N/A'}</span>
                       {message.read ? (
                         <span className="mt-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold w-max">Read</span>
                       ) : (
                         <span className="mt-1 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold w-max">Unread</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>Job: {message.chat_info?.job?.title || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ const ManageMessages: React.FC = () => {
                         <a href={message.attachment_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center">
                           <Download className="h-4 w-4 mr-1" /> File
                         </a>
-                      ) : <span className="text-gray-400">No Attachment</span>}
+                      ) : <span className="text-muted-foreground">No Attachment</span>}
                     </div>
                     <div className="flex gap-2 mt-2">
                       <Button

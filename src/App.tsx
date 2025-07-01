@@ -19,7 +19,11 @@ import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminLogin from "./components/admin/AdminLogin";
 import { AffiliateLayout } from "./pages/affiliate/AffiliateDashboard";
+<<<<<<< HEAD
 import AuthGuard from "./components/AuthGuard";
+=======
+import { ThemeProvider } from '@/lib/theme';
+>>>>>>> 089fd42 (admin dashboard)
 
 const queryClient = new QueryClient();
 

@@ -37,7 +37,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ adminEmail }) =
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="flex w-full min-h-screen">
         {/* Sidebar for desktop, drawer for mobile */}
         <div className="hidden md:block fixed top-0 left-0 h-full z-30">
@@ -47,7 +47,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ adminEmail }) =
         {sidebarOpen && (
           <div className="fixed inset-0 z-40 flex md:hidden">
             <div className="fixed inset-0 bg-black bg-opacity-40" onClick={() => setSidebarOpen(false)}></div>
-            <div className="relative z-50 w-64 max-w-full h-full bg-gray-900 shadow-xl">
+            <div className="relative z-50 w-64 max-w-full h-full bg-sidebar-background shadow-xl">
               <AdminSidebar onNavLinkClick={handleNavLinkClick} />
             </div>
           </div>
@@ -56,21 +56,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ adminEmail }) =
         <div className="flex-1 flex flex-col min-h-screen md:ml-64">
           {/* Header with menu button for mobile */}
           <div className="sticky top-0 z-30">
-            <div className="md:hidden flex items-center bg-white border-b border-gray-100 shadow-sm h-16 px-4">
+            <div className="md:hidden flex items-center bg-background border-b border-border shadow-sm h-16 px-4">
               <button
-                className="p-2 rounded-md text-gray-700 hover:bg-gray-200 focus:outline-none mr-2"
+                className="p-2 rounded-md text-foreground hover:bg-muted focus:outline-none mr-2"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Open sidebar"
               >
                 <Menu className="h-6 w-6" />
               </button>
-              <span className="text-xl font-bold text-blue-600">Admin Panel</span>
+              <span className="text-xl font-bold text-primary">Admin Panel</span>
             </div>
             <div className="hidden md:block">
               <AdminHeader adminEmail={adminEmail} />
             </div>
           </div>
-          <main className="flex-1 overflow-y-auto p-2 sm:p-4 w-full">
+          <main className="flex-1 overflow-y-auto p-2 sm:p-4 w-full bg-background">
             <Routes>
               <Route path="/" element={<OverviewDashboard />} />
               <Route path="/jobs" element={<ManageJobs />} />
