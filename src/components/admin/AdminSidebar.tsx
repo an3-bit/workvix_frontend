@@ -147,7 +147,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-extrabold text-sidebar-foreground">Workvix</h2>
       </div>
-      <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)]">
+      <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)] pb-8">
         {menuItems.map((item) => (
           <li key={item.name}>
             {item.subItems ? (

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Search, Star, Heart, Play, Bookmark, DollarSign, TrendingUp, Calendar, Users, Briefcase, Bell, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -201,7 +200,7 @@ const FreelancerDashboard = () => {
       const { data: notificationsData } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .eq('read', false)
         .order('created_at', { ascending: false })
         .limit(5);

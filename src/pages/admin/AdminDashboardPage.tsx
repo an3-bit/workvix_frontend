@@ -20,6 +20,7 @@ import SystemSettings from '@/components/admin/SystemSettings'; // Example for s
 import ManageAffiliateMarketers from './ManageAffiliateMarketers';
 import { Menu } from 'lucide-react';
 import ActivityLog from '@/components/admin/ActivityLog';
+import ManageTalentPool from '@/components/admin/ManageTalentPool';
 
 
 interface AdminDashboardPageProps {
@@ -77,7 +78,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ adminEmail }) =
               <Route path="/users/clients" element={<ManageClients />} />
               <Route path="/users/freelancers" element={<ManageFreelancers />} />
               <Route path="/users/applications" element={<ManageFreelancerApplications />} />
-              <Route path="/users/talent-pools" element={<h2 className="text-2xl p-6">Talent Pools (View Freelancers, Filtered)</h2>} />
+              <Route path="/users/talent-pools" element={<ManageTalentPool />} />
               <Route path="/messages" element={<ManageMessages />} />
               <Route path="/feedback" element={<ManageFeedback />} />
               <Route path="/coupons" element={<ManageCoupons />} />

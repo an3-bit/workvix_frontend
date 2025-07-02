@@ -168,12 +168,33 @@ const Footer: React.FC = () => {
               >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a 
-                href="#" 
-                className="text-gray-400 hover:text-orange-500 transition-colors duration-200 p-2 rounded-full hover:bg-gray-800"
+              <a
+                href="#"
+                className="transition-colors duration-200 p-2 rounded-full hover:bg-gray-800"
                 aria-label="LinkedIn"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <Linkedin className="h-5 w-5" />
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: '#0077b5',
+                    color: '#fff',
+                    fontWeight: 900,
+                    fontFamily: 'Arial Black, Arial, sans-serif',
+                    fontSize: '1.35rem',
+                    letterSpacing: '-0.08em',
+                    lineHeight: 1,
+                    textAlign: 'center',
+                    userSelect: 'none',
+                  }}
+                >
+                  in
+                </span>
               </a>
               <a 
                 href="#" 

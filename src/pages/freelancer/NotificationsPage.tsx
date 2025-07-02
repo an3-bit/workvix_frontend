@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Briefcase, DollarSign, User, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,7 +49,7 @@ const NotificationsPage: React.FC = () => {
       const { data: notificationsData, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

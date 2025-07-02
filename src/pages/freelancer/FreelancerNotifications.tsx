@@ -67,7 +67,7 @@ const FreelancerNotifications: React.FC = () => {
       const { data: notificationsData, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
       setNotifications(
