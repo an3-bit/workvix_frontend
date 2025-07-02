@@ -186,7 +186,7 @@ const ChatPage: React.FC = () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       setUserProfile(profile);
       
@@ -281,19 +281,19 @@ const ChatPage: React.FC = () => {
               .from('jobs')
               .select('title, budget, category')
               .eq('id', chat.job_id)
-              .single();
+              .maybeSingle();
 
             const { data: clientData } = await supabase
               .from('profiles')
               .select('first_name, last_name, email')
               .eq('id', chat.client_id)
-              .single();
+              .maybeSingle();
 
             const { data: freelancerData } = await supabase
               .from('profiles')
               .select('first_name, last_name')
               .eq('id', chat.freelancer_id)
-              .single();
+              .maybeSingle();
 
             const { data: messages } = await supabase
               .from('messages')
@@ -309,7 +309,7 @@ const ChatPage: React.FC = () => {
               .from('offers')
               .select('*')
               .eq('chat_id', chat.id)
-              .single();
+              .maybeSingle();
 
             const typedOffer = offerData ? {
               ...offerData,
@@ -349,7 +349,7 @@ const ChatPage: React.FC = () => {
         .select('id')
         .eq('user_id', currentUser.id)
         .eq('status', 'open')
-        .single();
+        .maybeSingle();
 
       if (existingChat) {
         setSupportChatId(existingChat.id);
@@ -357,16 +357,24 @@ const ChatPage: React.FC = () => {
         return;
       }
 
+      // Prepare insert data based on user_type
+      const insertData: any = {
+        user_id: currentUser.id,
+        user_type: userProfile.user_type, // must be 'client' or 'freelancer'
+        subject: 'General Support',
+        status: 'open',
+      };
+      if (userProfile.user_type === 'client') {
+        insertData.client_id = currentUser.id;
+      } else if (userProfile.user_type === 'freelancer') {
+        insertData.freelancer_id = currentUser.id;
+      }
+
       const { data: supportChat, error } = await supabase
         .from('support_chats')
-        .insert([{
-          user_id: currentUser.id,
-          user_type: userProfile.user_type,
-          subject: 'General Support',
-          status: 'open'
-        }])
+        .insert([insertData])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -485,7 +493,7 @@ const ChatPage: React.FC = () => {
           attachment_url: attachmentUrl,
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -562,7 +570,7 @@ const ChatPage: React.FC = () => {
           status: 'pending'
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -608,7 +616,7 @@ const ChatPage: React.FC = () => {
         .update({ status: 'accepted' })
         .eq('id', offerId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -661,7 +669,7 @@ const ChatPage: React.FC = () => {
         .update({ status: 'declined' })
         .eq('id', offerId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

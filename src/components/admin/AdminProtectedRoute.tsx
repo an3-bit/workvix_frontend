@@ -32,7 +32,7 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
           .from('support_users' as any)
           .select('email')
           .eq('email', user.email)
-          .single();
+          .maybeSingle();
 
         if (adminCheckError || !adminUser) {
           console.log('User is not an admin, redirecting to admin login.');

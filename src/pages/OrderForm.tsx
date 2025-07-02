@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, DollarSign, User, FileText, Check, X } from 'lucide-react';
@@ -61,7 +60,7 @@ const OrderForm: React.FC = () => {
         .from('profiles')
         .select('user_type')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       setUserRole(profileData?.user_type as 'client' | 'freelancer');
 
@@ -83,7 +82,7 @@ const OrderForm: React.FC = () => {
           )
         `)
         .eq('id', bidId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -92,7 +91,7 @@ const OrderForm: React.FC = () => {
         .from('clients')
         .select('first_name, last_name, email')
         .eq('id', bidData.job.client_id)
-        .single();
+        .maybeSingle();
 
       setOrderDetails({
         bid: bidData,

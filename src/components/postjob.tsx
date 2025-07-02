@@ -75,7 +75,7 @@ const PostJobForm: React.FC = () => {
           .from('profiles')
           .select('email, first_name, last_name')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileData && !profileError) {
           setFormData(prev => ({
@@ -194,7 +194,7 @@ const PostJobForm: React.FC = () => {
         attachment_url: attachmentUrl,
       }])
       .select()
-      .single();
+      .maybeSingle();
 
     if (jobError) throw jobError;
 
@@ -389,7 +389,7 @@ const PostJobForm: React.FC = () => {
             attachment_url: attachmentUrl,
           }])
           .select()
-          .single();
+          .maybeSingle();
 
         if (jobError) throw jobError;
 

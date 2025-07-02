@@ -43,7 +43,7 @@ const SignIn = () => {
             .from('support_users')
             .select('email')
             .eq('email', user.email)
-            .single();
+            .maybeSingle();
 
           if (adminCheckError && adminCheckError.code !== 'PGRST116') {
             console.error('Error checking admin status:', adminCheckError.message);
@@ -58,7 +58,7 @@ const SignIn = () => {
             .from('profiles')
             .select('user_type')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
           if (profileError) {
             console.error("Error fetching profile:", profileError);
@@ -112,7 +112,7 @@ const SignIn = () => {
         .from('support_users')
         .select('email')
         .eq('email', loggedInUser.email)
-        .single();
+        .maybeSingle();
 
       if (adminCheckError && adminCheckError.code !== 'PGRST116') {
         console.error('Error checking admin status from support_users:', adminCheckError.message);
@@ -131,7 +131,7 @@ const SignIn = () => {
         .from('profiles')
         .select('user_type')
         .eq('id', loggedInUser.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);

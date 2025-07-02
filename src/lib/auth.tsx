@@ -155,7 +155,7 @@ export const getUserRole = async (userId: string): Promise<'client' | 'freelance
       .from('profiles')
       .select('user_type')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileData?.user_type) {
       return profileData.user_type as 'client' | 'freelancer';
@@ -163,8 +163,8 @@ export const getUserRole = async (userId: string): Promise<'client' | 'freelance
 
     // Fallback: Check both role tables in parallel
     const [clientCheck, freelancerCheck] = await Promise.all([
-      supabase.from('clients').select('id').eq('id', userId).single(),
-      supabase.from('freelancers').select('id').eq('id', userId).single()
+      supabase.from('clients').select('id').eq('id', userId).maybeSingle(),
+      supabase.from('freelancers').select('id').eq('id', userId).maybeSingle()
     ]);
 
     if (clientCheck.data) return 'client';
@@ -209,7 +209,7 @@ export class JobService {
         .from('profiles')
         .select('id')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (profileCheckError && profileCheckError.code === 'PGRST116') {
         // Profile doesn't exist, create it
@@ -225,7 +225,7 @@ export class JobService {
             user_type: session.user.user_metadata?.user_type || 'client'
           })
           .select()
-          .single()
+          .maybeSingle()
 
         if (createProfileError) {
           console.error('Error creating profile:', createProfileError)
@@ -258,7 +258,7 @@ export class JobService {
           status: 'open'
         })
         .select()
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error('Error creating job:', error)
@@ -311,7 +311,7 @@ export class JobService {
           client_id: session.user.id
         }])
         .select()
-        .single()
+        .maybeSingle()
 
       if (error) {
         // More specific error handling
@@ -430,7 +430,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('id, first_name, last_name, email, avatar, phone')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       if (profileData) {
         setProfile({
           id: profileData.id,

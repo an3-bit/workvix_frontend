@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +28,7 @@ const Dashboard = () => {
           .from('profiles')
           .select('user_type')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileData?.user_type) {
           console.log('User role from profiles:', profileData.user_type);
@@ -40,8 +39,8 @@ const Dashboard = () => {
 
         // Fallback: Check both role tables in parallel
         const [clientCheck, freelancerCheck] = await Promise.all([
-          supabase.from('clients').select('id').eq('id', session.user.id).single(),
-          supabase.from('freelancers').select('id').eq('id', session.user.id).single()
+          supabase.from('clients').select('id').eq('id', session.user.id).maybeSingle(),
+          supabase.from('freelancers').select('id').eq('id', session.user.id).maybeSingle()
         ]);
 
         if (clientCheck.data) {

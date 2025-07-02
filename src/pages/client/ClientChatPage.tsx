@@ -213,19 +213,19 @@ const ClientChatPage: React.FC = () => {
               .from('jobs')
               .select('title, budget, category')
               .eq('id', chat.job_id)
-              .single();
+              .maybeSingle();
 
             const { data: freelancerData } = await supabase
               .from('profiles') // Assuming a 'profiles' table for both client/freelancer details
               .select('id, first_name, last_name, email')
               .eq('id', chat.freelancer_id)
-              .single();
+              .maybeSingle();
 
             const { data: clientData } = await supabase
               .from('profiles') // Assuming a 'profiles' table
               .select('id, first_name, last_name, email')
               .eq('id', chat.client_id)
-              .single();
+              .maybeSingle();
 
             const { data: messages } = await supabase
               .from('messages')
@@ -421,7 +421,7 @@ setOrders(clientOrders);
           attachment_url: attachmentUrl,
         }])
         .select()
-        .single();
+        .maybeSingle();
       if (error) throw error;
       if (message) {
         setSelectedChat(prev => prev ? {
@@ -483,7 +483,7 @@ setOrders(clientOrders);
           status: 'pending'
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -548,7 +548,7 @@ setOrders(clientOrders);
         })
         .eq('id', offerId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

@@ -56,6 +56,7 @@ const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
 const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
 const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
 const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
+const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
 
 const App = () => (
   <ThemeProvider>
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/join/:role" element={<Join />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
               <Route path="/bids" element={<FreelancerBidsPage />} />
               <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
               <Route path="/checkout/:bidId?" element={<CheckoutPage />} />

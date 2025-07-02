@@ -48,22 +48,31 @@ const ManageFreelancers: React.FC = () => {
     skills: '', // Will handle as comma-separated string for input
   });
 
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  const [total, setTotal] = useState(0);
+
   useEffect(() => {
     fetchFreelancers();
-  }, []);
+  }, [page]);
 
   const fetchFreelancers = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('user_type', 'freelancer')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setFreelancers(data as FreelancerProfile[]);
+      setTotal(count || 0);
     } catch (err: any) {
       console.error('Error fetching freelancers:', err.message);
       setError('Failed to fetch freelancers: ' + err.message);
@@ -231,6 +240,17 @@ const ManageFreelancers: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {freelancers.length > 0 && (
+            <div className="flex justify-between items-center mt-4">
+              <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                Previous
+              </Button>
+              <span>Page {page} of {Math.ceil(total / pageSize) || 1}</span>
+              <Button onClick={() => setPage((p) => (p * pageSize < total ? p + 1 : p))} disabled={page * pageSize >= total}>
+                Next
+              </Button>
             </div>
           )}
         </CardContent>

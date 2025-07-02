@@ -102,7 +102,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         .from('profiles')
         .select('first_name, last_name, email, avatar, phone')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       if (profileData) {
         setProfile({
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
