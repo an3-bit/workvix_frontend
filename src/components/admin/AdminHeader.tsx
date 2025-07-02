@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/lib/theme';
+import { useUserProfile } from '../../lib/auth';
 
 interface AdminHeaderProps {
   adminEmail: string | null;
@@ -27,12 +28,18 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
-  const [admin, setAdmin] = useState<{ name: string; avatar: string | null } | null>(null);
+  const { profile: admin } = useUserProfile();
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
   const [search, setSearch] = useState('');
   const [searching, setSearching] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  // Fallbacks for avatar and name
+  const avatar = admin?.avatar || '';
+  const name = admin?.firstName && admin?.lastName
+    ? `${admin.firstName} ${admin.lastName}`
+    : admin?.email || 'Admin';
 
   React.useEffect(() => {
     if (showSearch && searchInputRef.current) {
@@ -41,41 +48,21 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
   }, [showSearch]);
 
   useEffect(() => {
+    if (!admin?.id) return;
     const fetchProfileAndNotifications = async () => {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      // Fetch admin profile from 'profiles' or 'support_users'
-      let name = user.user_metadata?.full_name || user.email || 'Admin';
-      let avatar = user.user_metadata?.avatar_url || null;
-      // Try to get more profile info from 'profiles' table
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, avatar')
-        .eq('id', user.id)
-        .single();
-      if (profile) {
-        name = (profile.first_name && profile.last_name)
-          ? `${profile.first_name} ${profile.last_name}`
-          : profile.first_name || name;
-        avatar = profile.avatar || avatar;
-      }
-      setAdmin({ name, avatar });
-      // Fetch notifications count (replace with real query if available)
       const { data: notifications } = await supabase
         .from('notifications')
         .select('id, read')
-        .eq('user_id', user.id);
+        .eq('id', admin.id);
       setNotificationCount(notifications ? notifications.filter((n: any) => !n.read).length : 0);
-      // Fetch messages count (replace with real query if available)
       const { data: messages } = await supabase
         .from('messages')
         .select('id, read')
-        .eq('receiver_id', user.id);
+        .eq('id', admin.id);
       setMessageCount(messages ? messages.filter((m: any) => !m.read).length : 0);
     };
     fetchProfileAndNotifications();
-  }, []);
+  }, [admin?.id]);
 
   const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && search.trim()) {
@@ -148,39 +135,17 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
           <DropdownMenuTrigger asChild>
             <button aria-label="Profile" className="ml-2">
               <Avatar className="h-8 w-8 border-2 border-border shadow-sm">
-                {admin && admin.avatar ? (
-                  <img src={admin.avatar} alt={admin.name} />
+                {avatar ? (
+                  <img src={avatar} alt={name} />
                 ) : (
-                  <AvatarFallback>{(() => {
-                    if (admin && admin.name && admin.name.trim() && admin.name.split(' ').length > 1) {
-                      // Use first and last name initials
-                      return admin.name.split(' ').map(n => n[0] ? n[0][0] : '').join('').toUpperCase();
-                    } else if (admin && admin.name && admin.name.includes('@')) {
-                      // Extract initials from email
-                      const emailName = admin.name.split('@')[0];
-                      const parts = emailName.match(/[a-zA-Z]+/g);
-                      if (parts && parts.length > 1) {
-                        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
-                      } else if (emailName.length > 1) {
-                        return `${emailName[0]}${emailName[emailName.length - 1]}`.toUpperCase();
-                      } else {
-                        return emailName[0].toUpperCase();
-                      }
-                    } else if (admin && adminEmail && adminEmail.includes('@')) {
-                      // Fallback to adminEmail
-                      const emailName = adminEmail.split('@')[0];
-                      const parts = emailName.match(/[a-zA-Z]+/g);
-                      if (parts && parts.length > 1) {
-                        return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
-                      } else if (emailName.length > 1) {
-                        return `${emailName[0]}${emailName[emailName.length - 1]}`.toUpperCase();
-                      } else {
-                        return emailName[0].toUpperCase();
-                      }
-                    } else {
-                      return 'A';
-                    }
-                  })()}</AvatarFallback>
+                  <AvatarFallback>
+                    {name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </AvatarFallback>
                 )}
               </Avatar>
             </button>

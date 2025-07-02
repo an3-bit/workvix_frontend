@@ -28,7 +28,7 @@ const NotificationSystem = () => {
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', uid)
+      .eq('id', uid)
       .order('created_at', { ascending: false });
     if (!error) {
       setNotifications(data);
@@ -43,7 +43,7 @@ const NotificationSystem = () => {
         event: '*',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${uid}`
+        filter: `id=eq.${uid}`
       }, () => {
         fetchNotifications(uid);
       })
@@ -55,7 +55,7 @@ const NotificationSystem = () => {
     await supabase
       .from('notifications')
       .update({ read: true })
-      .eq('user_id', userId)
+      .eq('id', userId)
       .eq('read', false);
     fetchNotifications(userId);
   };

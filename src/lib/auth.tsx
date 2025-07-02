@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type AuthError = {
   message: string;
@@ -393,4 +394,64 @@ export class JobService {
       }
     }
   }
+}
+
+// Define the user profile type
+export type UserProfile = {
+  id?: string;
+  avatar?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  // Add any other fields you use
+};
+
+// Define the context type
+interface UserProfileContextType {
+  profile: UserProfile | null;
+  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+}
+
+const UserProfileContext = createContext<UserProfileContextType>({
+  profile: null,
+  setProfile: () => {},
+});
+
+export function UserProfileProvider({ children }: { children: ReactNode }) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    // Fetch the profile on mount
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, avatar, phone')
+        .eq('id', user.id)
+        .single();
+      if (profileData) {
+        setProfile({
+          id: profileData.id,
+          avatar: profileData.avatar,
+          firstName: profileData.first_name,
+          lastName: profileData.last_name,
+          email: profileData.email,
+          phone: profileData.phone,
+        });
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  return (
+    <UserProfileContext.Provider value={{ profile, setProfile }}>
+      {children}
+    </UserProfileContext.Provider>
+  );
+}
+
+export function useUserProfile() {
+  return useContext(UserProfileContext);
 }

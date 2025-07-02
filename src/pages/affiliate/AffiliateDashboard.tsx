@@ -179,7 +179,7 @@ const AffiliateDashboard: React.FC = () => {
         const { data: commissionsData, error: commErr } = await supabase
           .from('payments')
           .select('amount')
-          .eq('user_id', affiliateId)
+          .eq('id', affiliateId)
           .eq('type', 'commission')
           .eq('status', 'completed');
         if (commErr) throw commErr;

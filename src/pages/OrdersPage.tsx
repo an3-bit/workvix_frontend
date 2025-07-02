@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Package, DollarSign, Clock, User, MessageCircle, HelpCircle } from 'lucide-react';
@@ -195,7 +194,7 @@ const OrdersPage: React.FC = () => {
       const { data: existingChat } = await supabase
         .from('support_chats')
         .select('id')
-        .eq('user_id', currentUser.id)
+        .eq('id', currentUser.id)
         .eq('status', 'open')
         .single();
 
@@ -208,7 +207,7 @@ const OrdersPage: React.FC = () => {
       const { data: supportChat, error } = await supabase
         .from('support_chats')
         .insert([{
-          user_id: currentUser.id,
+          id: currentUser.id,
           user_type: userProfile.user_type,
           subject: 'Order Support',
           status: 'open'
