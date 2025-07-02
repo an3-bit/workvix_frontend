@@ -56,8 +56,12 @@ const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFr
 const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
 const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
 const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
+<<<<<<< HEAD
 const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
 const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
+=======
+const ServicesPage = lazy(() => import("./components/services"));
+>>>>>>> 5a4df94 (new service page and updates on services and hero section.)
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -78,8 +82,11 @@ const App = () => (
             <Route path="/join/:role" element={<Join />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<JobsPage />} />
+<<<<<<< HEAD
             <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
             <Route path="/bids" element={<FreelancerBidsPage />} />
+=======
+>>>>>>> 5a4df94 (new service page and updates on services and hero section.)
             <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
             <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
@@ -121,6 +128,7 @@ const App = () => (
            }
          />
 
+<<<<<<< HEAD
              <Route
                path="/chat-system"
                element={
@@ -141,6 +149,26 @@ const App = () => (
              <Route path="/profile" element={<ProfileSettings />} />
              <Route path="/client/payments" element={<Payments />} />
            </Routes>
+=======
+            <Route
+              path="/chat-system"
+              element={
+                <ChatSystem jobId={null} bidId={null} receiverId={null} />
+              }
+            />
+            <Route path="/affiliate/register" element={<AffiliateRegister />} />
+            <Route path="/affiliate" element={<AffiliateLayout active="" />}>
+              <Route path="dashboard" element={<AffiliateDashboard />} />
+              <Route path="clients" element={<AffiliateManageClients />} />
+              <Route path="freelancers" element={<AffiliateManageFreelancers />} />
+              <Route path="jobs" element={<AffiliateManageJobs />} />
+              <Route path="commissions" element={<AffiliateCommissionSummary />} />
+              <Route index element={<AffiliateDashboard />} />
+            </Route>
+            <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
+            <Route path="/services" element={<ServicesPage />} />
+          </Routes>
+>>>>>>> 5a4df94 (new service page and updates on services and hero section.)
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>

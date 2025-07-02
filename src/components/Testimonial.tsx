@@ -8,7 +8,7 @@ const testimonials = [
     role: "Founder, TechStart Solutions",
     company: "TechStart Solutions",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&h=150&q=80",
-    content: "WorkVix is the best platform for freelancers to find and work with top designers and developers. Their portfolio showcases their skills and expertise, and their reviews provide valuable insights into their work. I highly recommend WorkVix to anyone looking to find the perfect freelancer for their project.",
+    content: "WorkVix is the best platform for clients to find top freelance designers and developers. Their portfolio showcases their skills and expertise, and their reviews provide valuable insights into their work. I highly recommend WorkVix to anyone looking to find the perfect freelancer for their project.",
     rating: 5,
     project: "E-commerce Website Development"
   },
