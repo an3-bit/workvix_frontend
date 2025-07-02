@@ -55,6 +55,7 @@ const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFr
 const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
 const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
 const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
+const ServicesPage = lazy(() => import("./components/services"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -75,7 +76,6 @@ const App = () => (
             <Route path="/join/:role" element={<Join />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/bids" element={<FreelancerBidsPage />} />
             <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
             <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
@@ -133,6 +133,7 @@ const App = () => (
               <Route index element={<AffiliateDashboard />} />
             </Route>
             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
+            <Route path="/services" element={<ServicesPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

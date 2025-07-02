@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Star, User, Globe, Clock } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { ServicesGrid } from '@/components/services';
 
 const PremiumServices: React.FC = () => {
+  const [showServices, setShowServices] = useState(false);
+  const servicesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showServices && servicesRef.current) {
+      servicesRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [showServices]);
+
   const featuredTalents = [
     {
       name: 'Sophia Lee',
@@ -181,6 +191,12 @@ const PremiumServices: React.FC = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Connect with premium talent and take your business to the next level with workvix Premium.
           </p>
+          <button
+            className="h-14 px-8 text-lg rounded-full bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 mr-4"
+            onClick={() => setShowServices(true)}
+          >
+            Learn More Services
+          </button>
           <Link to="/contact-premium">
             <button className="h-14 px-8 text-lg rounded-full bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300">
               Get started
@@ -188,7 +204,14 @@ const PremiumServices: React.FC = () => {
           </Link>
         </div>
       </div>
-      {/* Footer */}
+      {/* Show services grid above the footer if showServices is true */}
+      {showServices && (
+        <div ref={servicesRef} className="bg-gray-50 py-16">
+          <div className="container mx-auto px-4">
+            <ServicesGrid />
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   );

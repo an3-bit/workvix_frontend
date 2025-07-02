@@ -398,13 +398,16 @@ const Navbar = () => {
   return (
     <>
       {/* Main Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrollPosition > 50 
-          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
-          : 'bg-white'
-      }`}>
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 pt-2 ${
+          scrollPosition > 50 
+            ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
+            : 'bg-white'
+        }`}
+        style={{ top: 'env(safe-area-inset-top, 0px)' }}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="flex items-center justify-between h-6 sm:h-8">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 group">
               <div className="text-2xl sm:text-3xl font-bold">
@@ -416,7 +419,6 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
-              {/* Explore Menu */}
               <div className="relative" ref={exploreMenuRef}>
                 <button
                   onMouseEnter={() => setIsExploreOpen(true)}
@@ -426,7 +428,6 @@ const Navbar = () => {
                   <span>Explore</span>
                   <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${isExploreOpen ? 'rotate-90' : ''}`} />
                 </button>
-                
                 {isExploreOpen && (
                   <div
                     onMouseEnter={() => setIsExploreOpen(true)}
@@ -438,8 +439,6 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
-
-              {/* Navigation Links */}
               <Link to="/join" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
                 Browse Jobs
               </Link>
@@ -500,167 +499,138 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        {isSearchOpen && (
-          <div className="border-t border-gray-100 bg-white/95 backdrop-blur-md">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <div className="relative max-w-2xl mx-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search for services, skills, or freelancers..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm sm:text-base"
-                />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-600">
-                  <X className="h-5 w-5" />
-                </button>
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            
+            {/* Menu Content */}
+            <div 
+              ref={mobileMenuRef}
+              className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl transform transition-transform duration-300"
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                  <div className="text-xl font-bold">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500">
+                      WorkVix
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+
+                {/* Menu Items */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Navigation Links */}
+                  <div className="space-y-4">
+                    <Link 
+                      to="/jobs" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
+                    >
+                      Browse Jobs
+                    </Link>
+                    <Link 
+                      to="/explore-skills" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
+                    >
+                      Explore Skills
+                    </Link>
+                    <Link 
+                      to="/blog" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
+                    >
+                      Blog
+                    </Link>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-gray-100" />
+
+                  {/* Auth Section */}
+                  <div className="space-y-4">
+                    <Link 
+                      to="/signin" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block w-full text-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:border-green-600 hover:text-green-600 transition-all duration-200 font-medium"
+                    >
+                      Sign In
+                    </Link>
+                    <Link 
+                      to="/join" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block w-full text-center py-3 px-4 bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
-      </nav>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          
-          {/* Menu Content */}
-          <div 
-            ref={mobileMenuRef}
-            className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl transform transition-transform duration-300"
+        {/* Spacer for fixed navbar */}
+        <div className="h-6 sm:h-8" />
+
+        {/* Secondary Navigation Bar with Mega Menus */}
+        {showSecondaryNav && (
+          <nav 
+            className="w-full bg-white border-b border-gray-100 shadow-sm z-40 sticky top-16 sm:top-20"
+            onMouseLeave={handleMouseLeaveSecondaryNav}
           >
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <div className="text-xl font-bold">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500">
-                    WorkVix
-                  </span>
-                </div>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              {/* Menu Items */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                  />
-                </div>
-
-                {/* Navigation Links */}
-                <div className="space-y-4">
-                  <Link 
-                    to="/jobs" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
-                  >
-                    Browse Jobs
-                  </Link>
-                  <Link 
-                    to="/explore-skills" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
-                  >
-                    Explore Skills
-                  </Link>
-                  <Link 
-                    to="/blog" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
-                  >
-                    Blog
-                  </Link>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-gray-100" />
-
-                {/* Auth Section */}
-                <div className="space-y-4">
-                  <Link 
-                    to="/signin" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:border-green-600 hover:text-green-600 transition-all duration-200 font-medium"
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    to="/join" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center py-3 px-4 bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Spacer for fixed navbar */}
-      <div className="h-16 sm:h-20" />
-
-      {/* Secondary Navigation Bar with Mega Menus */}
-      {showSecondaryNav && (
-        <nav 
-          className="w-full bg-white border-b border-gray-100 shadow-sm z-40 sticky top-16 sm:top-20"
-          onMouseLeave={handleMouseLeaveSecondaryNav}
-        >
-          <div
-            ref={secondaryNavRef}
-            className="relative flex overflow-x-auto no-scrollbar whitespace-nowrap px-2 sm:px-8 py-2 gap-2 sm:gap-4 lg:justify-center"
-          >
-            {/* Trending (no dropdown) */}
-            <div className="relative">
-              <button className="flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition focus:outline-none">
-                <span className="mr-1">Trending</span> <span role="img" aria-label="fire">🔥</span>
-              </button>
-            </div>
-
-            {/* Iterate through mainCategories to create secondary nav links */}
-            {mainCategories.map((category) => (
-              <div key={category.name} className="relative">
-                <button
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none 
-                    ${activeCategory === category.name ? 'bg-green-100 text-green-700' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'}`}
-                  onMouseEnter={() => handleMouseEnterCategory(category.name)}
-                >
-                  {category.name}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Mega Menu Content - This will appear based on activeCategory */}
-          {activeCategory && (
             <div
-              className="absolute left-0 right-0 top-full bg-white border-t border-gray-200 shadow-lg py-6"
-              onMouseEnter={handleMouseEnterMegaMenu}
-              onMouseLeave={handleMouseLeaveSecondaryNav}
+              ref={secondaryNavRef}
+              className="relative flex overflow-x-auto no-scrollbar whitespace-nowrap px-2 sm:px-8 py-2 gap-2 sm:gap-4 lg:justify-center"
             >
-              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <MegaMenuContent sections={findCategorySections(activeCategory)} />
+              {/* Trending (no dropdown) */}
+              <div className="relative">
+                <button className="flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition focus:outline-none">
+                  <span className="mr-1">Trending</span> <span role="img" aria-label="fire">🔥</span>
+                </button>
               </div>
+
+              {/* Iterate through mainCategories to create secondary nav links */}
+              {mainCategories.map((category) => (
+                <div key={category.name} className="relative">
+                  <button
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none 
+                      ${activeCategory === category.name ? 'bg-green-100 text-green-700' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'}`}
+                    onMouseEnter={() => handleMouseEnterCategory(category.name)}
+                  >
+                    {category.name}
+                  </button>
+                </div>
+              ))}
             </div>
-          )}
-        </nav>
-      )}
+
+            {/* Mega Menu Content - This will appear based on activeCategory */}
+            {activeCategory && (
+              <div
+                className="absolute left-0 right-0 top-full bg-white border-t border-gray-200 shadow-lg py-6"
+                onMouseEnter={handleMouseEnterMegaMenu}
+                onMouseLeave={handleMouseLeaveSecondaryNav}
+              >
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                  <MegaMenuContent sections={findCategorySections(activeCategory)} />
+                </div>
+              </div>
+            )}
+          </nav>
+        )}
+      </nav>
     </>
   );
 };

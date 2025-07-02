@@ -63,13 +63,6 @@ const Featured = () => {
               Handpicked services from our top-rated freelancers
             </p>
           </div>
-          <Link 
-            to="/jobs"
-            className="inline-flex items-center text-green-600 hover:text-green-700 font-medium transition-colors duration-200"
-          >
-            <span className="text-sm sm:text-base">See All Services</span>
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Link>
         </div>
         
         {/* Services Grid */}
@@ -155,7 +148,7 @@ const Featured = () => {
         {/* Load More Button */}
         <div className="text-center mt-12 lg:mt-16">
           <Link 
-            to="/jobs"
+            to="/services"
             className="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 
                      bg-gradient-to-r from-green-600 to-orange-500 
                      hover:from-green-700 hover:to-orange-600 

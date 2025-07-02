@@ -11,7 +11,7 @@ const Hero: React.FC = () => {
   const success = useCountUp({ end: 98, duration: 2000, start: 0, loop: true });
 
   return (
-    <section id="hero-section" className="relative min-h-screen flex items-center justify-center bg-transparent overflow-hidden">
+    <section id="hero-section" className="relative min-h-screen flex items-center justify-center bg-transparent overflow-hidden pt-20">
       {/* Background Image */}
       <img 
         src="https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg" 
