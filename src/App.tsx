@@ -61,7 +61,11 @@ const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
 const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
 =======
 const ServicesPage = lazy(() => import("./components/services"));
+<<<<<<< HEAD
 >>>>>>> 5a4df94 (new service page and updates on services and hero section.)
+=======
+const Projects = lazy(() => import("./pages/Projects"));
+>>>>>>> 29548a0 (New updates on projects page)
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -167,6 +171,7 @@ const App = () => (
             </Route>
             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
             <Route path="/services" element={<ServicesPage />} />
+            <Route path="/projects" element={<Projects />} />
           </Routes>
 >>>>>>> 5a4df94 (new service page and updates on services and hero section.)
         </Suspense>

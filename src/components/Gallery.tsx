@@ -200,7 +200,7 @@ const Gallery = () => {
         {/* CTA */}
         <div className="text-center mt-12 lg:mt-16">
           <Link 
-            to="/jobs"
+            to="/projects"
             className="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             <span className="text-sm sm:text-base">Explore More Projects</span>
