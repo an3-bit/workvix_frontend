@@ -146,6 +146,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         .maybeSingle();
 =======
         .single();
@@ -154,11 +155,19 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         .maybeSingle();
 >>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
 =======
+=======
+>>>>>>> 9b83c4a (Refactor database queries to use maybeSingle() for safer data retrieval)
         .maybeSingle();
 =======
         .single();
 >>>>>>> 089fd42 (admin dashboard)
+<<<<<<< HEAD
 >>>>>>> e25df71 (admin dashboard)
+=======
+=======
+        .maybeSingle();
+>>>>>>> 3c73a1e (Refactor database queries to use maybeSingle() for safer data retrieval)
+>>>>>>> 9b83c4a (Refactor database queries to use maybeSingle() for safer data retrieval)
       if (profileData) {
         setProfile({
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),

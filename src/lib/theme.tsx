@@ -34,10 +34,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .select('theme')
           .eq('id', user.id)
 <<<<<<< HEAD
+<<<<<<< HEAD
           .maybeSingle();
 =======
           .single();
 >>>>>>> e25df71 (admin dashboard)
+=======
+          .maybeSingle();
+>>>>>>> 9b83c4a (Refactor database queries to use maybeSingle() for safer data retrieval)
         if (profile && profile.theme) {
           setThemeState(profile.theme);
           localStorage.setItem('theme', profile.theme);
