@@ -29,7 +29,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .from('profiles')
           .select('theme')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
         if (profile && profile.theme) {
           setThemeState(profile.theme);
           localStorage.setItem('theme', profile.theme);

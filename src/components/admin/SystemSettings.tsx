@@ -134,10 +134,14 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         .select('first_name, last_name, email, avatar, phone')
         .eq('id', user.id)
 <<<<<<< HEAD
+<<<<<<< HEAD
         .maybeSingle();
 =======
         .single();
 >>>>>>> 7438431 (admin dashboard)
+=======
+        .maybeSingle();
+>>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
       if (profileData) {
         setProfile({
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),

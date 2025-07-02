@@ -20,6 +20,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminLogin from "./components/admin/AdminLogin";
 import { AffiliateLayout } from "./pages/affiliate/AffiliateDashboard";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import ProfileSettings from './pages/client/ProfileSettings';
 import Payments from './pages/client/Payments';
 =======
@@ -29,6 +30,9 @@ import AuthGuard from "./components/AuthGuard";
 import { ThemeProvider } from '@/lib/theme';
 >>>>>>> 089fd42 (admin dashboard)
 >>>>>>> 7438431 (admin dashboard)
+=======
+import AuthGuard from "./components/AuthGuard";
+>>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
 
 const queryClient = new QueryClient();
 
