@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Send, HelpCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,10 +17,11 @@ interface SupportMessage {
 
 interface SupportChatProps {
   chatId: string;
+  order?: any;
   onClose: () => void;
 }
 
-const SupportChat: React.FC<SupportChatProps> = ({ chatId, onClose }) => {
+const SupportChat: React.FC<SupportChatProps> = ({ chatId, order, onClose }) => {
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,11 +29,17 @@ const SupportChat: React.FC<SupportChatProps> = ({ chatId, onClose }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userType, setUserType] = useState<'client' | 'freelancer' | null>(null);
   const { toast } = useToast();
+  const [resolutionNote, setResolutionNote] = useState('');
+  const [isResolving, setIsResolving] = useState(false);
+  const [orderStatus, setOrderStatus] = useState(order?.status || '');
+  const [orderResolution, setOrderResolution] = useState(order?.resolution_note || '');
 
   useEffect(() => {
     initializeData();
     setupRealtimeSubscription();
-  }, [chatId]);
+    setOrderStatus(order?.status || '');
+    setOrderResolution(order?.resolution_note || '');
+  }, [chatId, order]);
 
   const initializeData = async () => {
     try {
@@ -140,7 +146,7 @@ const SupportChat: React.FC<SupportChatProps> = ({ chatId, onClose }) => {
           content: newMessage.trim()
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -173,86 +179,64 @@ const SupportChat: React.FC<SupportChatProps> = ({ chatId, onClose }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full max-w-full sm:max-w-lg mx-auto bg-white rounded-lg shadow-lg sm:my-8 sm:border sm:border-gray-200" style={{ minHeight: '100vh', maxHeight: '100vh' }}>
       {/* Support Chat Header */}
-      <div className="border-b border-gray-200 p-4 flex items-center justify-between bg-blue-50">
+      <div className="border-b border-gray-200 p-4 flex items-center justify-between bg-blue-50 sticky top-0 z-10">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
             <HelpCircle className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900">Support Chat</h2>
-            <p className="text-sm text-gray-600">Get help from our support team</p>
+            <h2 className="font-semibold text-gray-900 text-base sm:text-lg">Support Chat</h2>
+            <p className="text-xs sm:text-sm text-gray-600">Get help from our support team</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
+        <Button variant="ghost" size="sm" onClick={onClose} className="p-2">
+          <X className="h-5 w-5" />
         </Button>
       </div>
 
+      {/* Order Details */}
+      {order && (
+        <div className="bg-gray-50 px-3 py-2 text-xs sm:text-sm text-gray-700 border-b border-gray-200">
+          <div><span className="font-semibold">Order:</span> {order.id}</div>
+          <div><span className="font-semibold">Status:</span> {order.status}</div>
+        </div>
+      )}
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-2 py-2 sm:px-4 sm:py-4" style={{ minHeight: 0 }}>
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-center">
-              <HelpCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="mb-2">Welcome to Support</p>
-              <p className="text-sm">How can we help you today?</p>
-            </div>
-          </div>
+          <div className="text-center text-gray-400 py-8">No messages yet.</div>
         ) : (
-          messages.map((message) => (
-            <div 
-              key={message.id} 
-              className={`flex ${message.sender_type === 'admin' ? 'justify-start' : 'justify-end'}`}
-            >
-              <div 
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.sender_type === 'admin'
-                    ? 'bg-white border border-gray-200' 
-                    : 'bg-blue-600 text-white'
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-                <p className={`text-xs mt-1 ${
-                  message.sender_type === 'admin' 
-                    ? 'text-gray-500' 
-                    : 'text-blue-100'
-                }`}>
-                  {new Date(message.created_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </p>
+          messages.map((msg) => (
+            <div key={msg.id} className={`mb-2 flex ${msg.sender_type === userType ? 'justify-end' : 'justify-start'}`}>
+              <div className={`rounded-lg px-3 py-2 max-w-[80vw] sm:max-w-xs text-sm ${msg.sender_type === userType ? 'bg-blue-100 text-blue-900' : 'bg-gray-100 text-gray-900'}`}>
+                {msg.content}
+                <div className="text-[10px] text-gray-400 mt-1 text-right">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Message Input */}
-      <div className="border-t border-gray-200 p-4 bg-white">
-        <div className="flex gap-2">
-          <Textarea
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message to support..."
-            className="flex-1 min-h-[60px] resize-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button 
-            onClick={handleSendMessage}
-            disabled={sending || !newMessage.trim()}
-            className="h-[60px]"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Input Area */}
+      <div className="sticky bottom-0 bg-white p-2 sm:p-4 border-t border-gray-200 flex items-center gap-2 z-10">
+        <Textarea
+          className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={1}
+          value={newMessage}
+          onChange={e => setNewMessage(e.target.value)}
+          placeholder="Type your message..."
+          style={{ minHeight: 36, maxHeight: 80 }}
+        />
+        <Button
+          onClick={handleSendMessage}
+          disabled={sending || !newMessage.trim()}
+          className="p-3 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center"
+        >
+          <Send className="h-5 w-5" />
+        </Button>
       </div>
     </div>
   );

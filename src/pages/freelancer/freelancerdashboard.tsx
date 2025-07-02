@@ -103,7 +103,7 @@ const FreelancerDashboard = () => {
         .from('freelancers')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         const profileCompleted = !!(

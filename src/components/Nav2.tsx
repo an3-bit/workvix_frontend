@@ -61,7 +61,7 @@ const Nav2 = () => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       setUserProfile(profile);
     } catch (error) {
       console.error('Error fetching user profile:', error);

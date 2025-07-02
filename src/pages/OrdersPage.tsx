@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Package, DollarSign, Clock, User, MessageCircle, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
-import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 
 interface Order {
@@ -37,6 +36,8 @@ interface Order {
   } | null;
 }
 
+const Footer = React.lazy(() => import('@/components/Footer'));
+
 const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -65,7 +66,7 @@ const OrdersPage: React.FC = () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       setUserProfile(profile);
       
@@ -91,10 +92,11 @@ const OrdersPage: React.FC = () => {
           *,
           bid:bids (
             *,
-            freelancer:profiles!bids_freelancer_id_fkey (
+            freelancer:freelancers (
+              id,
+              email,
               first_name,
-              last_name,
-              email
+              last_name
             ),
             job:jobs (
               title,
@@ -113,7 +115,7 @@ const OrdersPage: React.FC = () => {
         .from('profiles')
         .select('user_type')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       let filteredOrders = ordersData || [];
 
@@ -129,18 +131,7 @@ const OrdersPage: React.FC = () => {
         ) || [];
       }
 
-      // Transform the data to match our interface
-      const transformedOrders = filteredOrders.map(order => ({
-        ...order,
-        bid: order.bid ? {
-          ...order.bid,
-          freelancer: Array.isArray(order.bid.freelancer) 
-            ? order.bid.freelancer[0] || null 
-            : order.bid.freelancer
-        } : null
-      })) as Order[];
-
-      setOrders(transformedOrders);
+      setOrders(filteredOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -194,26 +185,34 @@ const OrdersPage: React.FC = () => {
       const { data: existingChat } = await supabase
         .from('support_chats')
         .select('id')
-        .eq('id', currentUser.id)
+        .eq('user_id', currentUser.id)
         .eq('status', 'open')
-        .single();
+        .maybeSingle();
 
       if (existingChat) {
         navigate(`/chat?support_chat=${existingChat.id}`);
         return;
       }
 
+      // Prepare insert data based on user_type
+      const insertData: any = {
+        user_id: currentUser.id,
+        user_type: userProfile.user_type,
+        subject: 'Order Support',
+        status: 'open',
+      };
+      if (userProfile.user_type === 'client') {
+        insertData.client_id = currentUser.id;
+      } else if (userProfile.user_type === 'freelancer') {
+        insertData.freelancer_id = currentUser.id;
+      }
+
       // Create new support chat
       const { data: supportChat, error } = await supabase
         .from('support_chats')
-        .insert([{
-          id: currentUser.id,
-          user_type: userProfile.user_type,
-          subject: 'Order Support',
-          status: 'open'
-        }])
+        .insert([insertData])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -382,7 +381,9 @@ const OrdersPage: React.FC = () => {
         </div>
       </div>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };

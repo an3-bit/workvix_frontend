@@ -33,7 +33,7 @@ const AdminLogin: React.FC = () => {
               .from('support_users' as any)
               .select('email')
               .eq('email', email)
-              .single();
+              .maybeSingle();
 
       if (adminError || !adminUser) {
         // If not an admin, log them out immediately

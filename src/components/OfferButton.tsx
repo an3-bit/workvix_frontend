@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { DollarSign, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,7 +60,7 @@ export const OfferButton = ({
           status: 'pending'
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

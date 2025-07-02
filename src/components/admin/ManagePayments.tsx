@@ -238,7 +238,7 @@ const ManagePayments: React.FC = () => {
         .from('payments')
         .select(`*, user_profile:user_id(email), job_title:related_job_id(title)`)
         .eq('id', paymentId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       setPaymentToView(data as Payment);
     } catch (err: unknown) {
