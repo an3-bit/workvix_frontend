@@ -418,11 +418,9 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              <div className="relative" ref={exploreMenuRef}>
+            <div className="hidden lg:flex items-center h-full space-x-10">
+              <div className="relative" ref={exploreMenuRef} onMouseEnter={() => setIsExploreOpen(true)} onMouseLeave={() => setIsExploreOpen(false)}>
                 <button
-                  onMouseEnter={() => setIsExploreOpen(true)}
-                  onMouseLeave={() => setIsExploreOpen(false)}
                   className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium"
                 >
                   <span>Explore</span>
@@ -430,17 +428,20 @@ const Navbar = () => {
                 </button>
                 {isExploreOpen && (
                   <div
-                    onMouseEnter={() => setIsExploreOpen(true)}
-                    onMouseLeave={() => setIsExploreOpen(false)}
                     className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 p-2"
                   >
                     <Link to="/blog" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Blog</Link>
-                    <Link to="/explore-skills" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Explore Skills</Link>
+                    <span className="block px-4 py-2 text-gray-400 cursor-not-allowed rounded" tabIndex={-1} aria-disabled="true">
+                      Explore Skills
+                    </span>
                   </div>
                 )}
               </div>
-              <Link to="/join" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
-                Browse Jobs
+              <Link to="/jobs" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
+                Jobs
+              </Link>
+              <Link to="/post-job" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
+                Post a Job
               </Link>
               <Link to="/premium-services" className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500 font-medium transition-colors duration-200">
                 WorkVix Pro
@@ -452,29 +453,6 @@ const Navbar = () => {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center space-x-4">
-              {/* Search Bar */}
-              <form
-                className="flex max-w-xs w-full"
-                style={{ minWidth: 0 }}
-                onSubmit={e => {
-                  e.preventDefault();
-                  if (searchQuery.trim()) {
-                    navigate(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
-                  }
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder="Search for services..."
-                  className="search-input rounded-l-md border-r-0"
-                  style={{ minWidth: 0 }}
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-                <button type="submit" className="search-button rounded-l-none rounded-r-md flex items-center justify-center">
-                  <Search className="h-4 w-4" />
-                </button>
-              </form>
               {/* Auth Buttons */}
               <Link to="/signin">
                 <Button className="bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -538,14 +516,14 @@ const Navbar = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
                     >
-                      Browse Jobs
+                      Jobs
                     </Link>
                     <Link 
-                      to="/explore-skills" 
+                      to="/post-job" 
                       onClick={() => setIsMenuOpen(false)}
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
+                      className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
                     >
-                      Explore Skills
+                      Post a Job
                     </Link>
                     <Link 
                       to="/blog" 
