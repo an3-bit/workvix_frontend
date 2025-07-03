@@ -13,8 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { useTheme } from '@/lib/theme';
-import { useUserProfile } from '../../lib/auth';
 
 interface AdminHeaderProps {
   adminEmail: string | null;
@@ -33,7 +31,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
   const [messageCount, setMessageCount] = useState(0);
   const [search, setSearch] = useState('');
   const [searching, setSearching] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
   // Fallbacks for avatar and name
   const avatar = admin?.avatar || '';
@@ -121,14 +118,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
           {messageCount > 0 && (
             <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-xs text-white rounded-full flex items-center justify-center border-2 border-white">{messageCount}</span>
           )}
-        </button>
-        {/* Theme Toggle */}
-        <button
-          aria-label="Toggle dark/light mode"
-          className="p-2 rounded-full hover:bg-muted transition"
-          onClick={toggleTheme}
-        >
-          {theme === 'dark' ? <Sun className="h-6 w-6 text-yellow-400" /> : <MoonStar className="h-6 w-6 text-gray-700" />}
         </button>
         {/* Profile Dropdown */}
         <DropdownMenu>
