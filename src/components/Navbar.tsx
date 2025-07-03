@@ -416,11 +416,9 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              <div className="relative" ref={exploreMenuRef}>
+            <div className="hidden lg:flex items-center h-full space-x-10">
+              <div className="relative" ref={exploreMenuRef} onMouseEnter={() => setIsExploreOpen(true)} onMouseLeave={() => setIsExploreOpen(false)}>
                 <button
-                  onMouseEnter={() => setIsExploreOpen(true)}
-                  onMouseLeave={() => setIsExploreOpen(false)}
                   className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium"
                 >
                   <span>Explore</span>
@@ -428,17 +426,20 @@ const Navbar = () => {
                 </button>
                 {isExploreOpen && (
                   <div
-                    onMouseEnter={() => setIsExploreOpen(true)}
-                    onMouseLeave={() => setIsExploreOpen(false)}
                     className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 p-2"
                   >
                     <Link to="/blog" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Blog</Link>
-                    <Link to="/explore-skills" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Explore Skills</Link>
+                    <span className="block px-4 py-2 text-gray-400 cursor-not-allowed rounded" tabIndex={-1} aria-disabled="true">
+                      Explore Skills
+                    </span>
                   </div>
                 )}
               </div>
-              <Link to="/join" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
-                Browse Jobs
+              <Link to="/jobs" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
+                Jobs
+              </Link>
+              <Link to="/post-job" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
+                Post a Job
               </Link>
               <Link to="/premium-services" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
                 WorkVix Pro
@@ -450,6 +451,7 @@ const Navbar = () => {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center space-x-4">
+<<<<<<< HEAD
               {/* Search Button */}
               <button
                 onClick={toggleSearch}
@@ -458,6 +460,8 @@ const Navbar = () => {
                 <Search className="h-5 w-5" />
               </button>
 
+=======
+>>>>>>> 41a2621 (explore skills paged disabled and new updates on the navbar)
               {/* Auth Buttons */}
               <Link to="/signin">
                 <Button variant="ghost" className="text-gray-700 hover:text-green-600 hover:bg-green-50 font-medium">
@@ -521,14 +525,14 @@ const Navbar = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
                     >
-                      Browse Jobs
+                      Jobs
                     </Link>
                     <Link 
-                      to="/explore-skills" 
+                      to="/post-job" 
                       onClick={() => setIsMenuOpen(false)}
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
+                      className="block text-lg font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
                     >
-                      Explore Skills
+                      Post a Job
                     </Link>
                     <Link 
                       to="/blog" 
