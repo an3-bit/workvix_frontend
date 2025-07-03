@@ -1,8 +1,11 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> e25df71 (admin dashboard)
+=======
+>>>>>>> 923fc14 (client (profile,dashboard))
 // Remove all theme context, provider, and logic. Default to light mode.
 // ... existing code ... 
 =======
@@ -91,4 +94,11 @@ export const useTheme = () => {
 >>>>>>> b2a4ea7 (client (profile,dashboard))
 =======
 >>>>>>> 089fd42 (admin dashboard)
+<<<<<<< HEAD
 >>>>>>> e25df71 (admin dashboard)
+=======
+=======
+// Remove all theme context, provider, and logic. Default to light mode.
+// ... existing code ... 
+>>>>>>> c427d0d (client (profile,dashboard))
+>>>>>>> 923fc14 (client (profile,dashboard))

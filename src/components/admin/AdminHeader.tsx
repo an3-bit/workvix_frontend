@@ -36,6 +36,7 @@ import {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useUserProfile } from '../../lib/auth';
 =======
 >>>>>>> a02f476 (admin dashboard)
@@ -45,11 +46,18 @@ import { useTheme } from '@/lib/theme';
 =======
 >>>>>>> b2a4ea7 (client (profile,dashboard))
 =======
+=======
+>>>>>>> 923fc14 (client (profile,dashboard))
 import { useUserProfile } from '../../lib/auth';
 =======
 import { useTheme } from '@/lib/theme';
 >>>>>>> 089fd42 (admin dashboard)
+<<<<<<< HEAD
 >>>>>>> e25df71 (admin dashboard)
+=======
+=======
+>>>>>>> c427d0d (client (profile,dashboard))
+>>>>>>> 923fc14 (client (profile,dashboard))
 
 interface AdminHeaderProps {
   adminEmail: string | null;
@@ -76,11 +84,14 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> b2a4ea7 (client (profile,dashboard))
 =======
   const { theme, toggleTheme } = useTheme();
 >>>>>>> e25df71 (admin dashboard)
+=======
+>>>>>>> 923fc14 (client (profile,dashboard))
 
   // Fallbacks for avatar and name
   const avatar = admin?.avatar || '';
@@ -289,9 +300,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> b2a4ea7 (client (profile,dashboard))
 =======
+=======
+>>>>>>> 923fc14 (client (profile,dashboard))
 =======
         {/* Theme Toggle */}
         <button
@@ -302,7 +316,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
           {theme === 'dark' ? <Sun className="h-6 w-6 text-yellow-400" /> : <MoonStar className="h-6 w-6 text-gray-700" />}
         </button>
 >>>>>>> 089fd42 (admin dashboard)
+<<<<<<< HEAD
 >>>>>>> e25df71 (admin dashboard)
+=======
+=======
+>>>>>>> c427d0d (client (profile,dashboard))
+>>>>>>> 923fc14 (client (profile,dashboard))
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
