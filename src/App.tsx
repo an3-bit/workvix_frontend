@@ -20,6 +20,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminLogin from "./components/admin/AdminLogin";
 import { AffiliateLayout } from "./pages/affiliate/AffiliateDashboard";
 import ProfileSettings from './pages/client/ProfileSettings';
+import Payments from './pages/client/Payments';
 
 const queryClient = new QueryClient();
 
@@ -138,6 +139,7 @@ const App = () => (
              <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
              <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
              <Route path="/profile" element={<ProfileSettings />} />
+             <Route path="/client/payments" element={<Payments />} />
            </Routes>
         </Suspense>
       </BrowserRouter>
