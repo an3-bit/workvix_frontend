@@ -243,28 +243,7 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
-      
-      <div className="pt-20 pb-8">
-        {/* Profile Card */}
-        <section className="container mx-auto px-4 mb-6">
-          <div className="flex items-center gap-4 bg-white rounded-lg shadow p-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-3xl">
-              {clientProfile?.avatar_url ? (
-                <img src={clientProfile.avatar_url} alt="avatar" className="w-16 h-16 rounded-full object-cover" />
-              ) : (
-                <UserCircle className="w-12 h-12" />
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="text-lg font-bold">{clientProfile?.first_name || 'Client'} {clientProfile?.last_name || ''}</div>
-              <div className="text-gray-500">{clientProfile?.email}</div>
-            </div>
-            <Link to="/profile">
-              <Button variant="outline">Profile Settings</Button>
-            </Link>
-          </div>
-        </section>
-
+      <div className="pt-4 pb-8">
         {/* Loading and Error States */}
         {loading && <div className="text-center py-8">Loading...</div>}
         {error && <div className="text-center text-red-500 py-4">{error}</div>}

@@ -55,6 +55,17 @@ const Nav2 = () => {
     }
   }, [location, user]);
 
+  useEffect(() => {
+    // Listen for profile-updated event
+    const handleProfileUpdated = () => {
+      if (isUser(user)) fetchUserProfile(user.id);
+    };
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdated);
+    };
+  }, [user]);
+
   const fetchUserProfile = async (userId: string) => {
     try {
       const { data: profile } = await supabase
@@ -344,27 +355,15 @@ const Nav2 = () => {
                       onClick={() => {
                         if (isUserProfile(userProfile) && userProfile.user_type === 'freelancer') {
                           navigate('/freelancer/profile');
+                        } else if (isUserProfile(userProfile) && userProfile.user_type === 'client') {
+                          navigate('/profile');
                         } else {
                           navigate('/dashboard');
                         }
                       }}
                     >
                       <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        if (isUserProfile(userProfile) && userProfile.user_type === 'freelancer') {
-                          navigate('/freelancer');
-                        } else if (isUserProfile(userProfile) && userProfile.user_type === 'client') {
-                          navigate('/client');
-                        } else {
-                          navigate('/dashboard');
-                        }
-                      }}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
+                      <span>Profile Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
