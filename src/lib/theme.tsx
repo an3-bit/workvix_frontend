@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Remove all theme context, provider, and logic. Default to light mode.
 // ... existing code ... 
 =======
@@ -72,3 +73,7 @@ export const useTheme = () => {
   return ctx;
 }; 
 >>>>>>> 7438431 (admin dashboard)
+=======
+// Remove all theme context, provider, and logic. Default to light mode.
+// ... existing code ... 
+>>>>>>> b2a4ea7 (client (profile,dashboard))

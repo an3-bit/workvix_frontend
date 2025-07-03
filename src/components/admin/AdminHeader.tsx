@@ -26,12 +26,15 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useUserProfile } from '../../lib/auth';
 =======
 >>>>>>> a02f476 (admin dashboard)
 =======
 import { useTheme } from '@/lib/theme';
 >>>>>>> 7438431 (admin dashboard)
+=======
+>>>>>>> b2a4ea7 (client (profile,dashboard))
 
 interface AdminHeaderProps {
   adminEmail: string | null;
@@ -56,6 +59,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
   const [searching, setSearching] = useState(false);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b2a4ea7 (client (profile,dashboard))
 
   // Fallbacks for avatar and name
   const avatar = admin?.avatar || '';
@@ -262,6 +268,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
         </button>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b2a4ea7 (client (profile,dashboard))
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
