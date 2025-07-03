@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Search, Star, Heart, Play, Bookmark, DollarSign, TrendingUp, Calendar, Users, Briefcase, Bell, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +37,7 @@ const FreelancerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [newJobsCount, setNewJobsCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,8 +73,16 @@ const FreelancerDashboard = () => {
     };
     
     const cleanup = setupSubscriptions();
+
+    // Listen for notifications-updated event
+    const handleNotificationsUpdated = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('notifications-updated', handleNotificationsUpdated);
+
     return () => {
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+      window.removeEventListener('notifications-updated', handleNotificationsUpdated);
     };
   }, []);
 
@@ -195,17 +203,29 @@ const FreelancerDashboard = () => {
   const fetchNotifications = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
       if (!user) return;
 
-      const { data: notificationsData } = await supabase
+      // Fetch unread count
+      const { count, error: countError } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      console.log('Unread count:', count, 'Error:', countError);
+
+      // Fetch latest 5 unread notifications
+      const { data: notificationsData, error: dataError } = await supabase
         .from('notifications')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .eq('read', false)
         .order('created_at', { ascending: false })
         .limit(5);
+      console.log('Notifications data:', notificationsData, 'Error:', dataError);
 
       setNotifications(notificationsData || []);
+      setUnreadCount(count || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -369,6 +389,20 @@ const FreelancerDashboard = () => {
     }
   ];
 
+  const markAllNotificationsAsRead = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    if (!error) {
+      setUnreadCount(0);
+      fetchNotifications();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
@@ -408,12 +442,16 @@ const FreelancerDashboard = () => {
         )}
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 z-0"></div>
-          
+        <section className="py-20 md:py-32 relative overflow-hidden">
+          {/* Background Video Sequence */}
+          <div className="absolute inset-0 z-0 w-full h-full pointer-events-none">
+            <VideoSequenceBackground />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20"></div>
+          </div>
           <div className="container mx-auto px-4 relative z-10 text-white">
             <div className="flex flex-col lg:flex-row items-start justify-between">
               <div className="max-w-2xl mb-8">
+                {/* Removed inline video, now handled by VideoSequenceBackground */}
                 <div className="flex items-center mb-4">
                   <h2 className="text-4xl font-bold">Welcome back, Freelancer!</h2>
                   {profile?.profile_completed && (
@@ -605,9 +643,9 @@ const FreelancerDashboard = () => {
                 <h3 className="text-xl font-semibold mb-4 flex items-center">
                   <Bell className="h-5 w-5 mr-2" />
                   Recent Notifications
-                  {notifications.length > 0 && (
+                  {unreadCount > 0 && (
                     <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {notifications.length}
+                      {unreadCount}
                     </span>
                   )}
                 </h3>
@@ -664,5 +702,65 @@ const FreelancerDashboard = () => {
     </div>
   );
 };
+
+const videoSources = [
+  '/freelancer/video 1.mp4',
+  '/freelancer/video 2.mp4',
+  '/freelancer/video 3.mp4',
+];
+
+function VideoSequenceBackground() {
+  const [current, setCurrent] = useState(0);
+  const [next, setNext] = useState(null);
+  const [fade, setFade] = useState(false);
+  const videoRefs = [useRef(null), useRef(null)];
+
+  // When a video ends, prepare to crossfade to the next
+  const handleEnded = () => {
+    setNext((current + 1) % videoSources.length);
+  };
+
+  // When next is set, trigger a fast crossfade
+  useEffect(() => {
+    let timer;
+    if (next !== null) {
+      setFade(true);
+      timer = setTimeout(() => {
+        setCurrent(next);
+        setNext(null);
+        setFade(false);
+      }, 200); // 0.2s fade duration
+    }
+    return () => clearTimeout(timer);
+  }, [next]);
+
+  return (
+    <div className="w-full h-full absolute inset-0">
+      {/* Current Video */}
+      <video
+        ref={videoRefs[0]}
+        src={videoSources[current]}
+        autoPlay
+        muted
+        playsInline
+        onEnded={handleEnded}
+        className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-200 ${fade ? 'opacity-0' : 'opacity-100'}`}
+        style={{ zIndex: 0 }}
+      />
+      {/* Next Video (for crossfade and preloading) */}
+      {next !== null && (
+        <video
+          ref={videoRefs[1]}
+          src={videoSources[next]}
+          autoPlay
+          muted
+          playsInline
+          className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-200 ${fade ? 'opacity-100' : 'opacity-0'}`}
+          style={{ zIndex: 0 }}
+        />
+      )}
+    </div>
+  );
+}
 
 export default FreelancerDashboard;
