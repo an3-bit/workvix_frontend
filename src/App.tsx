@@ -46,8 +46,15 @@ import AuthGuard from "./components/AuthGuard";
 =======
 =======
 import ProfileSettings from './pages/client/ProfileSettings';
+<<<<<<< HEAD
 >>>>>>> c427d0d (client (profile,dashboard))
+<<<<<<< HEAD
 >>>>>>> 923fc14 (client (profile,dashboard))
+=======
+=======
+import Payments from './pages/client/Payments';
+>>>>>>> c209820 (client dashboard)
+>>>>>>> 9be6499 (client dashboard)
 
 const queryClient = new QueryClient();
 
@@ -372,6 +379,7 @@ const App = () => (
              <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
              <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
              <Route path="/profile" element={<ProfileSettings />} />
+             <Route path="/client/payments" element={<Payments />} />
            </Routes>
 >>>>>>> c427d0d (client (profile,dashboard))
 >>>>>>> 923fc14 (client (profile,dashboard))
