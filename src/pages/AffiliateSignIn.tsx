@@ -33,15 +33,7 @@ const AffiliateSignIn: React.FC = () => {
         .from('profiles')
         .select('user_type')
         .eq('id', user.id)
-<<<<<<< HEAD
-<<<<<<< HEAD
         .maybeSingle();
-=======
-        .single();
->>>>>>> a02f476 (admin dashboard)
-=======
-        .maybeSingle();
->>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
       if (profileError && profileError.code !== 'PGRST116') throw profileError;
       if (!profile) {
         // Insert profile if it doesn't exist
