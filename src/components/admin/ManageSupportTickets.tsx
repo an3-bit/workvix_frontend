@@ -33,6 +33,26 @@ interface AdminProfile { // For assigning tickets
   email: string;
 }
 
+// Support Chat Section Types
+interface SupportChat {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  subject: string;
+  status: string;
+}
+
+interface SupportMessage {
+  id: string;
+  support_chat_id: string;
+  sender_id: string;
+  sender_type: 'client' | 'freelancer' | 'admin';
+  content: string;
+  read: boolean;
+  created_at: string;
+}
+
 const ManageSupportTickets: React.FC = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,9 +73,18 @@ const ManageSupportTickets: React.FC = () => {
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<SupportTicket | null>(null);
 
+  // Support Chats State
+  const [chats, setChats] = useState<SupportChat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<SupportChat | null>(null);
+  const [chatMessages, setChatMessages] = useState<SupportMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
+
   useEffect(() => {
     fetchTickets();
     fetchAdmins();
+    fetchChats();
   }, []);
 
   const fetchTickets = async () => {
@@ -113,6 +142,58 @@ const ManageSupportTickets: React.FC = () => {
         description: 'Failed to fetch admin list.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const fetchChats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_chats')
+        .select('*')
+        .order('updated_at', { ascending: false });
+      if (!error) setChats(data || []);
+    } catch (err) {
+      // ignore for now
+    }
+  };
+
+  const fetchChatMessages = async (chatId: string) => {
+    setChatLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('support_messages')
+        .select('*')
+        .eq('support_chat_id', chatId)
+        .order('created_at', { ascending: true });
+      if (!error) setChatMessages(data || []);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleSelectChat = (chat: SupportChat) => {
+    setSelectedChat(chat);
+    fetchChatMessages(chat.id);
+  };
+
+  const handleSendChatMessage = async () => {
+    if (!selectedChat || !chatInput.trim()) return;
+    setSendingChat(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase
+        .from('support_messages')
+        .insert([{
+          support_chat_id: selectedChat.id,
+          sender_id: user.id,
+          sender_type: 'admin',
+          content: chatInput.trim(),
+        }]);
+      setChatInput('');
+      fetchChatMessages(selectedChat.id);
+      fetchChats(); // update chat list order
+    } finally {
+      setSendingChat(false);
     }
   };
 
@@ -211,12 +292,8 @@ const ManageSupportTickets: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-background min-h-screen pb-8">
-      {/* User-facing support ticket submission form */}
-      <div className="mb-8">
-        <SubmitSupportTicket />
-      </div>
-      <Card className="bg-card">
+    <div className="max-w-5xl mx-auto w-full py-8">
+      <Card className="bg-card shadow-lg rounded-lg mb-8 w-full">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-foreground">Manage Support Tickets</CardTitle>
           <Button onClick={fetchTickets} variant="outline" className="flex items-center space-x-2">
@@ -294,6 +371,77 @@ const ManageSupportTickets: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <Card className="bg-card shadow-lg rounded-lg w-full mb-12">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-foreground">Support Chats</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Chat List */}
+            <div className="w-full md:w-1/3 max-h-96 overflow-y-auto border-r border-gray-200 pr-4">
+              <h4 className="font-semibold mb-2">All Chats</h4>
+              <ul>
+                {chats.length === 0 ? (
+                  <li className="text-gray-400 text-sm">No support chats found.</li>
+                ) : (
+                  chats.map(chat => (
+                    <li
+                      key={chat.id}
+                      className={`p-2 rounded cursor-pointer mb-1 ${selectedChat?.id === chat.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                      onClick={() => handleSelectChat(chat)}
+                    >
+                      <div className="font-medium text-gray-900 text-sm truncate">{chat.subject || 'No subject'}</div>
+                      <div className="text-xs text-gray-500">{new Date(chat.updated_at).toLocaleString()}</div>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+            {/* Chat Messages */}
+            <div className="flex-1">
+              {selectedChat ? (
+                <div className="flex flex-col h-96">
+                  <div className="flex-1 overflow-y-auto border rounded p-3 bg-white mb-2">
+                    {chatLoading ? (
+                      <div className="text-center text-gray-400">Loading messages...</div>
+                    ) : chatMessages.length === 0 ? (
+                      <div className="text-center text-gray-400">No messages yet.</div>
+                    ) : (
+                      chatMessages.map(msg => (
+                        <div key={msg.id} className={`mb-3 flex ${msg.sender_type === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`rounded-lg px-3 py-2 max-w-xs text-sm ${msg.sender_type === 'admin' ? 'bg-blue-100 text-blue-900' : 'bg-gray-100 text-gray-800'}`}>
+                            <div>{msg.content}</div>
+                            <div className="text-xs text-gray-400 mt-1 text-right">{new Date(msg.created_at).toLocaleTimeString()}</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 border rounded px-3 py-2 text-sm"
+                      placeholder="Type a message..."
+                      value={chatInput}
+                      onChange={e => setChatInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSendChatMessage(); }}
+                      disabled={sendingChat}
+                    />
+                    <Button onClick={handleSendChatMessage} disabled={sendingChat || !chatInput.trim()}>
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-400 text-center mt-12">Select a chat to view messages.</div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="mt-16 w-full">
+        <SubmitSupportTicket />
+      </div>
 
       {/* Edit Support Ticket Dialog */}
       <Dialog open={isEditTicketDialogOpen} onOpenChange={setIsEditTicketDialogOpen}>
@@ -394,6 +542,7 @@ const ManageSupportTickets: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
         <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
         <div className="flex items-center gap-4">
