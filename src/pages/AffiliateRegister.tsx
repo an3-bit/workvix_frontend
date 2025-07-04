@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,16 @@ const AffiliateRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        navigate('/affiliate/dashboard');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -33,6 +43,25 @@ const AffiliateRegister: React.FC = () => {
         },
       });
       if (error) throw error;
+      const user = data.user;
+      if (!user) throw new Error('User registration failed.');
+      // Split name into first and last name
+      const [firstName, ...lastNameParts] = form.name.trim().split(' ');
+      const lastName = lastNameParts.join(' ');
+      // Insert into profiles table
+      const now = new Date().toISOString();
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: user.id,
+        email: form.email,
+        first_name: firstName,
+        last_name: lastName,
+        phone: form.phone,
+        created_at: now,
+        updated_at: now,
+        user_type: 'affiliate_marketer',
+        online: true,
+      });
+      if (profileError) throw profileError;
       toast({ title: 'Registration successful', description: 'Check your email to confirm your account.' });
       navigate('/affiliate/dashboard');
     } catch (err: any) {
@@ -77,6 +106,19 @@ const AffiliateRegister: React.FC = () => {
               </div>
               <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Registering...' : 'Register'}</Button>
             </form>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-lg mt-4"
+              onClick={() => navigate('/')}
+            >
+              Back to Home
+            </Button>
+            <div className="mt-4 text-center">
+              <span className="text-gray-600">Already registered?</span>
+              <Button variant="link" className="ml-2 text-blue-600" onClick={() => navigate('/affiliate/signin')}>
+                Sign in
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

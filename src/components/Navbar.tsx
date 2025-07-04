@@ -437,7 +437,7 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
-              <Link to="/jobs" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
+              <Link to="/signin" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">
                 Jobs
               </Link>
               <Link to="/post-job" className="text-gray-700 hover:text-green-600 transition-colors duration-200 font-medium">

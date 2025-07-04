@@ -124,7 +124,7 @@ const CheckoutPage = () => {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (bidError) throw bidError;
       

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Nav2 from '@/components/Nav2';
@@ -42,7 +41,7 @@ const FreelancerProfile: React.FC = () => {
         .from('freelancers')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         setProfile(profileData);

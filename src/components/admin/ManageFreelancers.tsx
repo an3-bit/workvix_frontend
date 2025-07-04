@@ -48,22 +48,31 @@ const ManageFreelancers: React.FC = () => {
     skills: '', // Will handle as comma-separated string for input
   });
 
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  const [total, setTotal] = useState(0);
+
   useEffect(() => {
     fetchFreelancers();
-  }, []);
+  }, [page]);
 
   const fetchFreelancers = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('user_type', 'freelancer')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setFreelancers(data as FreelancerProfile[]);
+      setTotal(count || 0);
     } catch (err: any) {
       console.error('Error fetching freelancers:', err.message);
       setError('Failed to fetch freelancers: ' + err.message);
@@ -178,7 +187,7 @@ const ManageFreelancers: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background min-h-screen pb-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-gray-800">Manage Freelancers</CardTitle>
@@ -231,6 +240,17 @@ const ManageFreelancers: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {freelancers.length > 0 && (
+            <div className="flex justify-between items-center mt-4">
+              <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                Previous
+              </Button>
+              <span>Page {page} of {Math.ceil(total / pageSize) || 1}</span>
+              <Button onClick={() => setPage((p) => (p * pageSize < total ? p + 1 : p))} disabled={page * pageSize >= total}>
+                Next
+              </Button>
             </div>
           )}
         </CardContent>
@@ -323,6 +343,14 @@ const ManageFreelancers: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
+        <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
+        <div className="flex items-center gap-4">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-blue-600 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-black transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.53 2H21l-7.19 8.24L22 22h-6.47l-5.1-6.2L4 22H1l7.64-8.74L2 2h6.47l4.73 5.75L17.53 2zm-2.13 16.98h1.77l-5.13-6.24-1.77 2.13 5.13 6.24z"/></svg></a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-blue-700 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/></svg></a>
+        </div>
+      </footer>
     </div>
   );
 };

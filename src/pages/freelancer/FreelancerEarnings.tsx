@@ -5,6 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Nav2 from '@/components/Nav2';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ChartContainer } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface EarningRecord {
   id: string;
@@ -22,6 +27,83 @@ interface EarningRecord {
   };
 }
 
+// Move these helpers above the component
+const getLast12Months = () => {
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${d.getMonth() + 1}`,
+      label: d.toLocaleString('default', { month: 'short', year: '2-digit' })
+    });
+  }
+  return months;
+};
+
+const aggregateMonthlyEarnings = (earnings: EarningRecord[]) => {
+  const months = getLast12Months();
+  const monthly = months.map(({ key, label }) => {
+    const total = earnings
+      .filter(e => e.status === 'completed' && `${new Date(e.created_at).getFullYear()}-${new Date(e.created_at).getMonth() + 1}` === key)
+      .reduce((sum, e) => sum + Number(e.amount), 0);
+    return { month: label, earnings: total };
+  });
+  return monthly;
+};
+
+const exportEarningsToCSV = (earnings: EarningRecord[]) => {
+  if (!earnings.length) return;
+  const header = [
+    'Order ID',
+    'Project Title',
+    'Amount',
+    'Status',
+    'Date',
+  ];
+  const rows = earnings.map(e => [
+    e.id,
+    e.bid?.jobs?.title || 'Unknown Project',
+    e.amount,
+    e.status,
+    new Date(e.created_at).toLocaleDateString(),
+  ]);
+  const csvContent = [header, ...rows].map(row => row.map(String).map(cell => '"' + cell.replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'earnings_report.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const exportEarningsToPDF = (earnings: EarningRecord[]) => {
+  if (!earnings.length) {
+    toast({ title: 'No Data', description: 'No earnings to export.', variant: 'destructive' });
+    return;
+  }
+  try {
+    const doc = new jsPDF();
+    const tableColumn = ['Order ID', 'Project Title', 'Amount', 'Status', 'Date'];
+    const tableRows = earnings.map(e => [
+      e.id,
+      e.bid?.jobs?.title || 'Unknown Project',
+      e.amount,
+      e.status,
+      new Date(e.created_at).toLocaleDateString(),
+    ]);
+    doc.text('Earnings Report', 14, 16);
+    autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
+    doc.save('earnings_report.pdf');
+    toast({ title: 'Success', description: 'PDF downloaded.', variant: 'success' });
+  } catch (error) {
+    console.error('PDF export error:', error);
+    toast({ title: 'Error', description: 'Failed to export PDF.', variant: 'destructive' });
+  }
+};
+
 const FreelancerEarnings = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -35,6 +117,8 @@ const FreelancerEarnings = () => {
     pending: 0,
     available: 0
   });
+
+  const monthlyEarningsData = aggregateMonthlyEarnings(earnings);
 
   useEffect(() => {
     fetchEarnings();
@@ -175,10 +259,22 @@ const FreelancerEarnings = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Earnings</h1>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export Report
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Export Report
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportEarningsToCSV(earnings)}>
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportEarningsToPDF(earnings)}>
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Balance Overview */}
@@ -279,19 +375,29 @@ const FreelancerEarnings = () => {
           </Card>
 
           {/* Earnings Chart Placeholder */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Earnings Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Earnings chart coming soon!</p>
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  Monthly Earnings Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div style={{ width: '100%', height: 300 }}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={monthlyEarningsData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="earnings" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

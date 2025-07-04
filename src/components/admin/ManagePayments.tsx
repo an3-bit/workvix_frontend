@@ -14,6 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCcw, Edit, Trash, Eye, DollarSign, Calendar, User, CreditCard } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface Payment {
   id: string;
@@ -51,6 +52,76 @@ const ManagePayments: React.FC = () => {
   const [paymentToView, setPaymentToView] = useState<Payment | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
 
+  const [useSample, setUseSample] = useState(false);
+
+  const samplePayments = [
+    {
+      id: 'paym1',
+      user_id: 'user1',
+      amount: 120.5,
+      type: 'job_payment',
+      status: 'completed',
+      description: 'Payment for Job #1',
+      related_job_id: 'job1',
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      user_profile: { first_name: 'Alice', last_name: 'Smith', email: 'alice@example.com', user_type: 'client' },
+      job_title: { title: 'Logo Design' },
+    },
+    {
+      id: 'paym2',
+      user_id: 'user2',
+      amount: 75.0,
+      type: 'withdrawal',
+      status: 'pending',
+      description: 'Withdrawal request',
+      related_job_id: null,
+      created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+      user_profile: { first_name: 'Bob', last_name: 'Jones', email: 'bob@example.com', user_type: 'freelancer' },
+      job_title: null,
+    },
+    {
+      id: 'paym3',
+      user_id: 'user3',
+      amount: 200.0,
+      type: 'deposit',
+      status: 'completed',
+      description: 'Deposit to wallet',
+      related_job_id: null,
+      created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+      user_profile: { first_name: 'Carol', last_name: 'Lee', email: 'carol@example.com', user_type: 'client' },
+      job_title: null,
+    },
+    {
+      id: 'paym4',
+      user_id: 'user4',
+      amount: 50.0,
+      type: 'refund',
+      status: 'refunded',
+      description: 'Refund for Job #2',
+      related_job_id: 'job2',
+      created_at: new Date(Date.now() - 86400000 * 20).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 20).toISOString(),
+      user_profile: { first_name: 'Dave', last_name: 'Kim', email: 'dave@example.com', user_type: 'client' },
+      job_title: { title: 'Website Fix' },
+    },
+    {
+      id: 'paym5',
+      user_id: 'user5',
+      amount: 300.0,
+      type: 'job_payment',
+      status: 'failed',
+      description: 'Payment for Job #3',
+      related_job_id: 'job3',
+      created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+      user_profile: { first_name: 'Eve', last_name: 'Wong', email: 'eve@example.com', user_type: 'freelancer' },
+      job_title: { title: 'App Development' },
+    },
+  ];
+
   useEffect(() => {
     fetchPayments();
   }, []);
@@ -64,7 +135,7 @@ const ManagePayments: React.FC = () => {
         .select(`
           *,
           user_profile:user_id(id, email, first_name, last_name, user_type),
-          job_title:related_job(title)
+          job_title:related_job_id(title)
         `)
         .order('created_at', { ascending: false });
 
@@ -167,7 +238,7 @@ const ManagePayments: React.FC = () => {
         .from('payments')
         .select(`*, user_profile:user_id(email), job_title:related_job_id(title)`)
         .eq('id', paymentId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       setPaymentToView(data as Payment);
     } catch (err: unknown) {
@@ -182,6 +253,8 @@ const ManagePayments: React.FC = () => {
       setViewLoading(false);
     }
   };
+
+  const displayPayments = useSample ? samplePayments : payments;
 
   if (loading) {
     return (
@@ -207,29 +280,33 @@ const ManagePayments: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8 pb-16">
+      <div className="flex items-center gap-4 mb-4">
+        <Switch checked={useSample} onCheckedChange={setUseSample} id="sample-toggle" />
+        <label htmlFor="sample-toggle" className="text-xs text-foreground cursor-pointer">Use Sample Data</label>
+      </div>
       <Card className="shadow-lg border-0">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card rounded-t-lg">
           <div>
-            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-2">
               <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               Manage Payments
             </CardTitle>
-            <p className="text-gray-600 text-sm sm:text-base mt-1">
+            <p className="text-foreground text-sm sm:text-base mt-1">
               Monitor and manage all payment transactions
             </p>
           </div>
           <Button 
             onClick={fetchPayments} 
             variant="outline" 
-            className="flex items-center gap-2 bg-white hover:bg-gray-50 border-gray-200"
+            className="flex items-center gap-2 bg-card text-foreground border border-border hover:bg-muted"
           >
             <RefreshCcw className="h-4 w-4" />
             <span className="text-sm sm:text-base">Refresh</span>
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          {payments.length === 0 ? (
+          {displayPayments.length === 0 ? (
             <div className="p-8 text-center">
               <div className="text-gray-400 text-6xl mb-4">💳</div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No payment records found</h3>
@@ -239,8 +316,8 @@ const ManagePayments: React.FC = () => {
             <div className="overflow-x-auto">
               {/* Mobile Cards View */}
               <div className="block lg:hidden space-y-4 p-4">
-                {payments.map((payment) => (
-                  <div key={payment.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                {displayPayments.map((payment) => (
+                  <div key={payment.id} className="bg-card rounded-lg border border-border p-4 shadow-sm text-foreground">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -304,25 +381,25 @@ const ManagePayments: React.FC = () => {
               <div className="hidden lg:block">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="font-semibold text-gray-900">ID</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Amount</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Type</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-900">User</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Related Job</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Date</TableHead>
-                      <TableHead className="text-right font-semibold text-gray-900">Actions</TableHead>
+                    <TableRow className="bg-muted">
+                      <TableHead className="font-semibold text-foreground">ID</TableHead>
+                      <TableHead className="font-semibold text-foreground">Amount</TableHead>
+                      <TableHead className="font-semibold text-foreground">Type</TableHead>
+                      <TableHead className="font-semibold text-foreground">Status</TableHead>
+                      <TableHead className="font-semibold text-foreground">User</TableHead>
+                      <TableHead className="font-semibold text-foreground">Related Job</TableHead>
+                      <TableHead className="font-semibold text-foreground">Date</TableHead>
+                      <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((payment) => (
-                      <TableRow key={payment.id} className="hover:bg-gray-50">
-                        <TableCell className="font-medium truncate max-w-[120px] text-sm">
+                    {displayPayments.map((payment) => (
+                      <TableRow key={payment.id} className="bg-card hover:bg-muted">
+                        <TableCell className="font-medium truncate max-w-[120px] text-sm text-foreground">
                           {payment.id.substring(0, 8)}...
                         </TableCell>
-                        <TableCell className="font-semibold text-green-600">${payment.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-sm">{payment.type}</TableCell>
+                        <TableCell className="font-semibold text-green-600 text-foreground">${payment.amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-sm text-foreground">{payment.type}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                             payment.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -333,9 +410,9 @@ const ManagePayments: React.FC = () => {
                             {payment.status}
                           </span>
                         </TableCell>
-                        <TableCell className="text-sm">{payment.user_profile ? payment.user_profile.email : 'N/A'}</TableCell>
-                        <TableCell className="text-sm">{payment.job_title?.title || 'N/A'}</TableCell>
-                        <TableCell className="text-sm">{new Date(payment.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-sm text-foreground">{payment.user_profile ? payment.user_profile.email : 'N/A'}</TableCell>
+                        <TableCell className="text-sm text-foreground">{payment.job_title?.title || 'N/A'}</TableCell>
+                        <TableCell className="text-sm text-foreground">{new Date(payment.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1">
                             <Button 
@@ -376,6 +453,14 @@ const ManagePayments: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
+        <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
+        <div className="flex items-center gap-4">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-blue-600 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-black transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.53 2H21l-7.19 8.24L22 22h-6.47l-5.1-6.2L4 22H1l7.64-8.74L2 2h6.47l4.73 5.75L17.53 2zm-2.13 16.98h1.77l-5.13-6.24-1.77 2.13 5.13 6.24z"/></svg></a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-blue-700 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/></svg></a>
+        </div>
+      </footer>
 
       {/* Edit Payment Status Dialog */}
       <Dialog open={isEditPaymentDialogOpen} onOpenChange={setIsEditPaymentDialogOpen}>

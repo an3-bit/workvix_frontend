@@ -93,7 +93,7 @@ const JobsBid: React.FC = () => {
         .from('jobs')
         .select('*')
         .eq('id', jobId)
-        .single();
+        .maybeSingle();
 
       if (jobError) throw jobError;
 
@@ -108,7 +108,7 @@ const JobsBid: React.FC = () => {
           .from('profiles')
           .select('first_name, last_name, email')
           .eq('id', jobData.client_id)
-          .single();
+          .maybeSingle();
 
         if (!clientError && clientInfo) {
           clientData = clientInfo;
@@ -136,7 +136,7 @@ const JobsBid: React.FC = () => {
         .select('*')
         .eq('job_id', jobId)
         .eq('freelancer_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
         throw error;
@@ -200,7 +200,7 @@ const JobsBid: React.FC = () => {
           status: 'pending'
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -209,7 +209,7 @@ const JobsBid: React.FC = () => {
         .from('freelancers')
         .select('first_name, last_name')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       const freelancerName = freelancerData 
         ? `${freelancerData.first_name} ${freelancerData.last_name}`

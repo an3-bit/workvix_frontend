@@ -114,7 +114,7 @@ const BidsDetailsPage: React.FC = () => {
                 .from('profiles')
                 .select('first_name, last_name, email')
                 .eq('id', bid.jobs.client_id)
-                .single();
+                .maybeSingle();
 
               return {
                 ...bid,

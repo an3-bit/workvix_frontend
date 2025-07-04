@@ -35,7 +35,7 @@ const categories = [
       { name: "Trust & Safety", href: "/trust" },
       { name: "Selling on WorkVix", href: "/become-seller" },
       { name: "Buying on WorkVix", href: "/how-it-works" },
-      { name: "Affiliate Program", href: "/affiliate" },
+      { name: "Affiliate Program", href: "/affiliate/register" },
     ],
   },
   {
@@ -55,9 +55,7 @@ const categories = [
 const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-white">
-      {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
-        {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Brand Section */}
           <div className="lg:col-span-1">
@@ -69,7 +67,6 @@ const Footer: React.FC = () => {
             <p className="text-gray-300 mb-6 leading-relaxed">
               Connect with talented freelancers worldwide. Get your projects done quickly and professionally.
             </p>
-            
             {/* Contact Info */}
             <div className="space-y-3">
               <div className="flex items-center text-gray-300">
@@ -86,7 +83,6 @@ const Footer: React.FC = () => {
               </div>
             </div>
           </div>
-
           {/* Categories */}
           {categories.map((category) => (
             <div key={category.title}>
@@ -106,7 +102,6 @@ const Footer: React.FC = () => {
             </div>
           ))}
         </div>
-
         {/* Newsletter Section */}
         <div className="border-t border-gray-800 pt-8 mb-8">
           <div className="max-w-md">
@@ -126,7 +121,6 @@ const Footer: React.FC = () => {
             </div>
           </div>
         </div>
-
         {/* Bottom Section */}
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -144,7 +138,6 @@ const Footer: React.FC = () => {
                 </a>
               </p>
             </div>
-
             {/* Social Links */}
             <div className="flex items-center space-x-4">
               <a 
@@ -168,12 +161,33 @@ const Footer: React.FC = () => {
               >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a 
-                href="#" 
-                className="text-gray-400 hover:text-orange-500 transition-colors duration-200 p-2 rounded-full hover:bg-gray-800"
+              <a
+                href="#"
+                className="transition-colors duration-200 p-2 rounded-full hover:bg-gray-800"
                 aria-label="LinkedIn"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <Linkedin className="h-5 w-5" />
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: '#0077b5',
+                    color: '#fff',
+                    fontWeight: 900,
+                    fontFamily: 'Arial Black, Arial, sans-serif',
+                    fontSize: '1.35rem',
+                    letterSpacing: '-0.08em',
+                    lineHeight: 1,
+                    textAlign: 'center',
+                    userSelect: 'none',
+                  }}
+                >
+                  in
+                </span>
               </a>
               <a 
                 href="#" 
@@ -184,7 +198,6 @@ const Footer: React.FC = () => {
               </a>
             </div>
           </div>
-
           {/* Additional Links */}
           <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-6 pt-6 border-t border-gray-800">
             <Link to="/privacy" className="text-gray-400 hover:text-orange-500 transition-colors duration-200 text-sm">
@@ -202,7 +215,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
-
       {/* Mobile App Download Section */}
       <div className="bg-gray-800 py-8">
         <div className="container mx-auto px-4">

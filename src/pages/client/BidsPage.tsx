@@ -228,7 +228,7 @@ const ClientBidsPage: React.FC = () => {
         .eq('job_id', bid.job_id)
         .eq('client_id', user.id)
         .eq('freelancer_id', bid.freelancer_id)
-        .single();
+        .maybeSingle();
       if (!existingChat) {
         // Create chat
         await supabase
@@ -316,7 +316,7 @@ const ClientBidsPage: React.FC = () => {
         .eq('job_id', bid.job_id)
         .eq('client_id', user.id)
         .eq('freelancer_id', bid.freelancer_id)
-        .single();
+        .maybeSingle();
 
       if (existingChatError && existingChatError.code !== 'PGRST116') { // PGRST116 means "no rows found"
         // This is a real error other than "not found"
@@ -343,7 +343,7 @@ const ClientBidsPage: React.FC = () => {
             updated_at: new Date().toISOString(), // Ensure updated_at is set
           })
           .select('id')
-          .single();
+          .maybeSingle();
 
         if (newChatError) {
           // This is where RLS errors often manifest if direct insert is not allowed
@@ -419,7 +419,12 @@ const ClientBidsPage: React.FC = () => {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <CardTitle className="text-xl mb-2">{bid.job.title}</CardTitle>
+                          <CardTitle
+                            className="text-xl mb-2 text-blue-600 cursor-pointer hover:underline"
+                            onClick={() => navigate(`/jobs/${bid.job_id}`)}
+                          >
+                            {bid.job.title}
+                          </CardTitle>
                           <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                             <Badge variant="outline">{bid.job.category}</Badge>
                             <span className="flex items-center">

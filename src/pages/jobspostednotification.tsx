@@ -28,7 +28,7 @@ const JobPostedNotification = () => {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 

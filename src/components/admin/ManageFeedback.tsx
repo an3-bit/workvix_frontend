@@ -160,73 +160,85 @@ const ManageFeedback: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Feedback</CardTitle>
-          <Button onClick={fetchFeedback} variant="outline" className="flex items-center space-x-2">
+    <div className="p-0 sm:p-6 min-h-screen bg-background pb-8">
+      <Card className="bg-card shadow-2xl rounded-2xl">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 p-4 sm:p-6">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="h-8 w-8 text-primary drop-shadow-lg" />
+            <span className="text-2xl font-extrabold text-foreground tracking-tight">Manage Feedback</span>
+          </div>
+          <Button onClick={fetchFeedback} variant="outline" className="flex items-center space-x-2 mt-2 sm:mt-0">
             <RefreshCcw className="h-4 w-4" />
-            <span>Refresh Feedback</span>
+            <span>Refresh</span>
           </Button>
         </CardHeader>
         <CardContent>
           {feedbackList.length === 0 ? (
             <p className="text-center text-gray-500">No feedback found.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Comment</TableHead>
-                    <TableHead>Related Job</TableHead>
-                    <TableHead>Resolved</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedbackList.map((feedback) => (
-                    <TableRow key={feedback.id}>
-                      <TableCell>{feedback.user_profile?.first_name || 'N/A'} ({feedback.user_profile?.email})</TableCell>
-                      <TableCell className="flex items-center">
-                        {renderStars(feedback.rating)}
-                      </TableCell>
-                      <TableCell className="max-w-[250px] truncate">{feedback.comment}</TableCell>
-                      <TableCell>{feedback.job_title?.title || 'N/A'}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          feedback.is_resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {feedback.is_resolved ? 'Yes' : 'No'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleEditFeedback(feedback)}
-                          className="mr-1"
-                          title="Edit Feedback"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          onClick={() => handleDeleteFeedback(feedback)}
-                          title="Delete Feedback"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+            <>
+              {/* Desktop Table View */}
+              <div className="overflow-x-auto rounded-lg hidden sm:block">
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-foreground">User</TableHead>
+                      <TableHead className="text-foreground">Rating</TableHead>
+                      <TableHead className="text-foreground">Comment</TableHead>
+                      <TableHead className="text-foreground">Related Job</TableHead>
+                      <TableHead className="text-foreground">Resolved</TableHead>
+                      <TableHead className="text-foreground">Date</TableHead>
+                      <TableHead className="text-right text-foreground">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {feedbackList.map((feedback, idx) => (
+                      <TableRow key={feedback.id} className={`transition-all duration-300 ${idx % 2 === 0 ? 'bg-muted' : 'bg-card'} hover:bg-muted/60 hover:shadow-md animate-fade-in-row`}>
+                        <TableCell className="text-foreground">{feedback.user_profile?.first_name || 'N/A'} ({feedback.user_profile?.email})</TableCell>
+                        <TableCell className="flex items-center gap-1">{renderStars(feedback.rating)}</TableCell>
+                        <TableCell className="max-w-[250px] truncate text-foreground">{feedback.comment}</TableCell>
+                        <TableCell className="text-foreground">{feedback.job_title?.title || 'N/A'}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${feedback.is_resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{feedback.is_resolved ? 'Resolved' : 'Unresolved'}</span>
+                        </TableCell>
+                        <TableCell>{new Date(feedback.created_at).toLocaleString()}</TableCell>
+                        <TableCell className="text-right flex gap-2 justify-end">
+                          <Button variant="outline" size="sm" onClick={() => handleEditFeedback(feedback)} className="transition-transform hover:scale-110 hover:bg-blue-50 hover:text-blue-700" title="Edit Feedback">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteFeedback(feedback)} className="transition-transform hover:scale-110 hover:bg-red-100 hover:text-red-700" title="Delete Feedback">
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {/* Mobile Card View */}
+              <div className="flex flex-col gap-4 sm:hidden">
+                {feedbackList.map((feedback) => (
+                  <div key={feedback.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col gap-2 animate-fade-in-row">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-base text-gray-900">{feedback.user_profile?.first_name || 'N/A'} ({feedback.user_profile?.email})</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${feedback.is_resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{feedback.is_resolved ? 'Resolved' : 'Unresolved'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">{renderStars(feedback.rating)}</div>
+                    <div className="text-gray-900 font-medium break-words">{feedback.comment}</div>
+                    <div className="text-xs text-gray-600">Job: {feedback.job_title?.title || 'N/A'}</div>
+                    <div className="text-xs text-gray-500">{new Date(feedback.created_at).toLocaleString()}</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditFeedback(feedback)} className="flex-1 transition-transform hover:scale-105 hover:bg-blue-50 hover:text-blue-700" title="Edit Feedback">
+                        <Edit className="h-4 w-4 mr-1" />Edit
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteFeedback(feedback)} className="flex-1 transition-transform hover:scale-105 hover:bg-red-100 hover:text-red-700" title="Delete Feedback">
+                        <Trash className="h-4 w-4 mr-1" />Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -283,6 +295,15 @@ const ManageFeedback: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
+        <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
+        <div className="flex items-center gap-4">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-blue-600 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-black transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.53 2H21l-7.19 8.24L22 22h-6.47l-5.1-6.2L4 22H1l7.64-8.74L2 2h6.47l4.73 5.75L17.53 2zm-2.13 16.98h1.77l-5.13-6.24-1.77 2.13 5.13 6.24z"/></svg></a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-blue-700 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/></svg></a>
+        </div>
+      </footer>
     </div>
   );
 };

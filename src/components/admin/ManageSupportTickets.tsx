@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Edit, Trash, RefreshCcw, MessageSquare, Tag } from 'lucide-react';
+import SubmitSupportTicket from '@/components/SubmitSupportTicket';
 
 interface SupportTicket {
   id: string;
@@ -88,19 +89,21 @@ const ManageSupportTickets: React.FC = () => {
   const fetchAdmins = async () => {
     try {
       const { data, error } = await supabase
-        .from('support_users' as any)
+        .from('profiles')
         .select(`
-          user_id,
+          id,
           email,
-          profiles:user_id (first_name, last_name)
-        `);
+          first_name,
+          last_name
+        `)
+        .eq('user_type', 'admin');
 
       if (error) throw error;
       const adminProfiles = (data as any[]).map(admin => ({
-        id: admin.user_id,
+        id: admin.id,
         email: admin.email,
-        first_name: admin.profiles?.first_name || 'Admin',
-        last_name: admin.profiles?.last_name || '',
+        first_name: admin.first_name || 'Admin',
+        last_name: admin.last_name || '',
       }));
       setAvailableAdmins(adminProfiles as AdminProfile[]);
     } catch (err: any) {
@@ -200,18 +203,22 @@ const ManageSupportTickets: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-6 text-center">Loading support tickets...</div>;
+    return <div className="p-6 text-center text-foreground">Loading support tickets...</div>;
   }
 
   if (error) {
-    return <div className="p-6 text-center font-bold">Your support tickets will appear here.</div>;
+    return <div className="p-6 text-center font-bold text-foreground">Your support tickets will appear here.</div>;
   }
 
   return (
-    <div className="p-6">
-      <Card>
+    <div className="p-6 bg-background min-h-screen pb-8">
+      {/* User-facing support ticket submission form */}
+      <div className="mb-8">
+        <SubmitSupportTicket />
+      </div>
+      <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Support Tickets</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Manage Support Tickets</CardTitle>
           <Button onClick={fetchTickets} variant="outline" className="flex items-center space-x-2">
             <RefreshCcw className="h-4 w-4" />
             <span>Refresh Tickets</span>
@@ -219,32 +226,32 @@ const ManageSupportTickets: React.FC = () => {
         </CardHeader>
         <CardContent>
           {tickets.length === 0 ? (
-            <p className="text-center text-gray-500">No support tickets found.</p>
+            <p className="text-center text-muted-foreground">No support tickets found.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-foreground">Subject</TableHead>
+                    <TableHead className="text-foreground">User</TableHead>
+                    <TableHead className="text-foreground">Status</TableHead>
+                    <TableHead className="text-foreground">Priority</TableHead>
+                    <TableHead className="text-foreground">Assigned To</TableHead>
+                    <TableHead className="text-foreground">Created</TableHead>
+                    <TableHead className="text-right text-foreground">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {tickets.map((ticket) => (
                     <TableRow key={ticket.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">{ticket.subject}</TableCell>
-                      <TableCell>{ticket.user_profile?.first_name || 'N/A'} ({ticket.user_profile?.user_type || 'N/A'})</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate text-foreground">{ticket.subject}</TableCell>
+                      <TableCell className="text-foreground">{ticket.user_profile?.first_name || 'N/A'} ({ticket.user_profile?.user_type || 'N/A'})</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          ticket.status === 'open' ? 'bg-blue-100 text-blue-800' :
+                          ticket.status === 'open' ? 'bg-primary/10 text-primary' :
                           ticket.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
                           ticket.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-muted text-foreground'
                         }`}>
                           {ticket.status.replace('_', ' ').charAt(0).toUpperCase() + ticket.status.replace('_', ' ').slice(1)}
                         </span>
@@ -253,14 +260,14 @@ const ManageSupportTickets: React.FC = () => {
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                           ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-muted text-foreground'
                         }`}>
                           {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
                         </span>
                       </TableCell>
-                      <TableCell>{ticket.assigned_admin_profile?.first_name || 'Unassigned'}</TableCell>
-                      <TableCell>{new Date(ticket.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
+                      <TableCell className="text-foreground">{ticket.assigned_admin_profile?.first_name || 'Unassigned'}</TableCell>
+                      <TableCell className="text-foreground">{new Date(ticket.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap text-foreground">
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -387,6 +394,14 @@ const ManageSupportTickets: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
+        <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
+        <div className="flex items-center gap-4">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-blue-600 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-black transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.53 2H21l-7.19 8.24L22 22h-6.47l-5.1-6.2L4 22H1l7.64-8.74L2 2h6.47l4.73 5.75L17.53 2zm-2.13 16.98h1.77l-5.13-6.24-1.77 2.13 5.13 6.24z"/></svg></a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-blue-700 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/></svg></a>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -18,13 +18,16 @@ interface Notification {
   offer_id?: string;
 }
 
+const PAGE_SIZE = 20;
 const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchNotifications();
+    fetchNotifications(page);
     const setupSubscription = async () => {
       const subscription = await setupRealtimeSubscription();
       return () => {
@@ -37,22 +40,28 @@ const NotificationsPage: React.FC = () => {
     return () => {
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (pageNum = 0) => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/signin');
         return;
       }
+      const from = pageNum * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
       const { data: notificationsData, error } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
       if (error) throw error;
       setNotifications(notificationsData || []);
+      setHasMore((notificationsData?.length || 0) === PAGE_SIZE);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -170,63 +179,58 @@ const NotificationsPage: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      !notification.read ? 'border-l-4 border-l-blue-600 bg-blue-50' : ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="flex-1">
-                        <p className={`${!notification.read ? 'font-medium' : ''} text-gray-900`}>
-                          {notification.message}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                          <Clock className="h-4 w-4" />
-                          {new Date(notification.created_at).toLocaleString()}
+              <>
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        !notification.read ? 'border-l-4 border-l-blue-600 bg-blue-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 mt-1">
+                          {getNotificationIcon(notification.type)}
                         </div>
-                        {notification.type === 'bid_received' && (
-                          <div className="mt-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              New bid received
-                            </span>
+                        <div className="flex-1">
+                          <p className={`${!notification.read ? 'font-medium' : ''} text-gray-900`}>
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                            <Clock className="h-4 w-4" />
+                            {new Date(notification.created_at).toLocaleString()}
                           </div>
-                        )}
-                        {notification.type === 'new_message' && (
-                          <div className="mt-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              New message
-                            </span>
-                          </div>
-                        )}
-                        {notification.type === 'new_offer' && (
-                          <div className="mt-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              New offer
-                            </span>
-                          </div>
-                        )}
-                        {notification.type === 'order_paid' && (
-                          <div className="mt-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Order complete
-                            </span>
-                          </div>
-                        )}
+                          {notification.type === 'bid_received' && (
+                            <div className="mt-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                New bid received
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {!notification.read && (
-                        <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></div>
-                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center mt-8">
+                  <button
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                  >
+                    Previous
+                  </button>
+                  <span>Page {page + 1}</span>
+                  <button
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
+                    onClick={() => setPage((p) => hasMore ? p + 1 : p)}
+                    disabled={!hasMore}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

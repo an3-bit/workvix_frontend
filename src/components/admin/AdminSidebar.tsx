@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, List, MessageSquare, Star, DollarSign,
   Gift, Briefcase, FileText, Activity, Rss, Settings, Users,
   ClipboardList, Package, ScrollText, Building2, User2, BookUser,
-  SquareKanban, FileBadge, LifeBuoy, ChevronDown, ChevronUp // Added ChevronDown and ChevronUp
+  SquareKanban, FileBadge, LifeBuoy, ChevronDown, ChevronUp, LogOut
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdminSidebarProps {
   onNavLinkClick: (path: string) => void;
@@ -14,6 +16,8 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Function to toggle the open/close state of a menu
   const toggleMenu = (name: string) => {
@@ -40,6 +44,25 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
     });
   }, [location.pathname]); // Re-run when the path changes
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      navigate('/admin/login');
+    } catch (error: any) {
+      console.error('Logout error:', error.message);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to log out.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const menuItems = [
     {
       name: 'Overview',
@@ -50,13 +73,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       name: 'Jobs',
       icon: Briefcase,
       path: '/admin/jobs',
-      subItems: [
-        { name: 'All Jobs', path: '/admin/jobs/all' },
-        { name: 'Open Jobs', path: '/admin/jobs/open' },
-        { name: 'Assigned Jobs', path: '/admin/jobs/assigned' },
-        { name: 'Completed Jobs', path: '/admin/jobs/completed' },
-        { name: 'Disputed Jobs', path: '/admin/jobs/disputed' },
-      ],
     },
     {
       name: 'Messages',
@@ -123,22 +139,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
       name: 'Settings',
       icon: Settings,
       path: '/admin/settings',
-      subItems: [
-        { name: 'System Settings', path: '/admin/settings/system' },
-        { name: 'Orders & Payments', path: '/admin/settings/orders-payments' },
-        { name: 'Theme Settings', path: '/admin/settings/themes' },
-        { name: 'Email Settings', path: '/admin/settings/email' },
-      ],
     },
   ];
 
   return (
-    <nav className="w-64 bg-gray-900 text-white p-4 flex flex-col overflow-y-auto custom-scrollbar">
+    <nav className="w-64 bg-sidebar-background text-sidebar-foreground p-4 flex flex-col overflow-y-auto custom-scrollbar min-h-screen border-r border-sidebar-border shadow-lg">
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-extrabold text-blue-400">Workvix</h2>
-        <p className="text-xs text-gray-400 mt-1">Admin Panel</p>
+        <h2 className="text-3xl font-extrabold text-sidebar-foreground">Workvix</h2>
       </div>
-      <ul className="space-y-1">
+      <ul className="space-y-1 flex-1 overflow-y-auto max-h-[calc(100vh-100px)] pb-8">
         {menuItems.map((item) => (
           <li key={item.name}>
             {item.subItems ? (
@@ -146,8 +155,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
               <div
                 className={`flex items-center justify-between space-x-3 p-3 rounded-md transition-colors duration-200 cursor-pointer ${
                   openMenus[item.name] || item.subItems.some(subItem => location.pathname.startsWith(subItem.path))
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'hover:bg-gray-700 text-gray-300'
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
+                    : 'hover:bg-sidebar-accent text-sidebar-foreground'
                 }`}
                 onClick={() => {
                   toggleMenu(item.name);
@@ -171,8 +180,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
                 className={({ isActive }) =>
                   `flex items-center space-x-3 p-3 rounded-md transition-colors duration-200 ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'hover:bg-gray-700 text-gray-300'
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
+                      : 'hover:bg-sidebar-accent text-sidebar-foreground'
                   }`
                 }
                 onClick={() => onNavLinkClick(item.path)}
@@ -191,10 +200,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavLinkClick }) => {
                     <NavLink
                       to={subItem.path}
                       className={({ isActive }) =>
-                        `flex items-center space-x-3 p-2 rounded-md transition-colors duration-200 text-sm ${
+                        `flex items-center space-x-2 p-2 rounded-md transition-colors duration-200 ${
                           isActive
-                            ? 'bg-blue-500 text-white'
-                            : 'hover:bg-gray-700 text-gray-400'
+                            ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow'
+                            : 'hover:bg-sidebar-accent text-sidebar-foreground'
                         }`
                       }
                       onClick={() => onNavLinkClick(subItem.path)}

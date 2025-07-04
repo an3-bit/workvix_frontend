@@ -5,6 +5,7 @@ import { Bell, Clock, DollarSign, User, MessageSquare, Briefcase } from 'lucide-
 import { Dialog } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import Footer from '@/components/Footer';
+import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
   id: string;
@@ -37,6 +38,7 @@ const FreelancerNotifications: React.FC = () => {
   const [paymentMessage, setPaymentMessage] = useState('');
   const [user, setUser] = useState<{ id: string } | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchNotifications();
@@ -171,19 +173,19 @@ const FreelancerNotifications: React.FC = () => {
     }
   };
 
-
-
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
-      await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notification.id);
+      // Optimistically update UI
       setNotifications(prev =>
         prev.map(n =>
           n.id === notification.id ? { ...n, read: true } : n
         )
       );
+      // Fire-and-forget update
+      supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notification.id);
     }
     switch (notification.type) {
       case 'job_posted':
@@ -250,9 +252,29 @@ const FreelancerNotifications: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b border-gray-200">
-                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                <p className="text-gray-600 mt-1">Stay updated with your freelancing activities</p>
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+                  <p className="text-gray-600 mt-1">Stay updated with your freelancing activities</p>
+                </div>
+                <button
+                  className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  onClick={async () => {
+                    if (!user) return;
+                    const { error } = await supabase
+                      .from('notifications')
+                      .update({ read: true })
+                      .eq('user_id', user.id)
+                      .eq('read', false);
+                    if (!error) {
+                      fetchNotifications();
+                      window.dispatchEvent(new Event('notifications-updated'));
+                      toast({ title: 'All notifications marked as read', description: 'You have no unread notifications.', variant: 'success' });
+                    }
+                  }}
+                >
+                  Mark all as read
+                </button>
               </div>
 
               <div className="divide-y divide-gray-200">
@@ -266,9 +288,7 @@ const FreelancerNotifications: React.FC = () => {
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                      }`}
+                      className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}
                       onClick={() => handleNotificationClick(notification)}
                       tabIndex={0}
                       role="button"
@@ -281,9 +301,7 @@ const FreelancerNotifications: React.FC = () => {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <h3 className={`text-sm font-medium ${
-                              !notification.read ? 'text-gray-900' : 'text-gray-700'
-                            }`}>
+                            <h3 className={`text-sm ${!notification.read ? 'font-bold text-gray-900' : 'font-normal text-gray-700'}`}>
                               {notification.message}
                             </h3>
                             <div className="flex items-center space-x-2">
@@ -292,7 +310,7 @@ const FreelancerNotifications: React.FC = () => {
                                 {formatTimeAgo(notification.created_at)}
                               </span>
                               {!notification.read && (
-                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                <span className="w-2 h-2 bg-blue-600 rounded-full inline-block"></span>
                               )}
                             </div>
                           </div>
