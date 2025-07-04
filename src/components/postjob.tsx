@@ -194,15 +194,7 @@ const PostJobForm: React.FC = () => {
         attachment_url: attachmentUrl,
       }])
       .select()
-<<<<<<< HEAD
-<<<<<<< HEAD
       .maybeSingle();
-=======
-      .single();
->>>>>>> 1125f27 (updates in the postjob page)
-=======
-      .maybeSingle();
->>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
 
     if (jobError) throw jobError;
 
@@ -397,15 +389,7 @@ const PostJobForm: React.FC = () => {
             attachment_url: attachmentUrl,
           }])
           .select()
-<<<<<<< HEAD
-<<<<<<< HEAD
           .maybeSingle();
-=======
-          .single();
->>>>>>> 1125f27 (updates in the postjob page)
-=======
-          .maybeSingle();
->>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
 
         if (jobError) throw jobError;
 
