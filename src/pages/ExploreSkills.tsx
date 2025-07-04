@@ -24,12 +24,12 @@ const ExploreSkills: React.FC = () => {
           <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
           <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
         </div>
-        <div className="container mx-auto px-4 py-12 md:py-16 relative z-10">
+        <div className="container mx-auto px-4 py-16 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+            <h1 className="text-6xl font-bold text-gray-900 leading-tight mb-6">
               Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Skills</span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Discover the perfect skill or service for your project needs
             </p>
             <div className="relative max-w-xl mx-auto">
@@ -57,7 +57,7 @@ const ExploreSkills: React.FC = () => {
               View all <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-4 gap-6">
             {[
               "AI & Machine Learning",
               "AR/VR Development",
@@ -89,7 +89,7 @@ const ExploreSkills: React.FC = () => {
 <div className="bg-white py-12">
   <div className="container mx-auto px-4">
     <h2 className="text-2xl font-bold mb-8">Featured Services</h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-3 gap-6">
       {[
         { id: 1, img: 'https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg', provider: 'Alice' ,description: 'I am a highly skilled graphic designer with over 5 years of experience.', } , 
         { id: 2, img: 'https://images.pexels.com/photos/3184298/pexels-photo-3184298.jpeg', provider: 'Bob', description: 'I specialize in creating engaging and user-friendly websites.' },
@@ -158,7 +158,7 @@ const ExploreSkills: React.FC = () => {
       <div className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8">Services By Level</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-6">
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition">
               <div className="p-6">
                 <div className="flex items-center justify-center mb-4">
@@ -269,7 +269,7 @@ const ExploreSkills: React.FC = () => {
 <div className="bg-white py-12">
   <div className="container mx-auto px-4">
     <h2 className="text-2xl font-bold mb-8">Skills by Industry</h2>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-4">
       {[
         {
           name: "Technology",
