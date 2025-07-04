@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { useUserProfile } from '../../lib/auth';
 
 interface AdminHeaderProps {
   adminEmail: string | null;
