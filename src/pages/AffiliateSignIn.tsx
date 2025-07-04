@@ -63,43 +63,50 @@ const AffiliateSignIn: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{
+      backgroundImage: `url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&w=1200&q=80')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }}>
+      {/* Overlay for darkening the background */}
+      <div className="absolute inset-0 bg-black opacity-40 z-0" />
       {/* Blurred Circles */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none z-0">
+      <div className="absolute inset-0 opacity-10 pointer-events-none z-10">
         <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
         <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
         <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
       </div>
-      <div className="relative z-10 w-full max-w-md">
-        <Card className="shadow-2xl rounded-2xl border-0 bg-white">
+      <div className="relative z-20 w-full max-w-md">
+        <Card className="shadow-2xl rounded-2xl border-0 bg-white/10 backdrop-blur-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center mb-2 text-gray-900">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate Marketer Sign In</span>
+            <CardTitle className="text-2xl font-bold text-center mb-2 text-white">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-orange-400">Affiliate Marketer Sign In</span>
             </CardTitle>
-            <p className="text-center text-gray-600 mt-2">Sign in to access your affiliate dashboard and manage your referrals.</p>
+            <p className="text-center text-gray-200 mt-2">Sign in to access your affiliate dashboard and manage your referrals.</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="email" className="text-gray-900">Email</Label>
-                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
+                <Label htmlFor="email" className="text-gray-200">Email</Label>
+                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg bg-white/10 text-white placeholder:text-gray-200 border-white/30 focus:border-green-400 focus:ring-green-300" />
               </div>
               <div>
-                <Label htmlFor="password" className="text-gray-900">Password</Label>
-                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
+                <Label htmlFor="password" className="text-gray-200">Password</Label>
+                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg bg-white/10 text-white placeholder:text-gray-200 border-white/30 focus:border-green-400 focus:ring-green-300" />
               </div>
-              <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</Button>
+              <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-semibold shadow-lg backdrop-blur-md" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</Button>
             </form>
             <Button
               variant="outline"
-              className="w-full h-12 text-lg mt-4"
+              className="w-full h-12 text-lg mt-4 bg-white/10 text-white border-white/30 hover:bg-white/20 backdrop-blur-md"
               onClick={() => navigate('/')}
             >
               Back to Home
             </Button>
             <div className="mt-4 text-center">
-              <span className="text-gray-600">Don't have an account?</span>
-              <Button variant="link" className="ml-2 text-blue-600" onClick={() => navigate('/affiliate/register')}>
+              <span className="text-gray-200">Don't have an account?</span>
+              <Button variant="link" className="ml-2 text-green-400" onClick={() => navigate('/affiliate/register')}>
                 Register
               </Button>
             </div>
