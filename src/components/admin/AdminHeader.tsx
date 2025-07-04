@@ -108,6 +108,18 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
       </div>
       {/* Right: Icons */}
       <div className="flex items-center gap-4 ml-4">
+        {/* Theme Toggle */}
+        <button
+          aria-label="Toggle theme"
+          className="p-2 rounded-full hover:bg-muted transition"
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-6 w-6 text-yellow-400" />
+          ) : (
+            <MoonStar className="h-6 w-6 text-blue-600" />
+          )}
+        </button>
         {/* Notifications (show unread messages count) */}
         <button
           aria-label="Messages"

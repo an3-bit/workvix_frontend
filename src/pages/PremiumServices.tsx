@@ -63,31 +63,34 @@ const PremiumServices: React.FC = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900 overflow-hidden">
-        {/* Blurred Circles */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
-          <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
-        </div>
+      <div className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <img
+          src="/upgrade/pro 2.webp"
+          alt="Premium Services Background"
+          className="absolute inset-0 w-full h-full object-cover opacity-60 z-0"
+          style={{ pointerEvents: 'none' }}
+        />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-60 z-0" />
         <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-            <div className="md:w-1/2 space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900">workvix <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Premium</span></h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl leading-relaxed">
+            <div className="md:w-1/2 space-y-6 text-white">
+              <h1 className="text-4xl md:text-5xl font-bold">workvix <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Premium</span></h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl leading-relaxed">
                 A business solution designed for teams. Connect with top-tier professionals handpicked for quality and service excellence.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-300" />
                   <span>Verified high-quality professionals</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-300" />
                   <span>Matched with proven experts in your field</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-300" />
                   <span>Dedicated success management</span>
                 </div>
               </div>
@@ -97,14 +100,6 @@ const PremiumServices: React.FC = () => {
                   <ArrowRight className="h-5 w-5" />
                 </button>
               </Link>
-            </div>
-            <div className="md:w-1/2">
-              <img
-                src="https://media.istockphoto.com/id/1364946137/photo/businessman-holding-and-showing-the-best-quality-assurance-with-golden-five-stars-for.webp?s=1024x1024&w=is&k=20&c=rJB9kZhjd4M6T8YYBoCRfN9AeI2gkkqKGZXPYgRTqK0="
-                alt="Premium Services"
-                loading="lazy"
-                className="rounded-lg shadow-lg object-cover w-full h-full max-h-[400px]"
-              />
             </div>
           </div>
         </div>

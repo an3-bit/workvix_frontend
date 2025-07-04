@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,7 +98,7 @@ const UpgradeToProPage = () => {
                 )}
                 <CardHeader className="text-center">
                   <div className="flex justify-center mb-4">
-                    <div className={`p-3 rounded-full ${plan.popular ? 'bg-skillforge-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
+                    <div className={`p-3 rounded-full ${plan.popular ? 'bg-skillforge-primary text-white' : 'bg-gray-100 text-gray-600'}`}> 
                       {plan.icon}
                     </div>
                   </div>

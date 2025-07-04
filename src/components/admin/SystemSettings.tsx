@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { RefreshCcw, Save, Settings, User, CreditCard, Bell, Palette, Mail, Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useUserProfile } from '../../lib/auth';
+import { useTheme } from '@/lib/theme';
 
 interface Setting {
   id: string;
@@ -89,6 +90,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
   ];
 
   const { setProfile: setGlobalProfile } = useUserProfile();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     fetchSettings();
@@ -272,7 +274,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row min-h-[80vh] bg-background pb-16">
+      <div className="flex flex-col md:flex-row min-h-[80vh] bg-background pb-32">
         {/* Sidebar */}
         <aside className={`transition-all duration-200 bg-background border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 mb-4 md:mb-0 flex flex-col items-center md:items-stretch border-border`}>
           <button
@@ -296,7 +298,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
           </nav>
         </aside>
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-8 bg-background pb-16">
+        <main className="flex-1 p-4 md:p-8 bg-background pb-32">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl font-bold mb-6 flex items-center text-foreground">
               {categories.find(c => c.key === activeCategory)?.icon}
@@ -346,6 +348,12 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                             )}
                           </div>
                         ))}
+                        <div className="flex justify-end pt-4">
+                          <Button onClick={handleSaveChanges} disabled={saving} className="flex items-center space-x-2">
+                            <Save className="h-4 w-4" />
+                            <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   )}
@@ -588,7 +596,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                 <CardContent className="space-y-6">
                   <div>
                     <Label>Mode</Label>
-                    <select value={themes.mode} onChange={e => setThemes(t => ({ ...t, mode: e.target.value }))} className="w-full border rounded px-3 py-2">
+                    <select
+                      value={theme}
+                      onChange={e => setTheme(e.target.value as 'light' | 'dark')}
+                      className="w-full border rounded px-3 py-2 bg-background text-foreground dark:bg-gray-800 dark:text-gray-100"
+                    >
                       <option value="light">Light</option>
                       <option value="dark">Dark</option>
                     </select>
@@ -631,15 +643,6 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
               </Card>
             ) : null}
           </div>
-          {/* Sticky Save Bar (only for system settings) */}
-          {activeCategory === 'system' && (
-            <div className="fixed bottom-0 left-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-white border-t shadow-lg p-4 flex justify-end space-x-2">
-              <Button onClick={handleSaveChanges} disabled={saving} className="flex items-center space-x-2">
-                <Save className="h-4 w-4" />
-                <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
-              </Button>
-            </div>
-          )}
         </main>
       </div>
       <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">

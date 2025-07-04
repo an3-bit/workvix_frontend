@@ -171,7 +171,7 @@ const ManageClients: React.FC = () => {
     <div className="p-6 bg-background pb-16">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Clients</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Manage Clients</CardTitle>
           <Button onClick={fetchClients} variant="outline">Refresh Clients</Button>
         </CardHeader>
         <CardContent>

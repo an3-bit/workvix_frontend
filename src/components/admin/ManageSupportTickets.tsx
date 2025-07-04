@@ -334,7 +334,16 @@ const ManageSupportTickets: React.FC = () => {
                   {tickets.map((ticket) => (
                     <TableRow key={ticket.id}>
                       <TableCell className="font-medium max-w-[200px] truncate text-foreground">{ticket.subject}</TableCell>
-                      <TableCell className="text-foreground">{ticket.user_profile?.first_name || 'N/A'} ({ticket.user_profile?.user_type || 'N/A'})</TableCell>
+                      <TableCell className="text-foreground">
+                        {ticket.user_profile?.first_name || 'N/A'}
+                        {ticket.user_profile?.last_name ? ` ${ticket.user_profile.last_name}` : ''}
+                        {ticket.user_profile?.user_type === 'affiliate_marketer' && (
+                          <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-xs font-semibold align-middle">Affiliate Marketer</span>
+                        )}
+                        <div className="text-xs text-gray-500">
+                          {ticket.user_profile?.email}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           ticket.status === 'open' ? 'bg-primary/10 text-primary' :
@@ -399,11 +408,21 @@ const ManageSupportTickets: React.FC = () => {
                   chats.map(chat => (
                     <li
                       key={chat.id}
-                      className={`p-2 rounded cursor-pointer mb-1 ${selectedChat?.id === chat.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                      className={`p-2 rounded cursor-pointer mb-1 transition-colors
+                        ${selectedChat?.id === chat.id ? 'bg-blue-900 text-white' : 'hover:bg-gray-800 hover:text-foreground'}
+                      `}
                       onClick={() => handleSelectChat(chat)}
                     >
-                      <div className="font-medium text-gray-900 text-sm truncate">{chat.subject || 'No subject'}</div>
-                      <div className="text-xs text-gray-500">{new Date(chat.updated_at).toLocaleString()}</div>
+                      <div className={`font-medium text-sm truncate
+                        ${selectedChat?.id === chat.id ? 'text-white' : 'text-foreground'}
+                      `}>
+                        {chat.subject || 'No subject'}
+                      </div>
+                      <div className={`text-xs
+                        ${selectedChat?.id === chat.id ? 'text-gray-200' : 'text-muted-foreground'}
+                      `}>
+                        {new Date(chat.updated_at).toLocaleString()}
+                      </div>
                     </li>
                   ))
                 )}
@@ -413,17 +432,23 @@ const ManageSupportTickets: React.FC = () => {
             <div className="flex-1">
               {selectedChat ? (
                 <div className="flex flex-col h-96">
-                  <div className="flex-1 overflow-y-auto border rounded p-3 bg-white mb-2">
+                  <div className="flex-1 overflow-y-auto border rounded p-3 bg-background dark:bg-gray-900 mb-2">
                     {chatLoading ? (
                       <div className="text-center text-gray-400">Loading messages...</div>
                     ) : chatMessages.length === 0 ? (
                       <div className="text-center text-gray-400">No messages yet.</div>
                     ) : (
                       chatMessages.map(msg => (
-                        <div key={msg.id} className={`mb-3 flex ${msg.sender_type === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`rounded-lg px-3 py-2 max-w-xs text-sm ${msg.sender_type === 'admin' ? 'bg-blue-100 text-blue-900' : 'bg-gray-100 text-gray-800'}`}>
+                        <div key={msg.id} className={`mb-6 flex ${msg.sender_type === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`rounded-2xl px-5 py-3 max-w-md text-base font-medium shadow-lg border break-words
+                            ${msg.sender_type === 'admin'
+                              ? 'bg-blue-800 text-white border-blue-900 dark:bg-blue-700 dark:text-white dark:border-blue-800'
+                              : 'bg-white text-black border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700'}
+                          `}>
                             <div>{msg.content}</div>
-                            <div className="text-xs text-gray-400 mt-1 text-right">{new Date(msg.created_at).toLocaleTimeString()}</div>
+                            <div className="text-xs mt-2 text-right opacity-70 text-gray-600 dark:text-gray-300">
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
                           </div>
                         </div>
                       ))

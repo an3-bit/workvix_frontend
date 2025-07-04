@@ -190,7 +190,7 @@ const ManageFreelancers: React.FC = () => {
     <div className="p-6 bg-background min-h-screen pb-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl font-bold text-gray-800">Manage Freelancers</CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Manage Freelancers</CardTitle>
           <Button onClick={fetchFreelancers} variant="outline">Refresh Freelancers</Button>
         </CardHeader>
         <CardContent>
