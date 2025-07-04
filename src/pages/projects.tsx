@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Nav2 from '@/components/Nav2';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Link } from 'react-router-dom';
 
@@ -1880,7 +1880,7 @@ const Projects = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Nav2 />
+      <Navbar />
       <main className="flex-1 pt-20">
         <section className="py-12 sm:py-16 lg:py-20 bg-white">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
