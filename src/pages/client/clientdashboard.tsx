@@ -599,21 +599,28 @@ const ClientDashboard = () => {
               </a>
             </div>
             {/* Recent Jobs */}
-            <div className="bg-white rounded-lg shadow p-4 w-full max-w-md mx-auto">
-              <h3 className="text-lg font-semibold mb-4">Recent Jobs</h3>
+            <div className="bg-white rounded-lg shadow p-4 w-full max-w-md mx-auto border border-gray-200">
+              <h3 className="text-lg font-bold mb-4 text-gray-900">Recent Jobs</h3>
               {recentJobs.length === 0 ? (
                 <div className="text-gray-400 text-center py-4">No jobs posted yet.</div>
               ) : (
                 <ul className="divide-y divide-gray-100">
                   {recentJobs.map(job => (
-                    <li key={job.id} className="py-3 flex items-center justify-between">
+                    <li key={job.id} className="py-4 flex items-center justify-between gap-4">
                       <div>
-                        <div className="font-medium">{job.title}</div>
-                        <div className="text-xs text-gray-500">{formatDate(job.created_at)} • {job.status}</div>
+                        <div className="font-bold text-gray-900 text-lg leading-tight mb-1">{job.title}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-700">{formatDate(job.created_at)}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full 
+                            ${job.status === 'completed' ? 'bg-green-100 text-green-700' :
+                              job.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
+                              job.status === 'open' ? 'bg-blue-100 text-blue-700' :
+                              'bg-gray-100 text-gray-600'}`}>{job.status.replace('_', ' ')}</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold">{formatCurrency(job.budget)}</div>
-                        <Link to={`/client/jobs/${job.id}`} className="text-blue-600 hover:underline text-sm ml-4">View</Link>
+                      <div className="text-right min-w-[100px]">
+                        <div className="font-bold text-gray-900 text-base">{formatCurrency(job.budget)}</div>
+                        <Link to={`/jobs/${job.id}`} className="text-blue-600 hover:underline text-sm font-semibold mt-2 inline-block">View</Link>
                       </div>
                     </li>
                   ))}
