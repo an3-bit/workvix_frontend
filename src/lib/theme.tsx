@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e25df71 (admin dashboard)
-=======
->>>>>>> 923fc14 (client (profile,dashboard))
-// Remove all theme context, provider, and logic. Default to light mode.
-// ... existing code ... 
-=======
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,9 +11,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<'light' | 'dark'>(
-    (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
-  );
+  const [theme, setThemeState] = useState<'light' | 'dark'>((localStorage.getItem('theme') as 'light' | 'dark') || 'light');
   const [loading, setLoading] = useState(true);
 
   // Fetch user theme from DB on mount
@@ -36,15 +23,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .from('profiles')
           .select('theme')
           .eq('id', user.id)
-<<<<<<< HEAD
-<<<<<<< HEAD
           .maybeSingle();
-=======
-          .single();
->>>>>>> e25df71 (admin dashboard)
-=======
-          .maybeSingle();
->>>>>>> 9b83c4a (Refactor database queries to use maybeSingle() for safer data retrieval)
         if (profile && profile.theme) {
           setThemeState(profile.theme);
           localStorage.setItem('theme', profile.theme);
@@ -85,20 +64,4 @@ export const useTheme = () => {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
   return ctx;
-}; 
-<<<<<<< HEAD
->>>>>>> 7438431 (admin dashboard)
-=======
-// Remove all theme context, provider, and logic. Default to light mode.
-// ... existing code ... 
->>>>>>> b2a4ea7 (client (profile,dashboard))
-=======
->>>>>>> 089fd42 (admin dashboard)
-<<<<<<< HEAD
->>>>>>> e25df71 (admin dashboard)
-=======
-=======
-// Remove all theme context, provider, and logic. Default to light mode.
-// ... existing code ... 
->>>>>>> c427d0d (client (profile,dashboard))
->>>>>>> 923fc14 (client (profile,dashboard))
+};

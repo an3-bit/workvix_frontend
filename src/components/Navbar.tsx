@@ -451,7 +451,6 @@ const Navbar = () => {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center space-x-4">
-<<<<<<< HEAD
               {/* Search Button */}
               <button
                 onClick={toggleSearch}
@@ -459,9 +458,6 @@ const Navbar = () => {
               >
                 <Search className="h-5 w-5" />
               </button>
-
-=======
->>>>>>> 41a2621 (explore skills paged disabled and new updates on the navbar)
               {/* Auth Buttons */}
               <Link to="/signin">
                 <Button variant="ghost" className="text-gray-700 hover:text-green-600 hover:bg-green-50 font-medium">

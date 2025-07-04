@@ -19,42 +19,9 @@ import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminLogin from "./components/admin/AdminLogin";
 import { AffiliateLayout } from "./pages/affiliate/AffiliateDashboard";
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 import ProfileSettings from './pages/client/ProfileSettings';
 import Payments from './pages/client/Payments';
-=======
-<<<<<<< HEAD
-=======
->>>>>>> e25df71 (admin dashboard)
-=======
->>>>>>> 923fc14 (client (profile,dashboard))
 import AuthGuard from "./components/AuthGuard";
-=======
-import { ThemeProvider } from '@/lib/theme';
->>>>>>> 089fd42 (admin dashboard)
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 7438431 (admin dashboard)
-=======
-import AuthGuard from "./components/AuthGuard";
->>>>>>> dc1b46d (Refactor database queries to use maybeSingle() for safer data retrieval)
-=======
->>>>>>> e25df71 (admin dashboard)
-=======
-=======
-import ProfileSettings from './pages/client/ProfileSettings';
-<<<<<<< HEAD
->>>>>>> c427d0d (client (profile,dashboard))
-<<<<<<< HEAD
->>>>>>> 923fc14 (client (profile,dashboard))
-=======
-=======
-import Payments from './pages/client/Payments';
->>>>>>> c209820 (client dashboard)
->>>>>>> 9be6499 (client dashboard)
 
 const queryClient = new QueryClient();
 
@@ -90,23 +57,9 @@ const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFr
 const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
 const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
 const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
-<<<<<<< HEAD
-<<<<<<< HEAD
 const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
 const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
-=======
-=======
->>>>>>> 9b83c4a (Refactor database queries to use maybeSingle() for safer data retrieval)
 const ServicesPage = lazy(() => import("./components/services"));
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 5a4df94 (new service page and updates on services and hero section.)
-=======
-const Projects = lazy(() => import("./pages/Projects"));
->>>>>>> 29548a0 (New updates on projects page)
-=======
-const Projects = lazy(() => import("./pages/projects"));
->>>>>>> 87ff80f (affilliate marketer)
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -127,11 +80,8 @@ const App = () => (
             <Route path="/join/:role" element={<Join />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<JobsPage />} />
-<<<<<<< HEAD
             <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
             <Route path="/bids" element={<FreelancerBidsPage />} />
-=======
->>>>>>> 5a4df94 (new service page and updates on services and hero section.)
             <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
             <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
@@ -160,123 +110,17 @@ const App = () => (
             <Route path="/client/chat" element={<ClientChatPage />} />
             <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
             <Route path="/chat-interface" element={<ChatSystem jobId={null} bidId={null} receiverId={null} />} />
-             {/* Admin Specific Routes */}
-<<<<<<< HEAD
-         <Route path="/admin/login" element={<AdminLogin />} />
-         
-         {/* Protected Admin Routes */}
-         <Route
-           path="/admin/*"
-           element={
-             <AdminProtectedRoute>
-               <AdminDashboardPage adminEmail="" />
-             </AdminProtectedRoute>
-           }
-         />
-=======
-        <Route path="/admin/login" element={<AdminLogin />} />
-        
-        {/* Protected Admin Routes */}
-        <Route
-          path="/admin/*"
-          element={
-            <AdminProtectedRoute>
-              <AdminDashboardPage adminEmail="" />
-            </AdminProtectedRoute>
-          }
-        />
-=======
-const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
-const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
-
-const App = () => (
-<<<<<<< HEAD
-  <ThemeProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/join" element={<JoinSelection />} />
-              <Route path="/joinselection" element={<JoinSelection />} />
-              <Route path="/join/:role" element={<Join />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/jobs" element={<JobsPage />} />
-              <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
-              <Route path="/bids" element={<FreelancerBidsPage />} />
-              <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
-              <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/freelancer" element={<FreelancerDashboard />} />
-              <Route path="/freelancer/profile" element={<FreelancerProfile />} />
-              <Route path="/client" element={<ClientDashboard />} />
-              <Route path="/client/bids" element={<ClientBidsPage />} />
-              <Route path="/client/jobs" element={<ClientMyJobs />} />
-              <Route path="/order/:bidId" element={<OrderForm />} />
-              <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
-              <Route path="/client/notifications" element={<ClientNotification />} />
-              <Route path="/upgrade" element={<UpgradeToProPage />} />
-              <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/pro" element={<WorkVixGoPage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/post-job" element={<PostJobForm />} />
-              <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
-              <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/explore-skills" element={<ExploreSkills />} />
-              <Route path="/premium-services" element={<PremiumServices />} />
-              <Route path="/become-seller" element={<BecomeSeller />} />
-              <Route path="/job-posted-notification" element={<JobPostedNotification />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/client/chat" element={<ClientChatPage />} />
-              <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
-              <Route path="/chat-interface" element={<ChatSystem jobId={null} bidId={null} receiverId={null} />} />
-               {/* Admin Specific Routes */}
-           <Route path="/admin/login" element={<AdminLogin />} />
-           
-           {/* Protected Admin Routes */}
-           <Route
-             path="/admin/*"
-             element={
-               <AdminProtectedRoute>
-                 <AdminDashboardPage adminEmail="" />
-               </AdminProtectedRoute>
-             }
-           />
->>>>>>> 3c73a1e (Refactor database queries to use maybeSingle() for safer data retrieval)
->>>>>>> 9b83c4a (Refactor database queries to use maybeSingle() for safer data retrieval)
-
-<<<<<<< HEAD
-             <Route
-               path="/chat-system"
-               element={
-                 <ChatSystem jobId={null} bidId={null} receiverId={null} />
-               }
-             />
-             <Route path="/affiliate/register" element={<AffiliateRegister />} />
-             <Route path="/affiliate" element={<AffiliateLayout active="" />}>
-               <Route path="dashboard" element={<AffiliateDashboard />} />
-               <Route path="clients" element={<AffiliateManageClients />} />
-               <Route path="freelancers" element={<AffiliateManageFreelancers />} />
-               <Route path="jobs" element={<AffiliateManageJobs />} />
-               <Route path="commissions" element={<AffiliateCommissionSummary />} />
-               <Route index element={<AffiliateDashboard />} />
-             </Route>
-             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
-             <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
-             <Route path="/profile" element={<ProfileSettings />} />
-             <Route path="/client/payments" element={<Payments />} />
-           </Routes>
-=======
+            {/* Admin Specific Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            {/* Protected Admin Routes */}
+            <Route
+              path="/admin/*"
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboardPage adminEmail="" />
+                </AdminProtectedRoute>
+              }
+            />
             <Route
               path="/chat-system"
               element={
@@ -293,96 +137,11 @@ const App = () => (
               <Route index element={<AffiliateDashboard />} />
             </Route>
             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
+            <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
+            <Route path="/profile" element={<ProfileSettings />} />
+            <Route path="/client/payments" element={<Payments />} />
             <Route path="/services" element={<ServicesPage />} />
-            <Route path="/projects" element={<Projects />} />
           </Routes>
-<<<<<<< HEAD
->>>>>>> 5a4df94 (new service page and updates on services and hero section.)
-=======
-=======
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        }>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/join" element={<JoinSelection />} />
-            <Route path="/joinselection" element={<JoinSelection />} />
-            <Route path="/join/:role" element={<Join />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
-            <Route path="/bids" element={<FreelancerBidsPage />} />
-            <Route path="/jobs/:jobId/bids" element={<JobsBid />} />
-            <Route path="/checkout/:bidId?" element={<CheckoutPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/freelancer" element={<FreelancerDashboard />} />
-            <Route path="/freelancer/profile" element={<FreelancerProfile />} />
-            <Route path="/client" element={<ClientDashboard />} />
-            <Route path="/client/bids" element={<ClientBidsPage />} />
-            <Route path="/client/jobs" element={<ClientMyJobs />} />
-            <Route path="/order/:bidId" element={<OrderForm />} />
-            <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
-            <Route path="/client/notifications" element={<ClientNotification />} />
-            <Route path="/upgrade" element={<UpgradeToProPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/pro" element={<WorkVixGoPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/post-job" element={<PostJobForm />} />
-            <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
-            <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/explore-skills" element={<ExploreSkills />} />
-            <Route path="/premium-services" element={<PremiumServices />} />
-            <Route path="/become-seller" element={<BecomeSeller />} />
-            <Route path="/job-posted-notification" element={<JobPostedNotification />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/client/chat" element={<ClientChatPage />} />
-            <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
-            <Route path="/chat-interface" element={<ChatSystem jobId={null} bidId={null} receiverId={null} />} />
-             {/* Admin Specific Routes */}
-         <Route path="/admin/login" element={<AdminLogin />} />
-         
-         {/* Protected Admin Routes */}
-         <Route
-           path="/admin/*"
-           element={
-             <AdminProtectedRoute>
-               <AdminDashboardPage adminEmail="" />
-             </AdminProtectedRoute>
-           }
-         />
-
-             <Route
-               path="/chat-system"
-               element={
-                 <ChatSystem jobId={null} bidId={null} receiverId={null} />
-               }
-             />
-             <Route path="/affiliate/register" element={<AffiliateRegister />} />
-             <Route path="/affiliate" element={<AffiliateLayout active="" />}>
-               <Route path="dashboard" element={<AffiliateDashboard />} />
-               <Route path="clients" element={<AffiliateManageClients />} />
-               <Route path="freelancers" element={<AffiliateManageFreelancers />} />
-               <Route path="jobs" element={<AffiliateManageJobs />} />
-               <Route path="commissions" element={<AffiliateCommissionSummary />} />
-               <Route index element={<AffiliateDashboard />} />
-             </Route>
-             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
-             <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
-             <Route path="/profile" element={<ProfileSettings />} />
-             <Route path="/client/payments" element={<Payments />} />
-           </Routes>
->>>>>>> c427d0d (client (profile,dashboard))
->>>>>>> 923fc14 (client (profile,dashboard))
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>

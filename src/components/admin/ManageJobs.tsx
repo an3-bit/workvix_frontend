@@ -300,24 +300,9 @@ const ManageJobs: React.FC = () => {
   }
 
   return (
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     <div className="p-6 bg-background min-h-screen pb-8">
-=======
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
->>>>>>> a02f476 (admin dashboard)
-=======
-    <div className="flex flex-col md:flex-row min-h-screen bg-background">
->>>>>>> 7438431 (admin dashboard)
-=======
-    <div className="p-6 bg-background min-h-screen pb-8">
-=======
-    <div className="flex flex-col md:flex-row min-h-screen bg-background">
->>>>>>> 089fd42 (admin dashboard)
->>>>>>> e25df71 (admin dashboard)
       {/* Sidebar */}
-      <aside className={`transition-all duration-200 bg-white border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 flex flex-col items-center md:items-stretch min-h-screen`}> {/* min-h-screen for sidebar */}
+      <aside className={`transition-all duration-200 bg-white border-r ${sidebarOpen ? 'w-full md:w-64' : 'w-16'} p-4 flex flex-col items-center md:items-stretch min-h-screen`}>
         <button
           className="mb-4 p-2 rounded hover:bg-gray-100 focus:outline-none self-end md:self-start"
           onClick={() => setSidebarOpen((open) => !open)}
@@ -568,17 +553,6 @@ const ManageJobs: React.FC = () => {
           </Dialog>
         </div>
       </main>
-<<<<<<< HEAD
-      <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
-        <span>Admin Dashboard © {new Date().getFullYear()} WorkVix</span>
-        <div className="flex items-center gap-4">
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-blue-600 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X" className="hover:text-black transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.53 2H21l-7.19 8.24L22 22h-6.47l-5.1-6.2L4 22H1l7.64-8.74L2 2h6.47l4.73 5.75L17.53 2zm-2.13 16.98h1.77l-5.13-6.24-1.77 2.13 5.13 6.24z"/></svg></a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-blue-700 transition-colors"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/></svg></a>
-        </div>
-      </footer>
-=======
->>>>>>> a02f476 (admin dashboard)
     </div>
   );
 };
