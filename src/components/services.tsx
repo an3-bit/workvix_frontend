@@ -2,7 +2,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Star, CheckCircle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import Nav2 from "@/components/Nav2";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 // Example services from Featured and WorkVixGo
@@ -308,7 +308,7 @@ export const ServicesGrid = () => (
 const ServicesPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Nav2 />
+      <Navbar />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 flex-1">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 text-center">All Services</h1>
         {/* Fiverr-style Services Grid */}
