@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Users, Briefcase, MessageSquare, User, Star, LifeBuoy } from 'lucide-react';
+import { DollarSign, Users, Briefcase, MessageSquare, User, Star, LifeBuoy, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Switch } from '@/components/ui/switch';

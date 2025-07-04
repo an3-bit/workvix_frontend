@@ -200,34 +200,19 @@ const ManageMessages: React.FC = () => {
                         {message.sender_profile?.first_name || 'N/A'}
                         <span className="ml-1">({message.sender_profile?.user_type || 'N/A'})</span>
                       </span>
-                      <span className="text-xs text-muted-foreground">{new Date(message.created_at).toLocaleString()}</span>
+                      <span className="text-xs text-gray-500">{new Date(message.created_at).toLocaleString()}</span>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-foreground font-medium break-words">{message.content || 'N/A'}</span>
-                      {message.read ? (
-                        <span className="mt-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold w-max">Read</span>
-                      ) : (
-                        <span className="mt-1 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold w-max">Unread</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Job: {message.chat_info?.job?.title || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    <div className="text-gray-900 font-medium break-words">{message.content || 'N/A'}</div>
+                    <div className="text-xs text-gray-600">Job: {message.chat_info?.job?.title || 'N/A'}</div>
+                    <div className="flex items-center gap-2 mt-2">
                       {message.attachment_url ? (
-                        <a href={message.attachment_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center">
+                        <a href={message.attachment_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center text-xs">
                           <Download className="h-4 w-4 mr-1" /> File
                         </a>
-                      ) : <span className="text-muted-foreground">No Attachment</span>}
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteMessage(message)}
-                        className="flex-1 transition-transform hover:scale-105 hover:bg-red-100 hover:text-red-700"
-                        title="Delete Message"
-                      >
+                      ) : (
+                        <span className="text-xs text-gray-400">No Attachment</span>
+                      )}
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteMessage(message)} className="flex-1 transition-transform hover:scale-105 hover:bg-red-100 hover:text-red-700" title="Delete Message">
                         <Trash className="h-4 w-4 mr-1" />Delete
                       </Button>
                     </div>

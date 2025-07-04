@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useUserProfile } from '../../lib/auth';
+import { useTheme } from '@/lib/theme';
 
 interface AdminHeaderProps {
   adminEmail: string | null;
@@ -32,6 +33,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
   const [messageCount, setMessageCount] = useState(0);
   const [search, setSearch] = useState('');
   const [searching, setSearching] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   // Fallbacks for avatar and name
   const avatar = admin?.avatar || '';

@@ -21,6 +21,7 @@ import AdminLogin from "./components/admin/AdminLogin";
 import { AffiliateLayout } from "./pages/affiliate/AffiliateDashboard";
 import ProfileSettings from './pages/client/ProfileSettings';
 import Payments from './pages/client/Payments';
+import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/Commissi
 const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
 const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
 const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
+const ServicesPage = lazy(() => import("./components/services"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -108,39 +110,38 @@ const App = () => (
             <Route path="/client/chat" element={<ClientChatPage />} />
             <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
             <Route path="/chat-interface" element={<ChatSystem jobId={null} bidId={null} receiverId={null} />} />
-             {/* Admin Specific Routes */}
-         <Route path="/admin/login" element={<AdminLogin />} />
-         
-         {/* Protected Admin Routes */}
-         <Route
-           path="/admin/*"
-           element={
-             <AdminProtectedRoute>
-               <AdminDashboardPage adminEmail="" />
-             </AdminProtectedRoute>
-           }
-         />
-
-             <Route
-               path="/chat-system"
-               element={
-                 <ChatSystem jobId={null} bidId={null} receiverId={null} />
-               }
-             />
-             <Route path="/affiliate/register" element={<AffiliateRegister />} />
-             <Route path="/affiliate" element={<AffiliateLayout active="" />}>
-               <Route path="dashboard" element={<AffiliateDashboard />} />
-               <Route path="clients" element={<AffiliateManageClients />} />
-               <Route path="freelancers" element={<AffiliateManageFreelancers />} />
-               <Route path="jobs" element={<AffiliateManageJobs />} />
-               <Route path="commissions" element={<AffiliateCommissionSummary />} />
-               <Route index element={<AffiliateDashboard />} />
-             </Route>
-             <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
-             <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
-             <Route path="/profile" element={<ProfileSettings />} />
-             <Route path="/client/payments" element={<Payments />} />
-           </Routes>
+            {/* Admin Specific Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            {/* Protected Admin Routes */}
+            <Route
+              path="/admin/*"
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboardPage adminEmail="" />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat-system"
+              element={
+                <ChatSystem jobId={null} bidId={null} receiverId={null} />
+              }
+            />
+            <Route path="/affiliate/register" element={<AffiliateRegister />} />
+            <Route path="/affiliate" element={<AffiliateLayout active="" />}>
+              <Route path="dashboard" element={<AffiliateDashboard />} />
+              <Route path="clients" element={<AffiliateManageClients />} />
+              <Route path="freelancers" element={<AffiliateManageFreelancers />} />
+              <Route path="jobs" element={<AffiliateManageJobs />} />
+              <Route path="commissions" element={<AffiliateCommissionSummary />} />
+              <Route index element={<AffiliateDashboard />} />
+            </Route>
+            <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
+            <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
+            <Route path="/profile" element={<ProfileSettings />} />
+            <Route path="/client/payments" element={<Payments />} />
+            <Route path="/services" element={<ServicesPage />} />
+          </Routes>
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>

@@ -141,8 +141,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await (supabase as any)
-        .from('system_settings')
+      const { data, error } = await (supabase as unknown as { from: typeof supabase.from }).from('system_settings')
         .select('*')
         .order('setting_key', { ascending: true });
       if (error) throw error;
@@ -152,8 +151,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         initialEditValues[setting.setting_key] = setting.setting_value || '';
       });
       setEditValues(initialEditValues);
-    } catch (err: any) {
-      setError('Failed to fetch settings: ' + err.message);
+    } catch (err: unknown) {
+      setError('Failed to fetch settings: ' + (err instanceof Error ? err.message : String(err)));
       toast({ title: 'Error', description: 'Failed to fetch system settings.', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -173,7 +172,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
       const updates = settings.map(setting => {
         const newValue = editValues[setting.setting_key];
         if (newValue !== (setting.setting_value || '')) {
-          return (supabase as any)
+          return (supabase as unknown as { from: typeof supabase.from })
             .from('system_settings')
             .update({ 
               setting_value: newValue, 
@@ -191,8 +190,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
       } else {
         toast({ title: 'No Changes', description: 'No changes were made to the settings.' });
       }
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to save settings.', variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -232,8 +231,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
         phone: updates.phone,
       });
       toast({ title: 'Profile Saved', description: 'Profile settings updated.' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to update profile.', variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setUpdating(false);
     }
@@ -256,8 +255,8 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
       if (error) throw error;
       toast({ title: 'Password Changed', description: 'Your password has been updated.' });
       setPasswords({ current: '', new: '', confirm: '' });
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to change password.', variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setUpdating(false);
     }
@@ -347,12 +346,6 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                             )}
                           </div>
                         ))}
-                        <div className="flex justify-end mt-4">
-                          <Button onClick={handleSaveChanges} disabled={saving} className="flex items-center space-x-2">
-                            <Save className="h-4 w-4" />
-                            <span>{saving ? 'Saving...' : 'Save Changes'}</span>
-                          </Button>
-                        </div>
                       </CardContent>
                     </Card>
                   )}
@@ -415,9 +408,11 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                       <Label>Phone</Label>
                       <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
                     </div>
+                    <div className="md:col-span-2">
+                      <Label>Avatar URL</Label>
+                      <Input value={profile.avatar} onChange={e => setProfile(p => ({ ...p, avatar: e.target.value }))} />
+                    </div>
                   </div>
-                  <input type="file" accept="image/*" onChange={e => setSelectedAvatarFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} className="hidden" id="avatar-upload" />
-                  <label htmlFor="avatar-upload" className="ml-2 px-3 py-1 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition">Upload Photo</label>
                   <Button onClick={handleSaveProfile} className="mt-4" disabled={updating}>Save Profile</Button>
                   {/* Password Change Section */}
                   <div className="mt-8">
@@ -438,12 +433,7 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
                           <Label>Confirm New Password</Label>
                           <Input type="password" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} placeholder="Confirm new password" />
                         </div>
-                        <div className="flex justify-end mt-4">
-                          <Button onClick={handleChangePassword} disabled={updating} className="flex items-center space-x-2 w-full md:w-auto">
-                            <Save className="h-4 w-4" />
-                            <span>{updating ? 'Saving...' : 'Change Password'}</span>
-                          </Button>
-                        </div>
+                        <Button onClick={handleChangePassword} className="w-full mt-2" disabled={updating}>Change Password</Button>
                       </div>
                     </div>
                   </div>
@@ -641,6 +631,15 @@ const SystemSettings: React.FC<SystemSettingsProps> = ({ initialTab }) => {
               </Card>
             ) : null}
           </div>
+          {/* Sticky Save Bar (only for system settings) */}
+          {activeCategory === 'system' && (
+            <div className="fixed bottom-0 left-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-white border-t shadow-lg p-4 flex justify-end space-x-2">
+              <Button onClick={handleSaveChanges} disabled={saving} className="flex items-center space-x-2">
+                <Save className="h-4 w-4" />
+                <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
+              </Button>
+            </div>
+          )}
         </main>
       </div>
       <footer className="fixed bottom-0 left-0 w-full z-50 border-t border-border bg-card py-2 px-6 flex items-center justify-between text-sm text-muted-foreground">
