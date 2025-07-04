@@ -304,9 +304,7 @@ const ManageSupportTickets: React.FC = () => {
   return (
     <div className="p-6 bg-background min-h-screen pb-8">
       {/* User-facing support ticket submission form */}
-      <div className="mb-8">
-        <SubmitSupportTicket />
-      </div>
+     
       <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-foreground">Manage Support Tickets</CardTitle>
