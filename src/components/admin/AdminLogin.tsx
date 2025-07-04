@@ -65,8 +65,17 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <img
+        src="/admin/background.jpg"
+        alt="Admin Login Background"
+        className="absolute inset-0 w-full h-full object-cover opacity-60 z-0"
+        style={{ pointerEvents: 'none' }}
+      />
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-60 z-0" />
+      <Card className="w-full max-w-md relative z-10 bg-card/90 backdrop-blur-md">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center text-gray-800">
             Workvix Admin Login
