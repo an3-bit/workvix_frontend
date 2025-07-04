@@ -29,19 +29,26 @@ const ManageAffiliateMarketers: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
+      // Fetch from both tables and merge by id
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, user_type')
         .eq('user_type', 'affiliate_marketer');
-      if (error) throw error;
-      // Add mock data for status, referrals, earnings
-      const withMock = (data as AffiliateMarketer[]).map(a => ({
+      if (profilesError) throw profilesError;
+      const { data: marketersData, error: marketersError } = await supabase
+        .from('affiliate_marketers')
+        .select('id, email, first_name, last_name, phone, online, created_at, updated_at');
+      if (marketersError) throw marketersError;
+      // Merge by id
+      const marketersMap = new Map((marketersData || []).map(m => [m.id, m]));
+      const merged = (profilesData as AffiliateMarketer[]).map(a => ({
         ...a,
-        status: 'active',
+        ...marketersMap.get(a.id),
+        status: marketersMap.get(a.id)?.online ? 'active' : 'inactive',
         total_referrals: Math.floor(Math.random() * 100),
         earnings: Math.floor(Math.random() * 10000) / 100,
       }));
-      setAffiliates(withMock);
+      setAffiliates(merged);
     } catch (err: any) {
       setError('Failed to fetch affiliate marketers: ' + err.message);
     } finally {

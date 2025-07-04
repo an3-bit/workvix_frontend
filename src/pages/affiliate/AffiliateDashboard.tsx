@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate, Link, Outlet } from 'react-router-dom';
-import { TrendingUp, DollarSign, Users, Link2, ClipboardList, BarChart2, UserPlus, Activity, Bell, UserCircle, Search, LogOut } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Link2, ClipboardList, BarChart2, UserPlus, Activity, Bell, UserCircle, Search, LogOut, User, Link as LinkIcon, ArrowDownCircle, Settings } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart';
-import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts';
+import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, BarChart, Bar } from 'recharts';
 import { getCurrentUser } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 // Sidebar component for affiliate dashboard
 const AffiliateSidebar = ({ active }: { active: string }) => (
-  <aside className="bg-white shadow-lg h-full w-64 flex-shrink-0 flex flex-col py-8 px-4 border-r border-gray-100">
+  <aside className="bg-white shadow-lg h-screen w-64 flex-shrink-0 flex flex-col py-8 px-4 border-r border-gray-100">
     <div className="mb-8 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate</div>
     <nav className="flex-1 flex flex-col gap-2">
       {[
@@ -38,6 +38,32 @@ const AffiliateSidebar = ({ active }: { active: string }) => (
 const AffiliateNavBar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Fetch user profile for dropdown
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userProf } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+        setUserProfile(userProf);
+      }
+    })();
+    // Close dropdown on outside click
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -78,20 +104,40 @@ const AffiliateNavBar = () => {
       <div className="flex items-center gap-4">
         <button className="relative p-2 rounded-full hover:bg-blue-50 transition" title="Notifications">
           <Bell className="h-6 w-6 text-blue-600" />
-          {/* Notification dot */}
           <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full"></span>
         </button>
-        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-          <UserCircle className="h-7 w-7" />
+        {/* Profile Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg p-0"
+            onClick={() => setDropdownOpen((v) => !v)}
+            aria-label="Profile"
+          >
+            <UserCircle className="h-7 w-7" />
+          </button>
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 p-5 animate-fade-in">
+              {userProfile && (
+                <div className="mb-3 text-center">
+                  <img src={userProfile.avatar_url || `https://ui-avatars.com/api/?name=${userProfile.first_name}+${userProfile.last_name}`} alt="avatar" className="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-blue-200 shadow" />
+                  <div className="font-bold text-lg text-gray-900">{userProfile.first_name} {userProfile.last_name}</div>
+                  <div className="text-xs text-gray-500">{userProfile.email}</div>
+                  <div className="text-xs text-gray-500 mt-1">{userProfile.user_type}</div>
+                  <div className="text-xs text-green-600 mt-1">{userProfile.online ? 'Online' : 'Offline'}</div>
+                </div>
+              )}
+              <hr className="my-3 border-gray-200" />
+              <button
+                className="w-full flex items-center gap-2 text-left px-4 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition mb-2 shadow"
+                onClick={() => { setDropdownOpen(false); navigate('/profile'); }}
+              >
+                <Settings className="h-4 w-4" />
+                Profile Settings
+              </button>
+              <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-blue-50 transition font-medium text-red-600" onClick={handleLogout}>Logout</button>
+            </div>
+          )}
         </div>
-        <button
-          className="p-2 rounded-full hover:bg-red-50 transition flex items-center justify-center"
-          title="Logout"
-          onClick={handleLogout}
-          aria-label="Logout"
-        >
-          <LogOut className="h-6 w-6 text-red-500" />
-        </button>
       </div>
     </nav>
   );
@@ -101,9 +147,9 @@ const AffiliateNavBar = () => {
 export const AffiliateLayout = ({ active }: { active: string }) => (
   <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-indigo-50">
     <AffiliateNavBar />
-    <div className="flex flex-1">
+    <div className="flex flex-1 h-[calc(100vh-4rem)]"> {/* 4rem = 64px navbar height */}
       <AffiliateSidebar active={active} />
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-y-auto">
         <Outlet />
       </main>
     </div>
@@ -116,182 +162,187 @@ const referralLink = `${window.location.origin}/?ref=${localStorage.getItem('aff
 // NOTE: Ensure Supabase Row Level Security (RLS) is enabled so users can only access their own data.
 
 const AffiliateDashboard: React.FC = () => {
-  const navigate = useNavigate();
-
-  // State for live data
+  const [profile, setProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [stats, setStats] = useState({ earnings: 0, clicks: 0, signups: 0, conversions: 0 });
+  const [activity, setActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState([
-    { label: 'Total Referrals', value: 0, icon: <Users className="h-6 w-6 text-blue-600" /> },
-    { label: 'Commissions Earned', value: '$0', icon: <DollarSign className="h-6 w-6 text-green-600" /> },
-    { label: 'Clicks', value: 0, icon: <TrendingUp className="h-6 w-6 text-purple-600" /> },
-    { label: 'Conversion Rate', value: '0%', icon: <BarChart2 className="h-6 w-6 text-orange-500" /> },
-  ]);
-  const [chartData, setChartData] = useState([
-    { month: 'Jan', Referrals: 0, Commissions: 0 },
-    { month: 'Feb', Referrals: 0, Commissions: 0 },
-    { month: 'Mar', Referrals: 0, Commissions: 0 },
-    { month: 'Apr', Referrals: 0, Commissions: 0 },
-    { month: 'May', Referrals: 0, Commissions: 0 },
-    { month: 'Jun', Referrals: 0, Commissions: 0 },
-    { month: 'Jul', Referrals: 0, Commissions: 0 },
-    { month: 'Aug', Referrals: 0, Commissions: 0 },
-    { month: 'Sep', Referrals: 0, Commissions: 0 },
-    { month: 'Oct', Referrals: 0, Commissions: 0 },
-    { month: 'Nov', Referrals: 0, Commissions: 0 },
-    { month: 'Dec', Referrals: 0, Commissions: 0 },
-  ]);
-  const [recentActivity, setRecentActivity] = useState([]);
-
-  // Format helpers
-  const formatNumber = (num: number) => num.toLocaleString();
-  const formatCurrency = (num: number) => num.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleString();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      setError(null);
-      try {
-        const user = await getCurrentUser();
-        if (!user) {
-          setLoading(false);
-          setError('User not authenticated.');
-          return;
-        }
-        const affiliateId = user.id;
+      // 1. Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return setLoading(false);
 
-        // Fetch total referrals
-        const { count: referralCount, error: refErr } = await supabase
-          .from('referrals')
-          .select('*', { count: 'exact', head: true })
-          .eq('affiliate_id', affiliateId);
-        if (refErr) throw refErr;
+      console.log('User:', user);
 
-        // Fetch total clicks
-        const { count: clickCount, error: clickErr } = await supabase
-          .from('affiliate_clicks')
-          .select('*', { count: 'exact', head: true })
-          .eq('affiliate_id', affiliateId);
-        if (clickErr) throw clickErr;
+      // 2. Fetch affiliate profile
+      const { data: affiliate } = await supabase
+        .from('affiliate_marketers')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      setProfile(affiliate);
 
-        // Fetch commissions earned
-        const { data: commissionsData, error: commErr } = await supabase
-          .from('payments')
-          .select('amount')
-          .eq('id', affiliateId)
-          .eq('type', 'commission')
-          .eq('status', 'completed');
-        if (commErr) throw commErr;
+      console.log('Affiliate:', affiliate);
 
-        const totalCommissions = commissionsData
-          ? commissionsData.reduce((sum, row) => sum + (row.amount || 0), 0)
-          : 0;
+      // 2b. Fetch user profile from profiles table
+      const { data: userProf } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      setUserProfile(userProf);
 
-        // Calculate conversion rate
-        const conversionRate =
-          clickCount && clickCount > 0
-            ? `${((referralCount || 0) / clickCount * 100).toFixed(1)}%`
-            : '0%';
-
-        // Fetch monthly chart data (example: group by month)
-        let monthlyData = null;
-        try {
-          const { data } = await supabase
-            .rpc('get_affiliate_monthly_stats', { affiliate_id: affiliateId });
-          monthlyData = data;
-        } catch (e) {
-          monthlyData = null;
-        }
-
-        // Fetch recent activity (last 5 events)
-        const { data: activityData, error: actErr } = await supabase
-          .from('referral_activity')
-          .select('*')
-          .eq('affiliate_id', affiliateId)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        if (actErr) throw actErr;
-
-        setStats([
-          { label: 'Total Referrals', value: formatNumber(referralCount || 0), icon: <Users className="h-6 w-6 text-blue-600" /> },
-          { label: 'Commissions Earned', value: formatCurrency(totalCommissions), icon: <DollarSign className="h-6 w-6 text-green-600" /> },
-          { label: 'Clicks', value: formatNumber(clickCount || 0), icon: <TrendingUp className="h-6 w-6 text-purple-600" /> },
-          { label: 'Conversion Rate', value: conversionRate, icon: <BarChart2 className="h-6 w-6 text-orange-500" /> },
-        ]);
-        if (monthlyData && Array.isArray(monthlyData)) setChartData(monthlyData);
-        if (activityData && Array.isArray(activityData)) setRecentActivity(activityData);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load dashboard data.');
-      } finally {
-        setLoading(false);
+      // 3. Fetch stats (replace with your actual logic/tables)
+      // Example: earnings from payouts/payments table
+      let earnings = 0;
+      const { data: earningsData } = await supabase
+        .from('payouts')
+        .select('amount')
+        .eq('affiliate_id', user.id)
+        .eq('status', 'Completed');
+      if (earningsData) {
+        earnings = earningsData.reduce((sum, p) => sum + (p.amount || 0), 0);
       }
+
+      // Example: signups from referrals table
+      let signups = 0;
+      const { count: signupsCount } = await supabase
+        .from('referrals')
+        .select('*', { count: 'exact', head: true })
+        .eq('affiliate_id', user.id);
+      if (typeof signupsCount === 'number') signups = signupsCount;
+
+      // Example: clicks from referral_clicks table
+      let clicks = 0;
+      const { count: clicksCount } = await supabase
+        .from('referral_clicks')
+        .select('*', { count: 'exact', head: true })
+        .eq('affiliate_id', user.id);
+      if (typeof clicksCount === 'number') clicks = clicksCount;
+
+      // Example: conversions from referrals table (where converted = true)
+      let conversions = 0;
+      const { count: conversionsCount } = await supabase
+        .from('referrals')
+        .select('*', { count: 'exact', head: true })
+        .eq('affiliate_id', user.id)
+        .eq('converted', true);
+      if (typeof conversionsCount === 'number') conversions = conversionsCount;
+
+      setStats({ earnings, clicks, signups, conversions });
+
+      // 4. Fetch recent activity (combine from relevant tables)
+      const { data: recentSignups } = await supabase
+        .from('referrals')
+        .select('referred_email, created_at')
+        .eq('affiliate_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      const { data: recentPayouts } = await supabase
+        .from('payouts')
+        .select('amount, created_at')
+        .eq('affiliate_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      const mergedActivity = [
+        ...(recentSignups || []).map(s => ({
+          type: 'signup',
+          message: `${s.referred_email} signed up`,
+          time: new Date(s.created_at).toLocaleString(),
+        })),
+        ...(recentPayouts || []).map(p => ({
+          type: 'payout',
+          message: `$${p.amount} payout sent`,
+          time: new Date(p.created_at).toLocaleString(),
+        })),
+      ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      setActivity(mergedActivity.slice(0, 5));
+      setLoading(false);
     };
-    fetchStats();
+    fetchData();
   }, []);
 
-  const copyReferralLink = () => {
-    navigator.clipboard.writeText(referralLink);
-    alert('Referral link copied!');
+  const handleCopyLink = () => {
+    if (!profile) return;
+    navigator.clipboard.writeText(`https://yourapp.com/register?ref=${profile.id}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (!profile) return <div className="p-8 text-center">No affiliate profile found.</div>;
+
   return (
-    <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-      {/* Stat Cards */}
-      <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="flex flex-col items-center justify-center p-6 shadow rounded-xl">
-            <div className="mb-2">{stat.icon}</div>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <div className="text-gray-500">{stat.label}</div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4 flex flex-col items-center bg-gradient-to-br from-blue-100 to-white border-0 shadow-md">
+            <DollarSign className="h-6 w-6 text-green-600 mb-1" />
+            <div className="text-lg font-bold text-green-700">${stats.earnings.toLocaleString()}</div>
+            <div className="text-xs text-gray-500">Earnings</div>
           </Card>
-        ))}
-      </div>
-      {/* Referral Link */}
-      <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl shadow">
-        <div className="font-semibold mb-2">Your Referral Link</div>
-        <div className="flex items-center w-full">
-          <input
-            type="text"
-            value={referralLink}
-            readOnly
-            className="flex-1 px-2 py-1 rounded-l border border-gray-300 bg-white text-sm"
-          />
-          <Button onClick={copyReferralLink} className="rounded-l-none rounded-r bg-gradient-to-r from-blue-600 to-purple-600 text-white h-9 px-4">Copy</Button>
+          <Card className="p-4 flex flex-col items-center bg-gradient-to-br from-purple-100 to-white border-0 shadow-md">
+            <User className="h-6 w-6 text-blue-600 mb-1" />
+            <div className="text-lg font-bold text-blue-700">{stats.signups}</div>
+            <div className="text-xs text-gray-500">Signups</div>
+          </Card>
+          <Card className="p-4 flex flex-col items-center bg-gradient-to-br from-yellow-100 to-white border-0 shadow-md">
+            <BarChart2 className="h-6 w-6 text-purple-600 mb-1" />
+            <div className="text-lg font-bold text-purple-700">{stats.clicks}</div>
+            <div className="text-xs text-gray-500">Clicks</div>
+          </Card>
+          <Card className="p-4 flex flex-col items-center bg-gradient-to-br from-green-100 to-white border-0 shadow-md">
+            <ArrowDownCircle className="h-6 w-6 text-yellow-600 mb-1" />
+            <div className="text-lg font-bold text-yellow-700">{stats.conversions}</div>
+            <div className="text-xs text-gray-500">Conversions</div>
+          </Card>
         </div>
-      </div>
-      {/* Chart Section */}
-      <div className="col-span-2 bg-white rounded-xl shadow p-6 mt-8">
-        <div className="font-semibold mb-4">Referrals & Commissions (Monthly)</div>
-        <ChartContainer
-          config={{
-            Referrals: { color: '#6366f1', label: 'Referrals' },
-            Commissions: { color: '#10b981', label: 'Commissions' },
-          }}
-        >
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="Referrals" stroke="#6366f1" strokeWidth={2} />
-            <Line type="monotone" dataKey="Commissions" stroke="#10b981" strokeWidth={2} />
-          </LineChart>
-        </ChartContainer>
-      </div>
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow p-6 mt-8">
-        <div className="font-semibold mb-4">Recent Activity</div>
-        <ul className="divide-y divide-gray-100">
-          {recentActivity.map((activity, idx) => (
-            <li key={idx} className="flex items-center gap-3 py-3">
-              <span>{activity.icon}</span>
-              <span className="flex-1">{activity.desc}</span>
-              <span className="text-xs text-gray-400">{activity.date}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Earnings Chart - Bar Graph */}
+          <Card className="p-6 bg-white border-0 shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-gray-900">Earnings Over Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{ earnings: { color: '#2563eb', label: 'Earnings' } }}>
+                <BarChart data={activity.map(a => ({ ...a, earnings: a.amount || 0 }))} width={400} height={250}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="earnings" fill="#2563eb" barSize={32} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          {/* Recent Activity Feed */}
+          <Card className="p-6 bg-white border-0 shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-gray-900">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-gray-100">
+                {activity.length === 0 ? (
+                  <li className="py-3 text-gray-400 text-center">No recent activity.</li>
+                ) : (
+                  activity.map((a, i) => (
+                    <li key={i} className="py-3 flex items-center gap-3">
+                      <span className="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
+                      <span className="flex-1 text-gray-800">{a.message}</span>
+                      <span className="text-xs text-gray-500">{a.time}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

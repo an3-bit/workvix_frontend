@@ -199,202 +199,202 @@ const ProfileSettings: React.FC = () => {
   if (!profile) return <div className="p-8 text-center text-red-500">Profile not found.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
-      {(success || errorMsg) && (
-        <div className="mb-6">
-          {success && <div className="text-green-600 text-center">Profile updated successfully!</div>}
-          {errorMsg && <div className="text-red-600 text-center">{errorMsg}</div>}
-        </div>
-      )}
-      <div className="flex space-x-2 mb-8 border-b">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${activeTab === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-600'}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      {activeTab === 'profile' && (
-        <div>
-          <div className="flex flex-col items-center mb-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-4xl mb-2 overflow-hidden">
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="avatar" className="w-24 h-24 rounded-full object-cover" />
-              ) : (
-                (profile.first_name?.charAt(0) || '') + (profile.last_name?.charAt(0) || '')
-              )}
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6 text-gray-900">Profile Settings</h1>
+        {(success || errorMsg) && (
+          <div className="mb-6">
+            {success && <div className="text-green-600 text-center">Profile updated successfully!</div>}
+            {errorMsg && <div className="text-red-600 text-center">{errorMsg}</div>}
+          </div>
+        )}
+        <div className="flex space-x-2 mb-8 border-b">
+          {TABS.map(tab => (
             <button
-              className="mt-2 bg-white text-xs px-4 py-1 rounded-full shadow border border-gray-200 hover:bg-gray-100"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={avatarUploading}
-              style={{ fontSize: '0.85rem' }}
+              key={tab.key}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${activeTab === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-600'}`}
+              onClick={() => setActiveTab(tab.key)}
             >
-              {avatarUploading ? 'Uploading...' : 'Change Avatar'}
+              {tab.label}
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-              disabled={avatarUploading}
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">First Name</label>
-            <input
-              type="text"
-              name="first_name"
-              value={profile.first_name || ''}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Last Name</label>
-            <input
-              type="text"
-              name="last_name"
-              value={profile.last_name || ''}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={profile.email || ''}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Phone</label>
-            <input
-              type="text"
-              name="phone"
-              value={profile.phone || ''}
-              onChange={handleChange}
-              placeholder="e.g. +254712345678"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Company</label>
-            <input
-              type="text"
-              name="company"
-              value={profile.company || ''}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Address</label>
-            <input
-              type="text"
-              name="address"
-              value={profile.address || ''}
-              onChange={handleChange}
-              placeholder="e.g. 123 Main St, Nairobi, Kenya"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
-            <Button onClick={handleCancel} variant="outline" className="w-full" disabled={saving}>
-              Cancel
-            </Button>
-          </div>
+          ))}
         </div>
-      )}
-      {activeTab === 'security' && (
-        <div className="max-w-md mx-auto">
-          <h2 className="text-xl font-semibold mb-4">Change Password</h2>
-          {lastLogin && <div className="mb-4 text-sm text-gray-500 text-center">Last login: {lastLogin}</div>}
-          <div className="mb-4 text-center">
-            <span className="text-gray-500">Two-Factor Authentication (2FA): </span>
-            <span className="text-gray-400">Coming soon</span>
+        {activeTab === 'profile' && (
+          <div>
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-4xl mb-2 overflow-hidden">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt="avatar" className="w-24 h-24 rounded-full object-cover" />
+                ) : (
+                  (profile.first_name?.charAt(0) || '') + (profile.last_name?.charAt(0) || '')
+                )}
+              </div>
+              <button
+                className="mt-2 bg-white text-xs px-4 py-1 rounded-full shadow border border-gray-200 hover:bg-gray-100 text-gray-700"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarUploading}
+                style={{ fontSize: '0.85rem' }}
+              >
+                {avatarUploading ? 'Uploading...' : 'Change Avatar'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+                disabled={avatarUploading}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-900">First Name</label>
+              <input
+                className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="first_name"
+                value={profile.first_name || ''}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-900">Last Name</label>
+              <input
+                className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="last_name"
+                value={profile.last_name || ''}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-900">Email</label>
+              <input
+                className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="email"
+                value={profile.email || ''}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-900">Phone</label>
+              <input
+                className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="phone"
+                value={profile.phone || ''}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-900">Company</label>
+              <input
+                className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="company"
+                value={profile.company || ''}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-900">Address</label>
+              <input
+                className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                name="address"
+                value={profile.address || ''}
+                onChange={handleChange}
+                disabled={saving}
+              />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleSave} disabled={saving} className="w-full">
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button onClick={handleCancel} variant="outline" className="w-full" disabled={saving}>
+                Cancel
+              </Button>
+            </div>
           </div>
-          {passwordSuccess && <div className="text-green-600 mb-4 text-center">{passwordSuccess}</div>}
-          {passwordError && <div className="text-red-600 mb-4 text-center">{passwordError}</div>}
-          <form onSubmit={handlePasswordChange}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">New Password</label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="newPassword"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                minLength={8}
-                required
-              />
+        )}
+        {activeTab === 'security' && (
+          <div className="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Change Password</h2>
+            {lastLogin && <div className="mb-4 text-sm text-gray-500 text-center">Last login: {lastLogin}</div>}
+            <div className="mb-4 text-center">
+              <span className="text-gray-500">Two-Factor Authentication (2FA): </span>
+              <span className="text-gray-400">Coming soon</span>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Confirm New Password</label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="confirmPassword"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                minLength={8}
-                required
-              />
-            </div>
-            <div className="flex items-center mb-4">
+            {passwordSuccess && <div className="text-green-600 mb-4 text-center">{passwordSuccess}</div>}
+            {passwordError && <div className="text-red-600 mb-4 text-center">{passwordError}</div>}
+            <form onSubmit={handlePasswordChange}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 text-gray-900">New Password</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="newPassword"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  minLength={8}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 text-gray-900">Confirm New Password</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  minLength={8}
+                  required
+                />
+              </div>
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  id="showPassword"
+                  checked={showPassword}
+                  onChange={() => setShowPassword(!showPassword)}
+                  className="mr-2"
+                />
+                <label htmlFor="showPassword" className="text-sm text-gray-700">Show Password</label>
+              </div>
+              <Button type="submit" className="w-full">Change Password</Button>
+            </form>
+          </div>
+        )}
+        {activeTab === 'notifications' && (
+          <div className="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Notification Preferences</h2>
+            {notifSuccess && <div className="text-green-600 mb-4 text-center">{notifSuccess}</div>}
+            {notifError && <div className="text-red-600 mb-4 text-center">{notifError}</div>}
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-gray-900">Email Notifications</span>
               <input
                 type="checkbox"
-                id="showPassword"
-                checked={showPassword}
-                onChange={() => setShowPassword(!showPassword)}
-                className="mr-2"
+                checked={emailNotifications}
+                onChange={e => setEmailNotifications(e.target.checked)}
+                className="h-5 w-5"
               />
-              <label htmlFor="showPassword" className="text-sm">Show Password</label>
             </div>
-            <Button type="submit" className="w-full">Change Password</Button>
-          </form>
-        </div>
-      )}
-      {activeTab === 'notifications' && (
-        <div className="max-w-md mx-auto">
-          <h2 className="text-xl font-semibold mb-4">Notification Preferences</h2>
-          {notifSuccess && <div className="text-green-600 mb-4 text-center">{notifSuccess}</div>}
-          {notifError && <div className="text-red-600 mb-4 text-center">{notifError}</div>}
-          <div className="mb-4 flex items-center justify-between">
-            <span>Email Notifications</span>
-            <input
-              type="checkbox"
-              checked={emailNotifications}
-              onChange={e => setEmailNotifications(e.target.checked)}
-              className="h-5 w-5"
-            />
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-gray-900">In-App Notifications</span>
+              <input
+                type="checkbox"
+                checked={inAppNotifications}
+                onChange={e => setInAppNotifications(e.target.checked)}
+                className="h-5 w-5"
+              />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleSaveNotifications} className="w-full">Save</Button>
+              <Button onClick={handleCancelNotifications} variant="outline" className="w-full">Cancel</Button>
+            </div>
           </div>
-          <div className="mb-4 flex items-center justify-between">
-            <span>In-App Notifications</span>
-            <input
-              type="checkbox"
-              checked={inAppNotifications}
-              onChange={e => setInAppNotifications(e.target.checked)}
-              className="h-5 w-5"
-            />
-          </div>
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleSaveNotifications} className="w-full">Save</Button>
-            <Button onClick={handleCancelNotifications} variant="outline" className="w-full">Cancel</Button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

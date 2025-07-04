@@ -71,9 +71,9 @@ const AffiliateSignIn: React.FC = () => {
         <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
       </div>
       <div className="relative z-10 w-full max-w-md">
-        <Card className="shadow-2xl rounded-2xl border-0">
+        <Card className="shadow-2xl rounded-2xl border-0 bg-white">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center mb-2">
+            <CardTitle className="text-2xl font-bold text-center mb-2 text-gray-900">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate Marketer Sign In</span>
             </CardTitle>
             <p className="text-center text-gray-600 mt-2">Sign in to access your affiliate dashboard and manage your referrals.</p>
@@ -81,12 +81,12 @@ const AffiliateSignIn: React.FC = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg" />
+                <Label htmlFor="email" className="text-gray-900">Email</Label>
+                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg" />
+                <Label htmlFor="password" className="text-gray-900">Password</Label>
+                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
               </div>
               <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</Button>
             </form>

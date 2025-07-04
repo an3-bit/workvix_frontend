@@ -62,6 +62,18 @@ const AffiliateRegister: React.FC = () => {
         online: true,
       });
       if (profileError) throw profileError;
+      // Insert into affiliate_marketers table
+      const { error: affiliateError } = await supabase.from('affiliate_marketers').insert({
+        id: user.id,
+        email: form.email,
+        first_name: firstName,
+        last_name: lastName,
+        phone: form.phone,
+        created_at: now,
+        updated_at: now,
+        online: true,
+      });
+      if (affiliateError) throw affiliateError;
       toast({ title: 'Registration successful', description: 'Check your email to confirm your account.' });
       navigate('/affiliate/dashboard');
     } catch (err: any) {
@@ -80,29 +92,29 @@ const AffiliateRegister: React.FC = () => {
         <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
       </div>
       <div className="relative z-10 w-full max-w-md">
-        <Card className="shadow-2xl rounded-2xl border-0">
+        <Card className="shadow-2xl rounded-2xl border-0 bg-white">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center mb-2">
+            <CardTitle className="text-2xl font-bold text-center mb-2 text-gray-900">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Affiliate Marketer Registration</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" value={form.name} onChange={handleChange} required className="h-12 text-lg" />
+                <Label htmlFor="name" className="text-gray-900">Name</Label>
+                <Input id="name" name="name" value={form.name} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg" />
+                <Label htmlFor="email" className="text-gray-900">Email</Label>
+                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg" />
+                <Label htmlFor="password" className="text-gray-900">Password</Label>
+                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required className="h-12 text-lg bg-white text-gray-900" />
               </div>
               <div>
-                <Label htmlFor="phone">Phone (optional)</Label>
-                <Input id="phone" name="phone" value={form.phone} onChange={handleChange} className="h-12 text-lg" />
+                <Label htmlFor="phone" className="text-gray-900">Phone (optional)</Label>
+                <Input id="phone" name="phone" value={form.phone} onChange={handleChange} className="h-12 text-lg bg-white text-gray-900" />
               </div>
               <Button type="submit" className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg" disabled={loading}>{loading ? 'Registering...' : 'Register'}</Button>
             </form>
