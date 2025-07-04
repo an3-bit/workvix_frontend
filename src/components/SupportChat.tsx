@@ -212,6 +212,9 @@ const SupportChat: React.FC<SupportChatProps> = ({ chatId, order, onClose }) => 
           messages.map((msg) => (
             <div key={msg.id} className={`mb-2 flex ${msg.sender_type === userType ? 'justify-end' : 'justify-start'}`}>
               <div className={`rounded-lg px-3 py-2 max-w-[80vw] sm:max-w-xs text-sm ${msg.sender_type === userType ? 'bg-blue-100 text-blue-900' : 'bg-gray-100 text-gray-900'}`}>
+                <span className="block font-bold text-xs mb-1">
+                  {msg.sender_type.charAt(0).toUpperCase() + msg.sender_type.slice(1)}
+                </span>
                 {msg.content}
                 <div className="text-[10px] text-gray-400 mt-1 text-right">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>

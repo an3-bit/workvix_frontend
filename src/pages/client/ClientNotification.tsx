@@ -63,7 +63,7 @@ const ClientNotification: React.FC = () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       // Transform raw notifications to match NotificationData interface

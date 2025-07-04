@@ -317,8 +317,7 @@ const ClientDashboard = () => {
     { 
       icon: <DollarSign className="h-6 w-6" />, 
       title: "Payments", 
-      desc: "Manage transactions",
-      link: "/checkout"
+      desc: "Manage transactions"
     }
   ];
 
@@ -502,15 +501,25 @@ const ClientDashboard = () => {
             <h3 className="text-lg font-semibold mb-6">Quick Actions</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {quickActions.map((action, index) => (
-                <Link key={index} to={action.link}>
-                  <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                action.link ? (
+                  <Link key={index} to={action.link}>
+                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                      <span className="text-blue-600">{action.icon}</span>
+                      <div>
+                        <h4 className="font-medium text-gray-900">{action.title}</h4>
+                        <p className="text-sm text-gray-600">{action.desc}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div key={index} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg cursor-default">
                     <span className="text-blue-600">{action.icon}</span>
                     <div>
                       <h4 className="font-medium text-gray-900">{action.title}</h4>
                       <p className="text-sm text-gray-600">{action.desc}</p>
                     </div>
                   </div>
-                </Link>
+                )
               ))}
             </div>
           </div>
@@ -542,11 +551,18 @@ const ClientDashboard = () => {
                 </ResponsiveContainer>
               </div>
               {/* Show Details Toggle */}
-              <ShowDetails />
+              <ShowDetails formatCurrency={formatCurrency} displaySpendingData={displaySpendingData} />
             </div>
             {/* Sidebar Accordion */}
             <div className="w-full md:w-80 flex-shrink-0">
-              <SidebarAccordion recentPayments={recentPayments} sampleRecentPayments={sampleRecentPayments} formatCurrency={formatCurrency} budgetTip={budgetTip} />
+              <SidebarAccordion
+                recentPayments={recentPayments}
+                sampleRecentPayments={sampleRecentPayments}
+                formatCurrency={formatCurrency}
+                budgetTip={budgetTip}
+                handleDownloadInvoice={handleDownloadInvoice}
+                handleExportCSV={handleExportCSV}
+              />
             </div>
           </div>
         </section>
@@ -612,7 +628,7 @@ const ClientDashboard = () => {
   );
 };
 
-function ShowDetails() {
+function ShowDetails({ formatCurrency, displaySpendingData }) {
   const [open, setOpen] = useState(false);
   return (
     <div>
@@ -637,7 +653,7 @@ function ShowDetails() {
   );
 }
 
-function SidebarAccordion({ recentPayments, sampleRecentPayments, formatCurrency, budgetTip }) {
+function SidebarAccordion({ recentPayments, sampleRecentPayments, formatCurrency, budgetTip, handleDownloadInvoice, handleExportCSV }) {
   const [open, setOpen] = useState('payments');
   return (
     <div className="rounded-2xl bg-white/90 border border-white/60 shadow p-3">

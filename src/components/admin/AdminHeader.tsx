@@ -53,11 +53,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ adminEmail }) => {
         .select('id, read')
         .eq('id', admin.id);
       setNotificationCount(notifications ? notifications.filter((n: any) => !n.read).length : 0);
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('id, read')
-        .eq('id', admin.id);
-      setMessageCount(messages ? messages.filter((m: any) => !m.read).length : 0);
+      const { data: unreadCount, error } = await supabase.rpc('get_unread_message_count', { user_uuid: admin.id });
+      setMessageCount(unreadCount ?? 0);
     };
     fetchProfileAndNotifications();
   }, [admin?.id]);

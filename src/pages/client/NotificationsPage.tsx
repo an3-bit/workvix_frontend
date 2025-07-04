@@ -43,6 +43,20 @@ const NotificationsPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
+  useEffect(() => {
+    const markAllAsRead = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      // Optionally, refresh the navbar count here if you have a global state or event
+    };
+    markAllAsRead();
+  }, []);
+
   const fetchNotifications = async (pageNum = 0) => {
     setLoading(true);
     try {
@@ -160,6 +174,9 @@ const NotificationsPage: React.FC = () => {
     );
   }
 
+  // Debug log
+  console.log('Fetched notifications:', notifications);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav2 />
@@ -170,6 +187,15 @@ const NotificationsPage: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
               <p className="text-gray-600 mt-2">Stay updated with your latest activity</p>
             </div>
+            {/* Debug: Render raw notifications if nothing else shows */}
+            {notifications.length > 0 && (
+              <ul style={{ background: '#f9f9f9', padding: '1em', borderRadius: '8px', marginBottom: '1em' }}>
+                <li style={{ fontWeight: 'bold', color: '#333' }}>DEBUG: Raw notifications</li>
+                {notifications.map((n, i) => (
+                  <li key={n.id || i} style={{ fontFamily: 'monospace', fontSize: '0.9em', color: '#555' }}>{JSON.stringify(n)}</li>
+                ))}
+              </ul>
+            )}
             {notifications.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                 <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -218,6 +244,8 @@ const NotificationsPage: React.FC = () => {
                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
+                    title="Go to previous page"
+                    aria-label="Go to previous page"
                   >
                     Previous
                   </button>
@@ -226,6 +254,8 @@ const NotificationsPage: React.FC = () => {
                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50"
                     onClick={() => setPage((p) => hasMore ? p + 1 : p)}
                     disabled={!hasMore}
+                    title="Go to next page"
+                    aria-label="Go to next page"
                   >
                     Next
                   </button>

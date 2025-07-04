@@ -189,6 +189,16 @@ const ManageSupportTickets: React.FC = () => {
           sender_type: 'admin',
           content: chatInput.trim(),
         }]);
+      // Send notification to the chat owner (freelancer or client)
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: selectedChat.user_id,
+          type: 'support_reply',
+          message: 'Support has replied to your ticket.',
+          read: false,
+          created_at: new Date().toISOString(),
+        }]);
       setChatInput('');
       fetchChatMessages(selectedChat.id);
       fetchChats(); // update chat list order

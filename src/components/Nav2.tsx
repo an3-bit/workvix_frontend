@@ -37,6 +37,7 @@ const Nav2 = () => {
         setUser(user);
         await fetchUserProfile(user.id);
         fetchNotifications(user.id);
+        fetchUnreadMessageCount(user.id);
         setupRealtime(user.id);
         setLoading(false);
       } catch (error) {
@@ -90,6 +91,11 @@ const Nav2 = () => {
     }
   };
 
+  const fetchUnreadMessageCount = async (uid: string) => {
+    const { data: unreadCount, error } = await supabase.rpc('get_unread_message_count', { user_uuid: uid });
+    setMessageCount(unreadCount ?? 0);
+  };
+
   const setupRealtime = (uid: string) => {
     const channel = supabase
       .channel('notifications_nav2')
@@ -100,6 +106,13 @@ const Nav2 = () => {
         filter: `user_id=eq.${uid}`
       }, () => {
         fetchNotifications(uid);
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages',
+      }, () => {
+        fetchUnreadMessageCount(uid);
       })
       .subscribe();
   };
