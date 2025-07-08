@@ -73,30 +73,25 @@ const PremiumServices: React.FC = () => {
         <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="md:w-1/2 space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900">workvix <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Premium</span></h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900">workvix <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-orange-500">Premium</span></h1>
               <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl leading-relaxed">
                 A business solution designed for teams. Connect with top-tier professionals handpicked for quality and service excellence.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-700" />
                   <span>Verified high-quality professionals</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-700" />
                   <span>Matched with proven experts in your field</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-700" />
                   <span>Dedicated success management</span>
                 </div>
               </div>
-              <Link to="/contact-premium">
-                <button className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
-                  Talk to an expert
-                  <ArrowRight className="h-5 w-5" />
-                </button>
-              </Link>
+              {/* Removed 'Talk to an expert' button as requested */}
             </div>
             <div className="md:w-1/2">
               <img
@@ -179,11 +174,11 @@ const PremiumServices: React.FC = () => {
       </div>
 
       {/* CTA */}
-      <div className="relative py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white overflow-hidden">
+      <div className="relative py-20 bg-gradient-to-r from-green-600 to-orange-500 text-white overflow-hidden">
         {/* Blurred Circles */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+          <div className="absolute top-0 left-0 w-72 h-72 bg-green-600/40 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-orange-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
           <div className="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
         </div>
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -192,13 +187,13 @@ const PremiumServices: React.FC = () => {
             Connect with premium talent and take your business to the next level with workvix Premium.
           </p>
           <button
-            className="h-14 px-8 text-lg rounded-full bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 mr-4"
+            className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl mr-4"
             onClick={() => setShowServices(true)}
           >
             Learn More Services
           </button>
           <Link to="/contact-premium">
-            <button className="h-14 px-8 text-lg rounded-full bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <button className="h-14 px-8 text-lg rounded-full bg-gradient-to-r from-green-600 to-orange-500 hover:from-green-700 hover:to-orange-600 text-white font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
               Get started
             </button>
           </Link>
