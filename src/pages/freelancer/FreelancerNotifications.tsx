@@ -269,7 +269,7 @@ const FreelancerNotifications: React.FC = () => {
                     if (!error) {
                       fetchNotifications();
                       window.dispatchEvent(new Event('notifications-updated'));
-                      toast({ title: 'All notifications marked as read', description: 'You have no unread notifications.', variant: 'success' });
+                      toast({ title: 'All notifications marked as Read', description: 'You have no unread notifications.', variant: 'success' });
                     }
                   }}
                 >
