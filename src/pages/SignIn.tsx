@@ -207,7 +207,7 @@ const SignIn = () => {
                   </p>
                 </div>
 
-                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+                <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-6 sm:p-8 rounded-2xl shadow-2xl border border-blue-200 text-white">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <FormField
@@ -215,17 +215,17 @@ const SignIn = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
+                            <FormLabel className="text-sm font-medium text-white">
                               Email address
                             </FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
                                 <Input
                                   type="email"
                                   placeholder="Enter your email"
                                   autoComplete="email"
-                                  className="pl-10 h-12 text-sm sm:text-base"
+                                  className="pl-10 h-12 text-sm sm:text-base bg-white/90 text-gray-900 placeholder-gray-500 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
                                   {...field}
                                 />
                               </div>
@@ -240,28 +240,28 @@ const SignIn = () => {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
+                            <FormLabel className="text-sm font-medium text-white">
                               Password
                             </FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" />
                                 <Input
                                   type={showPassword ? "text" : "password"}
                                   placeholder="Enter your password"
                                   autoComplete="current-password"
-                                  className="pl-10 pr-12 h-12 text-sm sm:text-base"
+                                  className="pl-10 pr-12 h-12 text-sm sm:text-base bg-white/90 text-gray-900 placeholder-gray-500 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
                                   {...field}
                                 />
                                 <button
                                   type="button"
-                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-blue-100 rounded transition-colors"
                                   onClick={() => setShowPassword(!showPassword)}
                                 >
                                   {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-gray-500" />
+                                    <EyeOff className="h-4 w-4 text-blue-600" />
                                   ) : (
-                                    <Eye className="h-4 w-4 text-gray-500" />
+                                    <Eye className="h-4 w-4 text-blue-600" />
                                   )}
                                 </button>
                               </div>
@@ -301,11 +301,11 @@ const SignIn = () => {
                   </Form>
 
                   <div className="mt-6 text-center">
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-blue-100 text-sm">
                       Don't have an account?{" "}
                       <Link 
                         to="/join" 
-                        className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                        className="font-medium text-yellow-200 hover:text-yellow-300 transition-colors underline"
                       >
                         Create one now
                       </Link>
