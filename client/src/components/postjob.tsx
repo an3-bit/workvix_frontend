@@ -389,7 +389,7 @@ const PostJobForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {userSession ? <Nav2 /> : <Navbar />}
+      {user ? <Nav2 /> : <Navbar />}
       
       {/* Email Confirmation Dialog */}
       <Dialog open={showEmailConfirmationDialog} onOpenChange={setShowEmailConfirmationDialog}>
@@ -589,7 +589,7 @@ const PostJobForm: React.FC = () => {
                     </div>
                   </div>
 
-                  {!userSession && (
+                  {!user && (
                     <div className="pt-4 border-t border-gray-200">
                       <div className="mb-6">
                         <div className="flex border-b border-gray-200">

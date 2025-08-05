@@ -32,7 +32,7 @@ export const createBid = async (req, res) => {
       });
     }
 
-    const pool = getPool();
+
     const pool = getPool();
     const connection = await pool.getConnection();
 
@@ -135,7 +135,7 @@ export const getAllBids = async (req, res) => {
     } = req.query;
 
     const offset = (page - 1) * limit;
-    const pool = getPool();
+  
     const pool = getPool();
     const connection = await pool.getConnection();
 
@@ -225,7 +225,7 @@ export const getAllBids = async (req, res) => {
 export const getBidById = async (req, res) => {
   try {
     const { id } = req.params;
-    const pool = getPool();
+ 
     const pool = getPool();
     const connection = await pool.getConnection();
 

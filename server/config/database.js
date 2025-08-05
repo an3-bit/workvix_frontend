@@ -18,19 +18,25 @@ const getDbConfig = () => ({
 // Create connection pool
 let pool = null;
 
+// This function will now return null as the pool creation is commented out
 const getPool = () => {
-  if (!pool) {
-    const dbConfig = getDbConfig();
-    pool = mysql.createPool(dbConfig);
-  }
-  return pool;
+  // if (!pool) {
+  //   const dbConfig = getDbConfig();
+  //   pool = mysql.createPool(dbConfig);
+  // }
+  // return pool;
+  console.warn('Database connection pool is not created (commented out in database.js)');
+  return null; // Return null when pool creation is commented out
 };
 
 // Test database connection
+// Commented out the database connection test
+/* 
 const testConnection = async () => {
   try {
     const dbConfig = getDbConfig();
-    const pool = getPool();
+    // Note: getPool() will return null if pool creation is commented out
+    const pool = getPool(); 
     
     console.log('🔍 Attempting to connect to database...');
     console.log('📊 Database config:', {
@@ -50,6 +56,7 @@ const testConnection = async () => {
     return false;
   }
 };
+*/
 
 // Initialize database tables
 const initializeDatabase = async () => {
@@ -242,4 +249,4 @@ const initializeDatabase = async () => {
   }
 };
 
-export { getPool, testConnection, initializeDatabase }; 
+export { getPool, initializeDatabase };

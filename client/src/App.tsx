@@ -4,70 +4,64 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Index from "./pages/general/Index";
+import AuthGuard from "./components/AuthGuard";
 
 // Lazy load all other pages/components
-const FreelancerDashboard = lazy(() => import("./pages/freelancer/freelancerdashboard"));
-const ClientDashboard = lazy(() => import("./pages/client/clientdashboard"));
-const PremiumServices = lazy(() => import("./pages/PremiumServices"));
-const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
-const JobPostedNotification = lazy(() => import("./pages/jobspostednotification"));
-const ResetPassword = lazy(() => import("./pages/reset_password/resetpassword"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
-const ClientChatPage = lazy(() => import("./pages/client/ClientChatPage"));
-const BidsDetailsPage = lazy(() => import("./pages/BidsDetailsPage"));
+const FreelancerDashboard = lazy(() => import("./pages/freelancer/dashboard/DashboardPage"));
+const ClientDashboard = lazy(() => import("./pages/client/clientdashboard")); // Renamed to clientdashboard.tsx
+const PremiumServices = lazy(() => import("./pages/general/PremiumServices"));
+const BecomeSeller = lazy(() => import("./pages/general/BecomeSeller"));
+const ClientChatPage = lazy(() => import("./pages/client/communication/ChatPage")); // Renamed from ClientChatPage.tsx
 const ChatSystem = lazy(() => import("./components/chat/ChatSystem"));
 const AdminProtectedRoute = lazy(() => import("./components/admin/AdminProtectedRoute"));
-const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
+const AdminDashboardPage = lazy(() => import("./pages/admin/dashboard/DashboardPage")); // Renamed from AdminDashboardPage.tsx
 const AdminLogin = lazy(() => import("./components/admin/AdminLogin"));
 const AffiliateLayout = lazy(() => import("./pages/affiliate/AffiliateDashboard").then(mod => ({ default: mod.AffiliateLayout })));
-const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings'));
-const Payments = lazy(() => import('./pages/client/Payments'));
-const AuthGuard = lazy(() => import("./components/AuthGuard"));
+const ProfileSettings = lazy(() => import('./pages/client/settings/ProfileSettingsPage')); // Renamed from ProfileSettings.tsx
+const Payments = lazy(() => import('./pages/client/payments/PaymentsPage')); // Renamed from Payments.tsx
 
 const queryClient = new QueryClient();
 
 // Lazy load components
-const SignIn = lazy(() => import("./pages/SignIn"));
-const Join = lazy(() => import("./pages/Join"));
-const JoinSelection = lazy(() => import("./pages/joinselection"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const JobsPage = lazy(() => import("./pages/JobsPage"));
-const FreelancerBidsPage = lazy(() => import("./pages/FreelancerBidsPage"));
-const JobsBid = lazy(() => import("./pages/JobsBid"));
-const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
-const UpgradeToProPage = lazy(() => import("./pages/UpgradeToProPage"));
-const OrdersPage = lazy(() => import("./pages/OrdersPage"));
-const WorkVixGoPage = lazy(() => import("./pages/WorkVixGoPage"));
-const WishlistPage = lazy(() => import("./pages/WishlistPage"));
+const SignIn = lazy(() => import("./pages/general/SignIn"));
+const Join = lazy(() => import("./pages/general/Join"));
+const JoinSelection = lazy(() => import("./pages/general/joinselection"));
+const Dashboard = lazy(() => import("./pages/general/Dashboard"));
+const JobsPage = lazy(() => import("./pages/general/JobsPage"));
+const FreelancerBidsPage = lazy(() => import("./pages/general/FreelancerBidsPage"));
+const JobsBid = lazy(() => import("./pages/general/JobsBid"));
+const CheckoutPage = lazy(() => import("./pages/general/CheckoutPage"));
+const UpgradeToProPage = lazy(() => import("./pages/general/UpgradeToProPage"));
+const OrdersPage = lazy(() => import("./pages/general/OrdersPage"));
+const WorkVixGoPage = lazy(() => import("./pages/general/WorkVixGoPage"));
+const WishlistPage = lazy(() => import("./pages/general/WishlistPage"));
 const PostJobForm = lazy(() => import("./components/postjob"));
-const FreelancerNotifications = lazy(() => import("./pages/freelancer/FreelancerNotifications"));
-const FreelancerPortfolio = lazy(() => import("./pages/freelancer/FreelancerPortfolio"));
-const FreelancerEarnings = lazy(() => import("./pages/freelancer/FreelancerEarnings"));
-const FreelancerProfile = lazy(() => import("./pages/freelancer/FreelancerProfile"));
-const Blog = lazy(() => import("./pages/Blog"));
-const BlogPost = lazy(() => import("./pages/BlogPost"));
-const ExploreSkills = lazy(() => import("./pages/ExploreSkills"));
-const ClientBidsPage = lazy(() => import("./pages/client/BidsPage"));
-const ClientMyJobs = lazy(() => import("./pages/client/MyJobs"));
-const OrderForm = lazy(() => import("./pages/OrderForm"));
-const FreelancerNotificationsPage = lazy(() => import("./pages/freelancer/NotificationsPage"));
-const ClientNotification = lazy(() => import("./pages/client/ClientNotification"));
-const AffiliateRegister = lazy(() => import("./pages/AffiliateRegister"));
-const AffiliateDashboard = lazy(() => import("./pages/affiliate/AffiliateDashboard"));
+const FreelancerNotifications = lazy(() => import("./pages/freelancer/communication/NotificationsPage")); // Consolidated notification page
+const FreelancerPortfolio = lazy(() => import("./pages/freelancer/portfolio/PortfolioPage")); // Renamed from FreelancerPortfolio.tsx
+const FreelancerEarnings = lazy(() => import("./pages/freelancer/earnings/EarningsPage")); // Renamed from FreelancerEarnings.tsx
+const FreelancerProfile = lazy(() => import("./pages/freelancer/portfolio/ProfilePage")); // Renamed from FreelancerProfile.tsx
+const Blog = lazy(() => import("./pages/general/Blog"));
+const BlogPost = lazy(() => import("./pages/general/BlogPost"));
+const ExploreSkills = lazy(() => import("./pages/general/ExploreSkills"));
+const ClientBidsPage = lazy(() => import("./pages/client/bids/BidsPage"));
+const ClientMyJobs = lazy(() => import("./pages/client/jobs/MyJobsPage")); // Renamed from MyJobs.tsx
+const OrderForm = lazy(() => import("./pages/general/OrderForm"));
+const AffiliateDashboard = lazy(() => import('/home/user/workvix/client/src/pages/affiliate/AffiliateDashboard'));
+const ChatPage = lazy(() => import('/home/user/workvix/client/src/pages/general/ChatPage'));
 const AffiliateManageClients = lazy(() => import("./pages/affiliate/ManageClients"));
 const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFreelancers"));
 const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
-const AffiliateCommissionSummary = lazy(() => import("./pages/affiliate/CommissionSummary"));
-const AdminManageAffiliateMarketers = lazy(() => import("./pages/admin/ManageAffiliateMarketers"));
-const AffiliateSignIn = lazy(() => import("./pages/AffiliateSignIn"));
-const JobDetailsPage = lazy(() => import("./pages/JobDetailsPage"));
+const JobDetailsPage = lazy(() => import("./pages/general/JobDetailsPage"));
+const BidsDetailsPage = lazy(() => import("./pages/general/BidsDetailsPage"));
 const ServicesPage = lazy(() => import("./components/services"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Help = lazy(() => import("./pages/Help"));
-const Trust = lazy(() => import("./pages/Trust"));
-const PlaceholderPage = lazy(() => import("./pages/PlaceholderPage"));
+const Privacy = lazy(() => import("./pages/general/Privacy"));
+const Terms = lazy(() => import("./pages/general/Terms"));
+const Help = lazy(() => import("./pages/general/Help"));
+const Trust = lazy(() => import("./pages/general/Trust"));
+const PlaceholderPage = lazy(() => import("./pages/general/PlaceholderPage"));
+const AffiliateRegister = lazy(() => import("./pages/affiliate/AffiliateRegister"));
+const AffiliateSignIn = lazy(() => import("./pages/affiliate/AffiliateSignIn").then(module => ({ default: module.default })));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -99,8 +93,8 @@ const App = () => (
             <Route path="/client/bids" element={<ClientBidsPage />} />
             <Route path="/client/jobs" element={<ClientMyJobs />} />
             <Route path="/order/:bidId" element={<OrderForm />} />
-            <Route path="/freelancer/notifications" element={<FreelancerNotifications/>} />
-            <Route path="/client/notifications" element={<ClientNotification />} />
+            <Route path="/freelancer/notifications" element={<FreelancerNotifications />} />
+            <Route path="/client/notifications" element={<ClientBidsPage />} /> {/* Update this route as needed based on where client notifications should go */}
             <Route path="/upgrade" element={<UpgradeToProPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/pro" element={<WorkVixGoPage />} />
@@ -113,8 +107,8 @@ const App = () => (
             <Route path="/explore-skills" element={<ExploreSkills />} />
             <Route path="/premium-services" element={<PremiumServices />} />
             <Route path="/become-seller" element={<BecomeSeller />} />
-            <Route path="/job-posted-notification" element={<JobPostedNotification />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            {/* <Route path="/job-posted-notification" element={<JobPostedNotification />} /> Corrected import path */}
+            {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/client/chat" element={<ClientChatPage />} />
             <Route path="/bids-details/:bidId" element={<BidsDetailsPage />} />
@@ -126,7 +120,7 @@ const App = () => (
               path="/admin/*"
               element={
                 <AdminProtectedRoute>
-                  <AdminDashboardPage adminEmail="" />
+                  <AdminDashboardPage />
                 </AdminProtectedRoute>
               }
             />
@@ -137,16 +131,17 @@ const App = () => (
               }
             />
             <Route path="/affiliate/register" element={<AffiliateRegister />} />
+            {/* Affiliate Sign-in Route */}
+            <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
             <Route path="/affiliate" element={<AffiliateLayout active="" />}>
               <Route path="dashboard" element={<AffiliateDashboard />} />
               <Route path="clients" element={<AffiliateManageClients />} />
               <Route path="freelancers" element={<AffiliateManageFreelancers />} />
               <Route path="jobs" element={<AffiliateManageJobs />} />
-              <Route path="commissions" element={<AffiliateCommissionSummary />} />
+              {/* <Route path="commissions" element={<AffiliateCommissionSummary />} /> */}
               <Route index element={<AffiliateDashboard />} />
             </Route>
-            <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} />
-            <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
+            {/* <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} /> */}
             <Route path="/profile" element={<ProfileSettings />} />
             <Route path="/client/payments" element={<Payments />} />
             <Route path="/services" element={<ServicesPage />} />

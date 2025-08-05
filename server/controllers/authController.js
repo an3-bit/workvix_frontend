@@ -35,8 +35,8 @@ export const register = async (req, res) => {
       });
     }
 
-    if (!['client', 'freelancer'].includes(role)) {
-      return res.status(400).json({
+    if (!['client', 'freelancer', 'affiliate_marketer'].includes(role)) {
+      return res.status(400).json({ // Modified: Added 'affiliate_marketer' to valid roles
         success: false,
         message: 'Role must be either client or freelancer'
       });
@@ -49,7 +49,6 @@ export const register = async (req, res) => {
       });
     }
 
-    const pool = getPool();
     const pool = getPool();
     const connection = await pool.getConnection();
 
@@ -79,15 +78,41 @@ export const register = async (req, res) => {
         [userId, name, email, passwordHash, role]
       );
 
+      // If the role is affiliate_marketer, insert into the affiliate_marketers table
+      if (role === 'affiliate_marketer') {
+        const { phone } = req.body;
+        // Parse name into first and last name (similar to frontend logic)
+        const [firstName, ...lastNameParts] = name.trim().split(' ');
+        const lastName = lastNameParts.join(' ');
+
+        // Insert into affiliate_marketers table
+        await connection.execute(
+          `INSERT INTO affiliate_marketers (id, email, first_name, last_name, phone, created_at, updated_at, online) 
+           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, TRUE)`,
+          [userId, email, firstName, lastName, phone]
+        );
+        logger.info(`Affiliate marketer registered successfully: ${email}`);
+      } else {
+        // You might want to add similar checks and insertions for other roles here
+        // For example, inserting into a 'clients' or 'freelancers' table if they exist
+      }
+
+      // Get user data (without password). Re-fetch to include potential additions from role-specific tables if needed later.
+      // For now, fetching from 'users' as before.
+      const [users] = await connection.execute(
+        'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+        [userId]
+      );
+
       // Generate tokens
       const token = generateToken(userId, role);
       const refreshToken = generateRefreshToken(userId);
 
       // Get user data (without password)
-      const [users] = await connection.execute(
-        'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
-        [userId]
-      );
+      // const [users] = await connection.execute(
+      //   'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+      //   [userId]
+      // );
 
       const user = users[0];
 
@@ -129,7 +154,6 @@ export const login = async (req, res) => {
       });
     }
 
-    const pool = getPool();
     const pool = getPool();
     const connection = await pool.getConnection();
 
@@ -220,6 +244,9 @@ export const getCurrentUser = async (req, res) => {
          FROM users WHERE id = ?`,
         [userId]
       );
+
+      // TODO: If the user is an affiliate_marketer, fetch additional details
+      // from the affiliate_marketers table and merge them with the user object.
 
       if (users.length === 0) {
         return res.status(404).json({

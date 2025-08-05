@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const AffiliateRegister: React.FC = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
@@ -134,9 +134,9 @@ const AffiliateRegister: React.FC = () => {
             </Button>
             <div className="mt-4 text-center">
               <span className="text-gray-200">Already registered?</span>
-              <Button variant="link" className="ml-2 text-green-400" onClick={() => navigate('/affiliate/signin')}>
+              <Link to="/affiliate/" className="ml-2 text-green-400 hover:underline">
                 Sign in
-              </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

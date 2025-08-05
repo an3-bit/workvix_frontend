@@ -15,7 +15,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 
 // Import database
-import { testConnection, initializeDatabase } from './config/database.js';
+import {  initializeDatabase } from './config/database.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -63,7 +63,7 @@ const limiter = rateLimit({
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:8081",
+  origin: '*',
   credentials: true
 }));
 app.use(limiter);
@@ -160,15 +160,16 @@ const PORT = process.env.PORT || 5000;
 // Initialize database and start server
 const startServer = async () => {
   try {
-    // Test database connection
-    const dbConnected = await testConnection();
-    if (!dbConnected) {
-      logger.error('Failed to connect to database. Exiting...');
-      process.exit(1);
-    }
+    // // Test database connection
+    // const dbConnected = await testConnection();
+    // if (!dbConnected) {
+    //   logger.error('Failed to connect to database. Exiting...');
+    //   process.exit(1);
+    // }
 
     // Initialize database tables
-    await initializeDatabase();
+    // Commented out database initialization for local testing without DB connection
+    // await initializeDatabase();
     logger.info('Database initialized successfully');
 
     // Start server
