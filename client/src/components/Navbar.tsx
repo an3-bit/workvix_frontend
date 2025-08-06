@@ -429,7 +429,7 @@ const Navbar = () => {
                     className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 p-2"
                   >
                     <Link to="/blog" className="block px-4 py-2 text-gray-700 hover:bg-green-50 rounded">Blog</Link>
-                    <span className="block px-4 py-2 text-gray-400 cursor-not-allowed rounded" tabIndex={-1} aria-disabled="true">
+                    <span className="block px-4 py-2 text-gray-400 cursor-not-allowed rounded" tabIndex={1} aria-disabled="true">
                       Explore Skills
                     </span>
                   </div>

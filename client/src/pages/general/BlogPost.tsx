@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { ArrowLeft, Calendar, Clock, User, ExternalLink } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { fetchWordPressPosts, type WordPressPost } from '@/lib/wordpress';
+import { fetchWordPressPostBySlug, type WordPressPost } from '@/lib/wordpress';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -27,13 +26,9 @@ const BlogPost = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch all posts and find the one with matching slug
-        const posts = await fetchWordPressPosts(50); // Fetch more posts to find the one we need
-        const foundPost = posts.find(p => p.slug === slug);
-        
-        if (foundPost) {
-          setPost(foundPost);
+        const postData = await fetchWordPressPostBySlug(slug);
+        if (postData) {
+          setPost(postData);
         } else {
           setError('Post not found');
         }
@@ -62,11 +57,9 @@ const BlogPost = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-grow container mx-auto px-4 py-12">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-workvix-primary mx-auto mb-4"></div>
-            <p className="text-lg text-gray-500">Loading blog post...</p>
-          </div>
+        <div className="flex-grow container mx-auto px-4 py-12 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-workvix-primary mx-auto mb-4" />
+          <p className="text-lg text-gray-500">Loading blog post...</p>
         </div>
         <Footer />
       </div>
@@ -77,15 +70,13 @@ const BlogPost = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-grow container mx-auto px-4 py-12">
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Post Not Found</h1>
-            <p className="text-gray-600 mb-6">{error || 'The blog post you are looking for does not exist.'}</p>
-            <Button onClick={handleBackToBlog} className="bg-workvix-primary hover:bg-workvix-primary/90">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Blog
-            </Button>
-          </div>
+        <div className="flex-grow container mx-auto px-4 py-12 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Post Not Found</h1>
+          <p className="text-gray-600 mb-6">{error || 'The blog post you are looking for does not exist.'}</p>
+          <Button onClick={handleBackToBlog} className="bg-workvix-primary hover:bg-workvix-primary/90">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Blog
+          </Button>
         </div>
         <Footer />
       </div>
@@ -95,8 +86,7 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
-      {/* Back Button */}
+
       <div className="bg-gray-50 border-b">
         <div className="container mx-auto px-4 py-4">
           <Button 
@@ -110,21 +100,18 @@ const BlogPost = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Article Header */}
           <div className="mb-8">
             <div className="mb-4">
               <span className="bg-workvix-primary/10 text-workvix-primary px-3 py-1 rounded-full text-sm font-medium">
                 {post.category}
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+            <h1 className="text-4xl font-bold text-gray-900 leading-tight mb-6">
               {post.title}
             </h1>
-            
-            {/* Article Meta */}
+
             <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-6">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -141,7 +128,6 @@ const BlogPost = () => {
             </div>
           </div>
 
-          {/* Featured Image */}
           {post.image && (
             <div className="mb-8">
               <AspectRatio ratio={16 / 9}>
@@ -154,7 +140,6 @@ const BlogPost = () => {
             </div>
           )}
 
-          {/* Article Content */}
           <Card className="mb-8">
             <CardContent className="p-8">
               <div 
@@ -164,7 +149,6 @@ const BlogPost = () => {
             </CardContent>
           </Card>
 
-          {/* Article Footer */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-3">
               <img 
@@ -179,18 +163,12 @@ const BlogPost = () => {
             </div>
             
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={handleBackToBlog}
-              >
+              <Button variant="outline" onClick={handleBackToBlog}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Blog
               </Button>
               {post.link && (
-                <Button 
-                  onClick={handleViewOriginal}
-                  className="bg-workvix-primary hover:bg-workvix-primary/90"
-                >
+                <Button onClick={handleViewOriginal} className="bg-workvix-primary hover:bg-workvix-primary/90">
                   <ExternalLink className="mr-2 h-4 w-4" />
                   View Original
                 </Button>
@@ -199,10 +177,10 @@ const BlogPost = () => {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );
 };
 
-export default BlogPost; 
+export default BlogPost;
