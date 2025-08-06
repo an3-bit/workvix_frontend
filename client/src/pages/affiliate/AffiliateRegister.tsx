@@ -134,7 +134,7 @@ const AffiliateRegister: React.FC = () => {
             </Button>
             <div className="mt-4 text-center">
               <span className="text-gray-200">Already registered?</span>
-              <Link to="/affiliate/" className="ml-2 text-green-400 hover:underline">
+              <Link to="/affiliate/signin" className="ml-2 text-green-400 hover:underline">
                 Sign in
               </Link>
             </div>

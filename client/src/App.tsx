@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/general/Index";
+import ButtonWithLocationCheck from "./components/ButtonWithLocationCheck";
 // Lazy load all other pages/components
 const FreelancerDashboard = lazy(() => import("./pages/freelancer/dashboard/DashboardPage"));
 const ClientDashboard = lazy(() => import("./pages/client/clientdashboard")); // Renamed to clientdashboard.tsx
@@ -19,7 +20,7 @@ const AffiliateLayout = lazy(() => import("./pages/affiliate/AffiliateDashboard"
 const ProfileSettings = lazy(() => import('./pages/client/settings/ProfileSettingsPage')); // Renamed from ProfileSettings.tsx
 const Payments = lazy(() => import('./pages/client/payments/PaymentsPage')); // Renamed from Payments.tsx
 
-import ButtonWithLocationCheck from "/home/user/workvix/client/src/components/ButtonWithLocationCheck.tsx";
+
 const queryClient = new QueryClient();
 
 // Lazy load components
@@ -46,8 +47,8 @@ const ExploreSkills = lazy(() => import("./pages/general/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/bids/BidsPage"));
 const ClientMyJobs = lazy(() => import("./pages/client/jobs/MyJobsPage")); // Renamed from MyJobs.tsx
 const OrderForm = lazy(() => import("./pages/general/OrderForm"));
-const AffiliateDashboard = lazy(() => import('/home/user/workvix/client/src/pages/affiliate/AffiliateDashboard'));
-const ChatPage = lazy(() => import('/home/user/workvix/client/src/pages/general/ChatPage'));
+const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard').then(mod => ({ default: mod.AffiliateDashboard }))); // Renamed from AffiliateDashboard.tsx
+const ChatPage = lazy(() => import('./pages/general/ChatPage'));
 const AffiliateManageClients = lazy(() => import("./pages/affiliate/ManageClients"));
 const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFreelancers"));
 const AffiliateManageJobs = lazy(() => import("./pages/affiliate/ManageJobs"));
