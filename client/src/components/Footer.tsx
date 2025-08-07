@@ -127,15 +127,8 @@ const Footer: React.FC = () => {
             {/* Copyright */}
             <div className="text-center md:text-left">
               <p className="text-gray-400 text-sm">
-                &copy; {new Date().getFullYear()} WorkVix. All rights reserved. Developed by{' '}
-                <a 
-                  href="https://personal-portfolio-react-master-eight.vercel.app/" 
-                  className="text-orange-500 hover:text-orange-400 transition-colors duration-200"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Andrew Omwenga
-                </a>
+                &copy; {new Date().getFullYear()} WorkVix. All rights reserved.
+               
               </p>
             </div>
             {/* Social Links */}

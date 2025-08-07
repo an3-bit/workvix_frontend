@@ -17,7 +17,7 @@ import ManageSamples from '@/components/admin/ManageSamples';
 import ManageNews from '@/components/admin/ManageNews';
 import ManageSupportTickets from '@/components/admin/ManageSupportTickets';
 import SystemSettings from '@/components/admin/SystemSettings'; // Example for settings
-import ManageAffiliateMarketers from './ManageAffiliateMarketers';
+import ManageAffiliateMarketers from '@/pages/admin/user-management/ManageAffiliateMarketersPage';
 import { Menu } from 'lucide-react';
 import ActivityLog from '@/components/admin/ActivityLog';
 import ManageTalentPool from '@/components/admin/ManageTalentPool';

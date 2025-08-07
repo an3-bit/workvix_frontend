@@ -1,24 +1,18 @@
 import express from 'express';
-import { protect } from '../middleware/auth.js';
+import User from '../models/User.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(protect);
-
-// Get user profile
-router.get('/profile', (req, res) => {
-  res.json({ message: 'Get user profile' });
-});
-
-// Update user profile
-router.put('/profile', (req, res) => {
-  res.json({ message: 'Update user profile' });
-});
-
-// Get user dashboard
-router.get('/dashboard', (req, res) => {
-  res.json({ message: 'Get user dashboard' });
+// Get current user
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
 });
 
 export default router; 
