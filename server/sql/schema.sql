@@ -1,6 +1,6 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT (uuid()),
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
@@ -8,15 +8,18 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Jobs table
+-- Jobs table 
 CREATE TABLE IF NOT EXISTS jobs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   client_id INT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
+  category TEXT,
+  skills_required JSON,
   budget DECIMAL(10,2),
   status ENUM('open', 'in_progress', 'completed', 'cancelled') DEFAULT 'open',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -27,6 +30,8 @@ CREATE TABLE IF NOT EXISTS bids (
   freelancer_id INT NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   message TEXT,
+  cover_letter TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
@@ -100,7 +105,7 @@ CREATE TABLE IF NOT EXISTS payments (
 -- Support Tickets table
 CREATE TABLE IF NOT EXISTS support_tickets (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
+  user_id UUID NOT NULL,
   subject VARCHAR(255) NOT NULL,
   status ENUM('open', 'closed', 'pending') DEFAULT 'open',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -110,7 +115,7 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 -- Notifications table
 CREATE TABLE IF NOT EXISTS notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
+  user_id UUID NOT NULL,
   type VARCHAR(50),
   content TEXT,
   read BOOLEAN DEFAULT FALSE,
@@ -121,7 +126,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- Profiles table
 CREATE TABLE IF NOT EXISTS profiles (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL UNIQUE,
+  user_id UUID NOT NULL UNIQUE,
   first_name VARCHAR(100),
   last_name VARCHAR(100),
   bio TEXT,
@@ -136,7 +141,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Affiliate Marketers table
 CREATE TABLE IF NOT EXISTS affiliate_marketers (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL UNIQUE,
+  user_id UUID NOT NULL UNIQUE,
   email VARCHAR(100) NOT NULL,
   first_name VARCHAR(100),
   last_name VARCHAR(100),
@@ -146,3 +151,28 @@ CREATE TABLE IF NOT EXISTS affiliate_marketers (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ); 
+
+-- Portfolios table
+CREATE TABLE IF NOT EXISTS portfolios (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL,
+  title TEXT,
+  description TEXT,
+  image_urls JSON,
+  video_urls JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Stats table
+CREATE TABLE IF NOT EXISTS stats (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL,
+  jobs_completed INTEGER DEFAULT 0,
+  total_earnings DECIMAL(10,2) DEFAULT 0,
+  positive_reviews INTEGER DEFAULT 0,
+  response_time INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

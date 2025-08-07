@@ -11,6 +11,8 @@ import supportRoutes from './support.js';
 import notificationRoutes from './notifications.js';
 import profileRoutes from './profiles.js';
 import affiliateRoutes from './affiliates.js';
+import portfolioRoutes from './portfolio.js';
+import statsRoutes from './stats.js';
 
 const router = express.Router();
 
@@ -26,5 +28,7 @@ router.use('/support', supportRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/profiles', profileRoutes);
 router.use('/affiliates', affiliateRoutes);
+router.use('/portfolio', portfolioRoutes);
+router.use('/stats', statsRoutes);
 
 export default router; 
