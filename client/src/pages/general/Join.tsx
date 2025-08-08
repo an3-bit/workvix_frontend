@@ -67,7 +67,13 @@ const Join = () => {
     try {
       if (!role) throw new Error("Role not defined. Please start again.");
 
-      // Use fetch to call your backend registration endpoint
+      // First, check if the server is running
+      try {
+        await fetch('http://localhost:5000/health');
+      } catch (e) {
+        throw new Error("Cannot connect to server. Please ensure the backend server is running on port 5000.");
+      }
+
       const response = await fetch('http://localhost:5000/auth/register', {
         method: 'POST',
         headers: {
@@ -81,37 +87,47 @@ const Join = () => {
         }),
       });
 
-      const responseData = await response.json();
+      // Log detailed response info
+      console.log({
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      });
 
-      if (response.ok) { // Check if the HTTP status code is in the 200-299 range
+      // Check for non-JSON responses
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`Server returned non-JSON response: ${contentType}`);
+      }
+
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Response parsing error:', parseError);
+        const text = await response.text();
+        console.error('Raw response:', text);
+        throw new Error('Server returned invalid JSON response');
+      }
+
+      if (response.ok) {
         toast({
           title: "Account Created!",
           description: `Welcome! You've successfully joined as a ${role}.`,
         });
-        // You might want to handle authentication state here
-        // e.g., store user data in local storage or a state management solution
-        // and potentially navigate the user.
-        // For now, navigation is still handled by the useEffect above based on the user state from useAuth
       } else {
-        // Handle backend errors
-        throw new Error(responseData.message || `Registration failed with status ${response.status}`);
+        throw new Error(responseData.message || `Registration failed: ${response.statusText}`);
       }
 
-    } catch (error: any) { // Use 'any' or a more specific type if you know the error structure
-      let errorMessage = "An unexpected error occurred. Please try again later.";
+    } catch (error: any) {
+      console.error('Registration error:', {
+        error,
+        message: error.message,
+        stack: error.stack
+      });
 
-      if (error instanceof Error) {
-        // Basic error message parsing - you might need more sophisticated parsing
-        // based on your backend's error response format.
-        if (error.message.includes("already exists")) {
-          errorMessage = "An account with this email already exists. Please sign in instead.";
-        } else {
-          errorMessage = error.message;
-        }
-      } else if (typeof error === 'string') {
-         errorMessage = error;
-      }
-
+      const errorMessage = error.message || "An unexpected error occurred. Please try again later.";
 
       toast({
         title: "Registration failed",

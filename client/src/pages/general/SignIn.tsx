@@ -57,7 +57,8 @@ const SignIn = () => {
   const onSubmit = async (values: z.infer<typeof signInFormSchema>) => {
     setIsSubmitting(true);
     try {
-      // Use fetch to call your backend login endpoint
+      console.log('Attempting login with:', values.email);
+
       const response = await fetch('http://localhost:5000/auth/login', {
         method: 'POST',
         headers: {
@@ -70,24 +71,34 @@ const SignIn = () => {
       });
 
       const responseData = await response.json();
+      console.log('Login response:', responseData);
 
-      if (response.ok) { // Check if the HTTP status code is in the 200-299 range
+      if (response.ok) {
+        // Store token in localStorage
+        localStorage.setItem('token', responseData.token);
+        
+        // Update user context with the full user object
+        signIn(responseData.user);
+
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
 
-        // Assuming your backend returns user data including role on successful login
-        // You would typically store this user data (e.g., in local storage or a state management solution)
-        // and then the useEffect that checks for the 'user' state would handle navigation.
-        // For now, the navigation is still dependent on the useAuth context's user state.
-        // If you are fully replacing useAuth, you'll need to manage the user state and navigation manually here.
-
+        // Immediately redirect based on role
+        if (responseData.user.role === 'client') {
+          navigate('/client');
+        } else if (responseData.user.role === 'freelancer') {
+          navigate('/freelancer');
+        } else if (responseData.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        // Handle backend errors
         throw new Error(responseData.message || `Sign in failed with status ${response.status}`);
       }
-    } catch (error: any) { // Use 'any' or a more specific type if you know the error structure
+    } catch (error: any) {
       console.error("Sign in error:", error);
       const errorMessage = error instanceof Error ? error.message : "Please try again later";
       toast({
