@@ -1,7 +1,7 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id BINARY(16) PRIMARY KEY,
-  name VARCHAR(100) NOT NULL, 
+  id UUID PRIMARY KEY DEFAULT (uuid()),
+  name VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   role ENUM('admin', 'affiliate', 'freelancer', 'client') NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS bids (
 -- Orders table
 CREATE TABLE IF NOT EXISTS orders (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  job_id INT NOT NULL, 
+  job_id INT NOT NULL,
   client_id INT NOT NULL,
   freelancer_id INT NOT NULL,
   status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS orders (
 -- Reviews table
 CREATE TABLE IF NOT EXISTS reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id INT NOT NULL, 
+  order_id INT NOT NULL,
   reviewer_id INT NOT NULL,
   reviewee_id INT NOT NULL,
   rating INT CHECK (rating >= 1 AND rating <= 5),
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 -- Chats table
 CREATE TABLE IF NOT EXISTS chats (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user1_id INT NOT NULL, 
+  user1_id INT NOT NULL,
   user2_id INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS chats (
 -- Messages table
 CREATE TABLE IF NOT EXISTS messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  chat_id INT NOT NULL, 
+  chat_id INT NOT NULL,
   sender_id INT NOT NULL,
   content TEXT,
   file_url VARCHAR(255),
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS messages (
 -- Payments table
 CREATE TABLE IF NOT EXISTS payments (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id INT NOT NULL, 
+  order_id INT NOT NULL,
   payer_id INT NOT NULL,
   payee_id INT NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS payments (
 -- Support Tickets table
 CREATE TABLE IF NOT EXISTS support_tickets (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL, 
+  user_id UUID NOT NULL,
   subject VARCHAR(255) NOT NULL,
   status ENUM('open', 'closed', 'pending') DEFAULT 'open',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -115,8 +115,8 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 
 -- Profiles table
 CREATE TABLE IF NOT EXISTS profiles (
-  id INT AUTO_INCREMENT PRIMARY KEY, -- Consider if this should also be BINARY(16) if you want to reference other tables with a UUID-like ID
-  user_id INT NOT NULL UNIQUE, 
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id UUID NOT NULL UNIQUE,
   first_name VARCHAR(100),
   last_name VARCHAR(100),
   bio TEXT,
@@ -131,10 +131,9 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Affiliate Marketers table
 CREATE TABLE IF NOT EXISTS affiliate_marketers (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL UNIQUE, 
+  user_id UUID NOT NULL UNIQUE,
   email VARCHAR(100) NOT NULL,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
+  first_name VARCHAR(100),\n  last_name VARCHAR(100),
   phone VARCHAR(20),
   online BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -145,7 +144,7 @@ CREATE TABLE IF NOT EXISTS affiliate_marketers (
 -- Portfolios table
 CREATE TABLE IF NOT EXISTS portfolios (
   id UUID PRIMARY KEY,
-  user_id INT NOT NULL, 
+  user_id UUID NOT NULL,
   title TEXT,
   description TEXT,
   image_urls JSON,
@@ -157,7 +156,7 @@ CREATE TABLE IF NOT EXISTS portfolios (
 -- Stats table
 CREATE TABLE IF NOT EXISTS stats (
   id UUID PRIMARY KEY,
-  user_id INT NOT NULL, 
+  user_id UUID NOT NULL,
   jobs_completed INTEGER DEFAULT 0,
   total_earnings DECIMAL(10,2) DEFAULT 0,
   positive_reviews INTEGER DEFAULT 0,

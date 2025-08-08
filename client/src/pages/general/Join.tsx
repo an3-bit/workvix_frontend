@@ -61,44 +61,57 @@ const Join = () => {
       agreeToTerms: false,
     },
   });
-
   const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
     setIsSubmitting(true);
 
     try {
       if (!role) throw new Error("Role not defined. Please start again.");
 
-      const response = await signUp({
-        name: `${values.firstName} ${values.lastName}`,
-        email: values.email,
-        password: values.password,
-        role: role as 'client' | 'freelancer'
+      // Use fetch to call your backend registration endpoint
+      const response = await fetch('http://localhost:5000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${values.firstName} ${values.lastName}`,
+          email: values.email,
+          password: values.password,
+          role: role as 'client' | 'freelancer',
+        }),
       });
 
-      if (response.success) {
+      const responseData = await response.json();
+
+      if (response.ok) { // Check if the HTTP status code is in the 200-299 range
         toast({
           title: "Account Created!",
           description: `Welcome! You've successfully joined as a ${role}.`,
         });
-        // Navigation will be handled by the useEffect above
+        // You might want to handle authentication state here
+        // e.g., store user data in local storage or a state management solution
+        // and potentially navigate the user.
+        // For now, navigation is still handled by the useEffect above based on the user state from useAuth
       } else {
-        throw new Error(response.message || "Registration failed");
+        // Handle backend errors
+        throw new Error(responseData.message || `Registration failed with status ${response.status}`);
       }
 
-    } catch (error: unknown) {
+    } catch (error: any) { // Use 'any' or a more specific type if you know the error structure
       let errorMessage = "An unexpected error occurred. Please try again later.";
 
       if (error instanceof Error) {
+        // Basic error message parsing - you might need more sophisticated parsing
+        // based on your backend's error response format.
         if (error.message.includes("already exists")) {
           errorMessage = "An account with this email already exists. Please sign in instead.";
-        } else if (error.message.includes("valid email")) {
-          errorMessage = "Please enter a valid email address.";
-        } else if (error.message.includes("password")) {
-          errorMessage = "Password must be at least 8 characters long.";
         } else {
           errorMessage = error.message;
         }
+      } else if (typeof error === 'string') {
+         errorMessage = error;
       }
+
 
       toast({
         title: "Registration failed",
@@ -109,6 +122,7 @@ const Join = () => {
       setIsSubmitting(false);
     }
   };
+
 
   if (loading) {
     return (

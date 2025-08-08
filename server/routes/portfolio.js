@@ -1,5 +1,5 @@
 import express from 'express';
-import { PortfolioController } from '../controllers';
+import { PortfolioController } from "./controllers/PortfolioController.js";
 
 const router = express.Router();
 
