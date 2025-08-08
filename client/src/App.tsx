@@ -47,7 +47,7 @@ const ExploreSkills = lazy(() => import("./pages/general/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/bids/BidsPage"));
 const ClientMyJobs = lazy(() => import("./pages/client/jobs/MyJobsPage")); // Renamed from MyJobs.tsx
 const OrderForm = lazy(() => import("./pages/general/OrderForm"));
-const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard').then(mod => ({ default: mod.AffiliateDashboard }))); // Renamed from AffiliateDashboard.tsx
+const AffiliateDashboard = lazy(() => import('./pages/affiliate/AffiliateDashboard')); // Renamed from AffiliateDashboard.tsx
 const ChatPage = lazy(() => import('./pages/general/ChatPage'));
 const AffiliateManageClients = lazy(() => import("./pages/affiliate/ManageClients"));
 const AffiliateManageFreelancers = lazy(() => import("./pages/affiliate/ManageFreelancers"));
@@ -61,7 +61,7 @@ const Help = lazy(() => import("./pages/general/Help"));
 const Trust = lazy(() => import("./pages/general/Trust"));
 const PlaceholderPage = lazy(() => import("./pages/general/PlaceholderPage"));
 const AffiliateRegister = lazy(() => import("./pages/affiliate/AffiliateRegister"));
-const AffiliateSignIn = lazy(() => import("./pages/affiliate/AffiliateSignIn").then(module => ({ default: module.default })));
+const AffiliateSignIn = lazy(() => import("./pages/affiliate/AffiliateSignIn"));
 
 const App = () => {
   return (
@@ -69,9 +69,8 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-          <BrowserRouter>
-        {/* BrowserRouter removed as it's handled in main.tsx or higher level */}
-        <Suspense fallback={
+        <BrowserRouter>
+          <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
@@ -109,6 +108,7 @@ const App = () => {
               <Route path="/explore-skills" element={<ExploreSkills />} />
               <Route path="/premium-services" element={<PremiumServices />} />
               <Route path="/become-seller" element={<BecomeSeller />} />
+               
               {/* <Route path="/job-posted-notification" element={<JobPostedNotification />} /> Corrected import path */}
               {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
               <Route path="/chat" element={<ChatPage />} />
@@ -132,16 +132,17 @@ const App = () => {
                   <ChatSystem jobId={null} bidId={null} receiverId={null} />
                 }
               />
-              <Route path="/affiliate/register" element={<AffiliateRegister />} />
-              {/* Affiliate Sign-in Route */}
-              <Route path="/affiliate/signin" element={<AffiliateSignIn />} />
-              <Route path="/affiliate" element={<AffiliateLayout active="" />}>
-                <Route path="dashboard" element={<AffiliateDashboard />} />
-                <Route path="clients" element={<AffiliateManageClients />} />
-                <Route path="freelancers" element={<AffiliateManageFreelancers />} />
-                <Route path="jobs" element={<AffiliateManageJobs />} />
-                {/* <Route path="commissions" element={<AffiliateCommissionSummary />} /> */}
-                <Route index element={<AffiliateDashboard />} />
+              {/* Affiliate Routes */}
+              <Route path="/affiliate">
+                <Route path="register" element={<AffiliateRegister />} />
+                <Route path="signin" element={<AffiliateSignIn />} />
+                <Route element={<AffiliateLayout active="" />}>
+                  <Route path="dashboard" element={<AffiliateDashboard />} />
+                  <Route path="clients" element={<AffiliateManageClients />} />
+                  <Route path="freelancers" element={<AffiliateManageFreelancers />} />
+                  <Route path="jobs" element={<AffiliateManageJobs />} />
+                  <Route index element={<AffiliateDashboard />} />
+                </Route>
               </Route>
               {/* <Route path="/admin/affiliate-marketers" element={<AdminManageAffiliateMarketers />} /> */}
               <Route path="/profile" element={<ProfileSettings />} />
@@ -166,7 +167,7 @@ const App = () => {
           </Routes>
           <ButtonWithLocationCheck />
           </Suspense>
-          </BrowserRouter>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );

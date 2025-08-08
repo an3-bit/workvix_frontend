@@ -5,62 +5,87 @@ import pool from '../config/database.js';
 
 const router = express.Router();
 
-// Register
+// Register route
 router.post('/register', async (req, res) => {
+  const connection = await pool.getConnection();
+  
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ 
+        message: 'Missing required fields' 
+      });
+    }
 
-    // Check if user already exists
-    const [existingUsers] = await pool.query(
+    // Check if user exists
+    const [existingUsers] = await connection.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
     );
 
     if (existingUsers.length > 0) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ 
+        message: 'An account with this email already exists' 
+      });
     }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
-    const [result] = await pool.query(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, role]
+    await connection.beginTransaction();
+
+    // Insert user with optional phone
+    const [userResult] = await connection.query(
+      'INSERT INTO users (name, email, password, role, phone) VALUES (?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, role, phone || null]
     );
 
-    const newUser = {
-      id: result.insertId,
-      name,
-      email,
-      role
-    };
+    await connection.commit();
 
     // Create token
     const token = jwt.sign(
-      { id: newUser.id, role },
+      { 
+        id: userResult.insertId,
+        role,
+        email,
+        name 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
 
     res.status(201).json({
-      user: newUser,
+      user: {
+        id: userResult.insertId,
+        name,
+        email,
+        role,
+        phone: phone || null
+      },
       token
     });
 
   } catch (error) {
+    await connection.rollback();
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Registration failed. Please try again later.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    connection.release();
   }
 });
 
-// Login
+// Login route
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email using correct SQL syntax
+    // Find user
     const [users] = await pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
@@ -78,23 +103,38 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Create token with user role
+    // Get additional profile data for affiliate marketers
+    let profileData = {};
+    if (user.role === 'affiliate_marketer') {
+      const [profiles] = await pool.query(
+        'SELECT * FROM affiliate_profiles WHERE user_id = ?',
+        [user.id]
+      );
+      if (profiles.length > 0) {
+        profileData = profiles[0];
+      }
+    }
+
+    // Create token
     const token = jwt.sign(
       { 
-        id: user.id, 
+        id: user.id,
         role: user.role,
         email: user.email,
-        name: user.name 
+        name: user.name
       },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
 
     // Remove password from user object
-    delete user.password;
+    const { password: _, ...userWithoutPassword } = user;
 
     res.json({
-      user,
+      user: {
+        ...userWithoutPassword,
+        ...profileData
+      },
       token
     });
 

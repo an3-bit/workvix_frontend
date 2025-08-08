@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,42 +20,50 @@ const AffiliateSignIn: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
+      console.log('Attempting affiliate login:', { email: form.email });
+
+      const response = await fetch('http://localhost:5000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
       });
-      if (error) throw error;
-      const user = data.user;
-      if (!user) throw new Error('Authentication failed.');
-      // Check user_type
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (profileError && profileError.code !== 'PGRST116') throw profileError;
-      if (!profile) {
-        // Insert profile if it doesn't exist
-        const now = new Date().toISOString();
-        const { error: insertError } = await supabase.from('profiles').insert({
-          id: user.id,
-          email: user.email,
-          first_name: '',
-          last_name: '',
-          phone: '',
-          created_at: now,
-          updated_at: now,
-          user_type: 'affiliate_marketer',
-          online: true,
-        });
-        if (insertError) throw insertError;
-      } else if (profile.user_type !== 'affiliate_marketer') {
+
+      const data = await response.json();
+      console.log('Login response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Sign in failed');
+      }
+
+      // Verify user is an affiliate marketer
+      if (data.user.role !== 'affiliate_marketer') {
         throw new Error('This sign-in is for affiliate marketers only.');
       }
-      toast({ title: 'Welcome back!', description: 'You have been signed in successfully.' });
-      navigate('/affiliate/dashboard');
+
+      // Store token and user data
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify({
+        ...data.user,
+        role: 'affiliate_marketer'
+      }));
+
+      toast({ 
+        title: 'Welcome back!', 
+        description: 'You have been signed in successfully.' 
+      });
+      
+      // Use absolute path instead of relative
+      navigate('/affiliate/dashboard', { replace: true });
+
     } catch (err: any) {
-      toast({ title: 'Sign in error', description: err.message, variant: 'destructive' });
+      console.error('Login error:', err);
+      toast({ 
+        title: 'Sign in failed', 
+        description: err.message || 'Please check your credentials and try again', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
@@ -117,4 +124,4 @@ const AffiliateSignIn: React.FC = () => {
   );
 };
 
-export default AffiliateSignIn; 
+export default AffiliateSignIn;

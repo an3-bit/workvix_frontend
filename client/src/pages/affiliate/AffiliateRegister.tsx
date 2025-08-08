@@ -30,54 +30,49 @@ const AffiliateRegister: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            name: form.name,
-            phone: form.phone,
-            role: 'affiliate_marketer',
-          },
+      console.log('Attempting affiliate registration:', {
+        ...form,
+        role: 'affiliate_marketer'
+      });
+
+      const response = await fetch('http://localhost:5000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          phone: form.phone || null,
+          role: 'affiliate_marketer'
+        }),
       });
-      if (error) throw error;
-      const user = data.user;
-      if (!user) throw new Error('User registration failed.');
-      // Split name into first and last name
-      const [firstName, ...lastNameParts] = form.name.trim().split(' ');
-      const lastName = lastNameParts.join(' ');
-      // Insert into profiles table
-      const now = new Date().toISOString();
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: user.id,
-        email: form.email,
-        first_name: firstName,
-        last_name: lastName,
-        phone: form.phone,
-        created_at: now,
-        updated_at: now,
-        user_type: 'affiliate_marketer',
-        online: true,
+
+      const data = await response.json();
+      console.log('Registration response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      toast({ 
+        title: 'Registration successful!', 
+        description: 'Please sign in to access your account.' 
       });
-      if (profileError) throw profileError;
-      // Insert into affiliate_marketers table
-      const { error: affiliateError } = await supabase.from('affiliate_marketers').insert({
-        id: user.id,
-        email: form.email,
-        first_name: firstName,
-        last_name: lastName,
-        phone: form.phone,
-        created_at: now,
-        updated_at: now,
-        online: true,
-      });
-      if (affiliateError) throw affiliateError;
-      toast({ title: 'Registration successful', description: 'Check your email to confirm your account.' });
-      navigate('/affiliate/dashboard');
+      
+      // Redirect to affiliate sign in instead of dashboard
+      navigate('/affiliate/signin');
+
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      console.error('Registration error:', err);
+      toast({ 
+        title: 'Registration failed', 
+        description: err.message || 'Please try again later', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
@@ -145,4 +140,4 @@ const AffiliateRegister: React.FC = () => {
   );
 };
 
-export default AffiliateRegister; 
+export default AffiliateRegister;

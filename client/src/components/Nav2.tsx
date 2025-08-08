@@ -3,129 +3,121 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Bell, MessageCircle, Search, LogOut, User, Settings } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Bell, MessageCircle, Search, LogOut, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+// Update type definitions
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: 'client' | 'freelancer' | 'admin' | 'affiliate_marketer';
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+}
 
 const Nav2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [user, setUser] = useState<unknown>(null);
-  const [userProfile, setUserProfile] = useState<unknown>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
 
-  // Type guards
-  const isUserProfile = (profile: unknown): profile is { user_type?: string; first_name?: string; last_name?: string } => {
-    return typeof profile === 'object' && profile !== null;
-  };
-  const isUser = (u: unknown): u is { id?: string; email?: string } => {
-    return typeof u === 'object' && u !== null;
-  };
-
   useEffect(() => {
     const fetchUserAndNotifications = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        const token = localStorage.getItem('token');
+        if (!token) {
           setLoading(false);
           return;
         }
-        setUser(user);
-        await fetchUserProfile(user.id);
-        fetchNotifications(user.id);
-        fetchUnreadMessageCount(user.id);
-        setupRealtime(user.id);
+
+        // Fetch user profile
+        const response = await fetch('http://localhost:5000/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+
+        const userData = await response.json();
+        setUser(userData);
+
+        // Fetch notifications count
+        const notifResponse = await fetch(`http://localhost:5000/notifications/unread/${userData.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (notifResponse.ok) {
+          const { count } = await notifResponse.json();
+          setNotificationCount(count);
+        }
+
+        // Fetch unread messages count
+        const msgResponse = await fetch(`http://localhost:5000/messages/unread/${userData.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (msgResponse.ok) {
+          const { count } = await msgResponse.json();
+          setMessageCount(count);
+        }
+
         setLoading(false);
       } catch (error) {
+        console.error('Error fetching user data:', error);
         setLoading(false);
       }
     };
+
     fetchUserAndNotifications();
+
+    // Setup WebSocket connection for real-time updates
+    const ws = new WebSocket('ws://localhost:5000');
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'notification') {
+        setNotificationCount(prev => prev + 1);
+      } else if (data.type === 'message') {
+        setMessageCount(prev => prev + 1);
+      }
+    };
+
     return () => {
-      supabase.removeAllChannels();
+      ws.close();
     };
   }, []);
 
-  useEffect(() => {
-    if (isUser(user) && user.id) {
-      fetchNotifications(user.id);
-    }
-  }, [location, user]);
-
-  useEffect(() => {
-    // Listen for profile-updated event
-    const handleProfileUpdated = () => {
-      if (isUser(user)) fetchUserProfile(user.id);
-    };
-    window.addEventListener('profile-updated', handleProfileUpdated);
-    return () => {
-      window.removeEventListener('profile-updated', handleProfileUpdated);
-    };
-  }, [user]);
-
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      setUserProfile(profile);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchNotifications = async (uid: string) => {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('id, read')
-      .eq('user_id', uid);
-    if (!error) {
-      setNotificationCount(data.filter((n: { read: boolean }) => !n.read).length);
-    }
-  };
-
-  const fetchUnreadMessageCount = async (uid: string) => {
-    const { data: unreadCount, error } = await supabase.rpc('get_unread_message_count', { user_uuid: uid });
-    setMessageCount(unreadCount ?? 0);
-  };
-
-  const setupRealtime = (uid: string) => {
-    const channel = supabase
-      .channel('notifications_nav2')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${uid}`
-      }, () => {
-        fetchNotifications(uid);
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'messages',
-      }, () => {
-        fetchUnreadMessageCount(uid);
-      })
-      .subscribe();
-  };
-
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const response = await fetch('http://localhost:5000/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null);
-      setUserProfile(null);
-      setNotificationCount(0);
-      setMessageCount(0);
       navigate('/');
+      
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
@@ -141,13 +133,19 @@ const Nav2 = () => {
   };
 
   const handleLogoClick = () => {
-    if (isUserProfile(userProfile)) {
-      if (userProfile.user_type === 'freelancer') {
-        navigate('/freelancer');
-      } else if (userProfile.user_type === 'client') {
-        navigate('/client');
-      } else {
-        navigate('/dashboard');
+    if (user) {
+      switch (user.role) {
+        case 'freelancer':
+          navigate('/freelancer');
+          break;
+        case 'client':
+          navigate('/client');
+          break;
+        case 'affiliate_marketer':
+          navigate('/affiliate/dashboard');
+          break;
+        default:
+          navigate('/dashboard');
       }
     } else {
       navigate('/');
@@ -161,39 +159,42 @@ const Nav2 = () => {
   };
 
   const getInitials = (profile: unknown) => {
-    if (isUserProfile(profile) && profile.first_name && profile.last_name) {
-      return `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase();
+    if (user && user.first_name && user.last_name) {
+      return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
     }
-    if (isUserProfile(profile) && profile.first_name) {
-      return profile.first_name.charAt(0).toUpperCase();
+    if (user && user.first_name) {
+      return user.first_name.charAt(0).toUpperCase();
     }
-    if (isUser(user) && user.email) {
+    if (user && user.email) {
       return user.email.charAt(0).toUpperCase();
     }
     return 'U';
   };
 
   const getUserDisplayName = () => {
-    if (isUserProfile(userProfile) && userProfile.first_name && userProfile.last_name) {
-      return `${userProfile.first_name} ${userProfile.last_name}`;
+    if (user && user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`;
     }
-    if (isUserProfile(userProfile) && userProfile.first_name) {
-      return userProfile.first_name;
+    if (user && user.first_name) {
+      return user.first_name;
     }
-    if (isUser(user) && user.email) {
+    if (user && user.email) {
       return user.email || 'User';
     }
     return 'User';
   };
 
   const handleNotificationClick = async () => {
-    if (isUserProfile(userProfile)) {
-      if (userProfile.user_type === 'freelancer') {
-        navigate('/freelancer/notifications');
-      } else if (userProfile.user_type === 'client') {
-        navigate('/client/notifications');
-      } else {
-        navigate('/freelancer/notifications'); // fallback
+    if (user) {
+      switch (user.role) {
+        case 'freelancer':
+          navigate('/freelancer/notifications');
+          break;
+        case 'client':
+          navigate('/client/notifications');
+          break;
+        default:
+          navigate('/freelancer/notifications'); // fallback
       }
     } else {
       navigate('/freelancer/notifications');
@@ -201,13 +202,13 @@ const Nav2 = () => {
   };
 
   const shouldShowJobs = () => {
-    return location.pathname === '/freelancer' || 
-           (isUserProfile(userProfile) && userProfile.user_type === 'freelancer' && ['/jobs', '/bids'].includes(location.pathname));
+    return user?.role === 'freelancer' && 
+           (location.pathname === '/freelancer' || ['/jobs', '/bids'].includes(location.pathname));
   };
 
   const shouldShowBids = () => {
-    return location.pathname === '/client' || 
-           (isUserProfile(userProfile) && userProfile.user_type === 'client' && location.pathname === '/client/bids');
+    return user?.role === 'client' && 
+           (location.pathname === '/client' || location.pathname === '/client/bids');
   };
 
   if (loading) {
@@ -236,7 +237,7 @@ const Nav2 = () => {
           </button>
 
           {/* Navigation Links */}
-          {isUser(user) && (
+          {user && (
             <div className="hidden md:flex items-center space-x-6">
               {shouldShowJobs() && (
                 <>
@@ -273,7 +274,7 @@ const Nav2 = () => {
           )}
 
           {/* orders */}
-          {isUser(user) && isUserProfile(userProfile) && userProfile.user_type === 'client' && (
+          {user && user.role === 'client' && (
             <div className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/orders" 
@@ -287,7 +288,7 @@ const Nav2 = () => {
           )}
 
            {/* orders */}
-          {isUser(user) && isUserProfile(userProfile) && userProfile.user_type === 'freelancer' && (
+          {user && user.role === 'freelancer' && (
             <div className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/orders" 
@@ -318,7 +319,7 @@ const Nav2 = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {isUser(user) ? (
+            {user ? (
               <>
                 {/* Notifications */}
                 <button 
@@ -352,7 +353,7 @@ const Nav2 = () => {
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-green-600 text-white">
-                          {getInitials(userProfile)}
+                          {getInitials(user)}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -361,14 +362,14 @@ const Nav2 = () => {
                     <div className="flex flex-col space-y-1 p-2">
                       <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {isUser(user) && user.email}
+                        {user.email}
                       </p>
                     </div>
                     <DropdownMenuItem 
                       onClick={() => {
-                        if (isUserProfile(userProfile) && userProfile.user_type === 'freelancer') {
+                        if (user.role === 'freelancer') {
                           navigate('/freelancer/profile');
-                        } else if (isUserProfile(userProfile) && userProfile.user_type === 'client') {
+                        } else if (user.role === 'client') {
                           navigate('/profile');
                         } else {
                           navigate('/dashboard');

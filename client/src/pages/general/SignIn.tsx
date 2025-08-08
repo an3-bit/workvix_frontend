@@ -78,7 +78,7 @@ const SignIn = () => {
         localStorage.setItem('token', responseData.token);
         
         // Update user context with the full user object
-        signIn(responseData.user);
+        signIn(responseData.user, values.password);
 
         toast({
           title: "Welcome back!",
