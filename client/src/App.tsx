@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/general/Index";
-import ButtonWithLocationCheck from "./components/ButtonWithLocationCheck";
+
 // Lazy load all other pages/components
 const FreelancerDashboard = lazy(() => import("./pages/freelancer/dashboard/DashboardPage"));
 const ClientDashboard = lazy(() => import("./pages/client/clientdashboard")); // Renamed to clientdashboard.tsx
@@ -165,7 +165,7 @@ const App = () => {
               <Route path="/cookies" element={<PlaceholderPage />} />
               <Route path="/accessibility" element={<PlaceholderPage />} />
           </Routes>
-          <ButtonWithLocationCheck />
+      
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>
