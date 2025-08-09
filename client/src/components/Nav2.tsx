@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Bell, MessageCircle, Search, LogOut, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
 // Update type definitions
 interface UserProfile {
   id: string;
@@ -16,7 +15,6 @@ interface UserProfile {
   last_name?: string;
   phone?: string;
 }
-
 const Nav2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +24,6 @@ const Nav2 = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
-
   useEffect(() => {
     const fetchUserAndNotifications = async () => {
       try {
@@ -35,57 +32,46 @@ const Nav2 = () => {
           setLoading(false);
           return;
         }
-
         // Fetch user profile
-        const response = await fetch('http://localhost:5000/auth/profile', {
+        const response = await fetch('http://localhost:5000/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (!response.ok) {
           throw new Error('Failed to fetch user profile');
         }
-
         const userData = await response.json();
         setUser(userData);
-
         // Fetch notifications count
         const notifResponse = await fetch(`http://localhost:5000/notifications/unread/${userData.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (notifResponse.ok) {
           const { count } = await notifResponse.json();
           setNotificationCount(count);
         }
-
         // Fetch unread messages count
         const msgResponse = await fetch(`http://localhost:5000/messages/unread/${userData.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (msgResponse.ok) {
           const { count } = await msgResponse.json();
           setMessageCount(count);
         }
-
         setLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
         setLoading(false);
       }
     };
-
     fetchUserAndNotifications();
-
     // Setup WebSocket connection for real-time updates
     const ws = new WebSocket('ws://localhost:5000');
-    
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'notification') {
@@ -94,12 +80,10 @@ const Nav2 = () => {
         setMessageCount(prev => prev + 1);
       }
     };
-
     return () => {
       ws.close();
     };
   }, []);
-
   const handleLogout = async () => {
     try {
       const response = await fetch('http://localhost:5000/auth/logout', {
@@ -108,16 +92,13 @@ const Nav2 = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-
       if (!response.ok) {
         throw new Error('Logout failed');
       }
-
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
       navigate('/');
-      
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
@@ -131,7 +112,6 @@ const Nav2 = () => {
       });
     }
   };
-
   const handleLogoClick = () => {
     if (user) {
       switch (user.role) {
@@ -151,14 +131,12 @@ const Nav2 = () => {
       navigate('/');
     }
   };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     navigate(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
   };
-
-  const getInitials = (profile: unknown) => {
+  const getInitials = () => {
     if (user && user.first_name && user.last_name) {
       return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
     }
@@ -170,7 +148,6 @@ const Nav2 = () => {
     }
     return 'U';
   };
-
   const getUserDisplayName = () => {
     if (user && user.first_name && user.last_name) {
       return `${user.first_name} ${user.last_name}`;
@@ -183,8 +160,7 @@ const Nav2 = () => {
     }
     return 'User';
   };
-
-  const handleNotificationClick = async () => {
+  const handleNotificationClick = () => {
     if (user) {
       switch (user.role) {
         case 'freelancer':
@@ -200,17 +176,14 @@ const Nav2 = () => {
       navigate('/freelancer/notifications');
     }
   };
-
   const shouldShowJobs = () => {
-    return user?.role === 'freelancer' && 
+    return user?.role === 'freelancer' &&
            (location.pathname === '/freelancer' || ['/jobs', '/bids'].includes(location.pathname));
   };
-
   const shouldShowBids = () => {
-    return user?.role === 'client' && 
+    return user?.role === 'client' &&
            (location.pathname === '/client' || location.pathname === '/client/bids');
   };
-
   if (loading) {
     return (
       <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
@@ -223,7 +196,6 @@ const Nav2 = () => {
       </nav>
     );
   }
-
   return (
     <nav className="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4">
@@ -233,9 +205,8 @@ const Nav2 = () => {
             onClick={handleLogoClick}
             className="text-2xl font-bold text-green-600 hover:text-orange-500 transition-colors"
           >
-                             <span className="text-2xl font-bold text-workvix-primary">work<span className="text-orange-500">vix</span></span>
+            <span className="text-2xl font-bold text-workvix-primary">work<span className="text-orange-500">vix</span></span>
           </button>
-
           {/* Navigation Links */}
           {user && (
             <div className="hidden md:flex items-center space-x-6">
@@ -259,7 +230,6 @@ const Nav2 = () => {
                   </Link>
                 </>
               )}
-              
               {shouldShowBids() && (
                 <Link 
                   to="/client/bids" 
@@ -270,37 +240,28 @@ const Nav2 = () => {
                   Bids
                 </Link>
               )}
+              {user.role === 'client' && (
+                <Link 
+                  to="/orders" 
+                  className={`text-gray-700 hover:text-green-600 transition-colors ${
+                    location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
+                  }`}
+                >
+                  Orders
+                </Link>
+              )}
+              {user.role === 'freelancer' && (
+                <Link 
+                  to="/orders" 
+                  className={`text-gray-700 hover:text-green-600 transition-colors ${
+                    location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
+                  }`}
+                >
+                  Orders
+                </Link>
+              )}
             </div>
           )}
-
-          {/* orders */}
-          {user && user.role === 'client' && (
-            <div className="hidden md:flex items-center space-x-6">
-              <Link 
-                to="/orders" 
-                className={`text-gray-700 hover:text-green-600 transition-colors ${
-                  location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
-                }`}
-              >
-                Orders
-              </Link>
-            </div>
-          )}
-
-           {/* orders */}
-          {user && user.role === 'freelancer' && (
-            <div className="hidden md:flex items-center space-x-6">
-              <Link 
-                to="/orders" 
-                className={`text-gray-700 hover:text-green-600 transition-colors ${
-                  location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
-                }`}
-              >
-                Orders
-              </Link>
-            </div>
-          )}
-          
           {/* Search Bar */}
           <div className="flex-1 max-w-md mx-8">
             <form onSubmit={handleSearch} className="relative">
@@ -316,7 +277,6 @@ const Nav2 = () => {
               </div>
             </form>
           </div>
-
           {/* Right Side */}
           <div className="flex items-center space-x-4">
             {user ? (
@@ -333,7 +293,6 @@ const Nav2 = () => {
                     </span>
                   )}
                 </button>
-
                 {/* Messages */}
                 <Link 
                   to="/chat"
@@ -346,14 +305,13 @@ const Nav2 = () => {
                     </span>
                   )}
                 </Link>
-
                 {/* User Avatar Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-green-600 text-white">
-                          {getInitials(user)}
+                          {getInitials()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -402,5 +360,4 @@ const Nav2 = () => {
     </nav>
   );
 };
-
 export default Nav2;
