@@ -8,50 +8,21 @@ const router = express.Router();
 router.get('/me', auth, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT 
-         u.id, 
-         u.name, 
-         u.email, 
-         u.role, 
-         u.phone, 
-         u.first_name, 
-         u.last_name,
-         p.*  // Select all columns from the profiles table
-       FROM users u
-       LEFT JOIN profiles p ON u.id = p.user_id
-       WHERE u.id = ?`,
+      `SELECT
+         id,
+         role,
+         name
+       FROM users
+       WHERE id = ?`,
       [req.user.id]
     );
 
-    if (rows.length === 0) {
-      // Although the user exists (authenticated), their profile might not.
-      // Return user details without profile if no profile found.
-      const [userRows] = await pool.query(
-        `SELECT 
-           id, 
-           name, 
-           email, 
-           role, 
-           phone, 
-           first_name, 
-           last_name
-         FROM users
-         WHERE id = ?`,
-        [req.user.id]
-      );
-      if (userRows.length > 0) {
-        return res.json(userRows[0]);
-      }
-      return res.status(404).json({ message: 'User not found' }); // Should not happen with valid auth
-    }
-
-    res.json(rows[0]); // Return the combined user and profile data
+    res.json(rows[0]);
   } catch (err) {
-    console.error('Error fetching user profile:', err);
+    console.error('Error fetching user profile:', err.message, err.stack);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
-
 // Update current user's profile
 router.put('/me', auth, async (req, res) => {
   const connection = await pool.getConnection();

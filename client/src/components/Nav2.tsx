@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Bell, MessageCircle, Search, LogOut, User } from 'lucide-react';
+import { Bell, MessageCircle, Search, LogOut, User, Menu, X } from 'lucide-react'; // Import Menu and X icons
 import { useToast } from '@/hooks/use-toast';
 // Update type definitions
 interface UserProfile {
@@ -11,8 +11,6 @@ interface UserProfile {
   name: string;
   email: string;
   role: 'client' | 'freelancer' | 'admin' | 'affiliate_marketer';
-  first_name?: string;
-  last_name?: string;
   phone?: string;
 }
 const Nav2 = () => {
@@ -24,6 +22,7 @@ const Nav2 = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false); // State for mobile menu
   useEffect(() => {
     const fetchUserAndNotifications = async () => {
       try {
@@ -33,7 +32,7 @@ const Nav2 = () => {
           return;
         }
         // Fetch user profile
-        const response = await fetch('http://localhost:5000/profile', {
+        const response = await fetch('http://localhost:5000/profile/me', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -70,6 +69,7 @@ const Nav2 = () => {
       }
     };
     fetchUserAndNotifications();
+    
     // Setup WebSocket connection for real-time updates
     const ws = new WebSocket('ws://localhost:5000');
     ws.onmessage = (event) => {
@@ -87,7 +87,7 @@ const Nav2 = () => {
   const handleLogout = async () => {
     try {
       const response = await fetch('http://localhost:5000/auth/logout', {
-        method: 'POST',
+        method: 'POST', // Already correct, but ensuring it's here
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -137,24 +137,12 @@ const Nav2 = () => {
     navigate(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
   };
   const getInitials = () => {
-    if (user && user.first_name && user.last_name) {
-      return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
-    }
-    if (user && user.first_name) {
-      return user.first_name.charAt(0).toUpperCase();
-    }
-    if (user && user.email) {
-      return user.email.charAt(0).toUpperCase();
+    if (user && user.name) {
+      return user.name.charAt(0).toUpperCase();
     }
     return 'U';
   };
   const getUserDisplayName = () => {
-    if (user && user.first_name && user.last_name) {
-      return `${user.first_name} ${user.last_name}`;
-    }
-    if (user && user.first_name) {
-      return user.first_name;
-    }
     if (user && user.email) {
       return user.email || 'User';
     }
@@ -207,61 +195,70 @@ const Nav2 = () => {
           >
             <span className="text-2xl font-bold text-workvix-primary">work<span className="text-orange-500">vix</span></span>
           </button>
+          {/* Hamburger Menu */}
+          <button 
+            className="md:hidden p-2"
+            onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6 text-gray-600" /> : <Menu className="h-6 w-6 text-gray-600" />}
+          </button>
           {/* Navigation Links */}
-          {user && (
-            <div className="hidden md:flex items-center space-x-6">
-              {shouldShowJobs() && (
-                <>
+          <div className={`hidden md:flex items-center space-x-6 ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
+            {user && (
+              <>
+                {shouldShowJobs() && (
+                  <>
+                    <Link 
+                      to="/jobs" 
+                      className={`text-gray-700 hover:text-green-600 transition-colors ${
+                        location.pathname === '/jobs' ? 'text-green-600 font-medium' : ''
+                      }`}
+                    >
+                      Jobs
+                    </Link>
+                    <Link 
+                      to="/bids" 
+                      className={`text-gray-700 hover:text-green-600 transition-colors ${
+                        location.pathname === '/bids' ? 'text-green-600 font-medium' : ''
+                      }`}
+                    >
+                      My Bids
+                    </Link>
+                  </>
+                )}
+                {shouldShowBids() && (
                   <Link 
-                    to="/jobs" 
+                    to="/client/bids" 
                     className={`text-gray-700 hover:text-green-600 transition-colors ${
-                      location.pathname === '/jobs' ? 'text-green-600 font-medium' : ''
+                      location.pathname === '/client/bids' ? 'text-green-600 font-medium' : ''
                     }`}
                   >
-                    Jobs
+                    Bids
                   </Link>
+                )}
+                {user.role === 'client' && (
                   <Link 
-                    to="/bids" 
+                    to="/orders" 
                     className={`text-gray-700 hover:text-green-600 transition-colors ${
-                      location.pathname === '/bids' ? 'text-green-600 font-medium' : ''
+                      location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
                     }`}
                   >
-                    My Bids
+                    Orders
                   </Link>
-                </>
-              )}
-              {shouldShowBids() && (
-                <Link 
-                  to="/client/bids" 
-                  className={`text-gray-700 hover:text-green-600 transition-colors ${
-                    location.pathname === '/client/bids' ? 'text-green-600 font-medium' : ''
-                  }`}
-                >
-                  Bids
-                </Link>
-              )}
-              {user.role === 'client' && (
-                <Link 
-                  to="/orders" 
-                  className={`text-gray-700 hover:text-green-600 transition-colors ${
-                    location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
-                  }`}
-                >
-                  Orders
-                </Link>
-              )}
-              {user.role === 'freelancer' && (
-                <Link 
-                  to="/orders" 
-                  className={`text-gray-700 hover:text-green-600 transition-colors ${
-                    location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
-                  }`}
-                >
-                  Orders
-                </Link>
-              )}
-            </div>
-          )}
+                )}
+                {user.role === 'freelancer' && (
+                  <Link 
+                    to="/orders" 
+                    className={`text-gray-700 hover:text-green-600 transition-colors ${
+                      location.pathname === '/orders' ? 'text-green-600 font-medium' : ''
+                    }`}
+                  >
+                    Orders
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
           {/* Search Bar */}
           <div className="flex-1 max-w-md mx-8">
             <form onSubmit={handleSearch} className="relative">
@@ -356,6 +353,33 @@ const Nav2 = () => {
             )}
           </div>
         </div>
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white shadow-md">
+            <div className="flex flex-col items-start p-4">
+              {user && (
+                <>
+                  {shouldShowJobs() && (
+                    <>
+                      <Link to="/jobs" className="text-gray-700 hover:text-green-600 my-2">Jobs</Link>
+                      <Link to="/bids" className="text-gray-700 hover:text-green-600 my-2">My Bids</Link>
+                    </>
+                  )}
+                  {shouldShowBids() && (
+                    <Link to="/client/bids" className="text-gray-700 hover:text-green-600 my-2">Bids</Link>
+                  )}
+                  {user.role === 'client' && (
+                    <Link to="/orders" className="text-gray-700 hover:text-green-600 my-2">Orders</Link>
+                  )}
+                  {user.role === 'freelancer' && (
+                    <Link to="/orders" className="text-gray-700 hover:text-green-600 my-2">Orders</Link>
+                  )}
+                </>
+              )}
+              <Button variant="ghost" onClick={handleLogout} className="mt-4">Sign out</Button>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
