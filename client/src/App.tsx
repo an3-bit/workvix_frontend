@@ -4,9 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Index from "./pages/general/Index";
-
-// Lazy load all other pages/components
 const FreelancerDashboard = lazy(() => import("./pages/freelancer/dashboard/DashboardPage"));
 const ClientDashboard = lazy(() => import("./pages/client/clientdashboard")); // Renamed to clientdashboard.tsx
 const PremiumServices = lazy(() => import("./pages/general/PremiumServices"));
@@ -25,6 +22,7 @@ const queryClient = new QueryClient();
 
 // Lazy load components
 const SignIn = lazy(() => import("./pages/general/SignIn"));
+const Index = lazy(() => import("./pages/general/Index"));
 const Join = lazy(() => import("./pages/general/Join"));
 const JoinSelection = lazy(() => import("./pages/general/joinselection"));
 const Dashboard = lazy(() => import("./pages/general/Dashboard"));
@@ -41,7 +39,7 @@ const FreelancerNotifications = lazy(() => import("./pages/freelancer/communicat
 const FreelancerPortfolio = lazy(() => import("./pages/freelancer/portfolio/PortfolioPage")); // Renamed from FreelancerPortfolio.tsx
 const FreelancerEarnings = lazy(() => import("./pages/freelancer/earnings/EarningsPage")); // Renamed from FreelancerEarnings.tsx
 const FreelancerProfile = lazy(() => import("./pages/freelancer/portfolio/ProfilePage")); // Renamed from FreelancerProfile.tsx
-const Blog = lazy(() => import("./pages/general/Blog"));
+const MyBlog = lazy(() => import("./pages/general/Blog"));
 const BlogPost = lazy(() => import("./pages/general/BlogPost"));
 const ExploreSkills = lazy(() => import("./pages/general/ExploreSkills"));
 const ClientBidsPage = lazy(() => import("./pages/client/bids/BidsPage"));
@@ -103,7 +101,7 @@ const App = () => {
               <Route path="/post-job" element={<PostJobForm />} />
               <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
               <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
-              <Route path="/blog" element={<Blog />} />
+              <Route path="/myblog" element={<MyBlog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/explore-skills" element={<ExploreSkills />} />
               <Route path="/premium-services" element={<PremiumServices />} />
@@ -165,7 +163,7 @@ const App = () => {
               <Route path="/cookies" element={<PlaceholderPage />} />
               <Route path="/accessibility" element={<PlaceholderPage />} />
           </Routes>
-      
+         
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>

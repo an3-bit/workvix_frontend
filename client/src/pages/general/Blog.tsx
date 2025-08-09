@@ -14,7 +14,7 @@ import {
     type WordPressPost
 } from '@/lib/wordpress';
 
-const Blog = () => {
+const MyBlog = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [blogPosts, setBlogPosts] = useState<WordPressPost[]>([]);
@@ -177,4 +177,4 @@ const Blog = () => {
     );
 };
 
-export default Blog;
+export default MyBlog;
