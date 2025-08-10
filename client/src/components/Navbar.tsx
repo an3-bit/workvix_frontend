@@ -586,17 +586,23 @@ const Navbar = () => {
               </div>
 
               {/* Iterate through mainCategories to create secondary nav links */}
-              {mainCategories.map((category) => (
-                <div key={category.name} className="relative">
-                  <button
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none 
-                      ${activeCategory === category.name ? 'bg-green-100 text-green-700' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'}`}
-                    onMouseEnter={() => handleMouseEnterCategory(category.name)}
-                  >
-                    {category.name}
-                  </button>
-                </div>
-              ))}
+             {mainCategories.map((category) => {
+  // Create a slug for the category, e.g., "Web Development" -> "web-development"
+  const categorySlug = category.name.toLowerCase().replace(/\s+/g, '-');
+   
+  return (
+    <div key={category.name} className="relative">
+      <Link
+        to={`/services/${categorySlug}`}
+        className={`px-3 py-1.5 rounded-full text-sm font-medium transition focus:outline-none
+           ${activeCategory === category.name ? 'bg-green-100 text-green-700' : 'text-gray-700 hover:bg-green-50 hover:text-green-700'}`}
+        onMouseEnter={() => handleMouseEnterCategory(category.name)}
+      >
+        {category.name}
+      </Link>
+    </div>
+  );
+})}
             </div>
 
             {/* Mega Menu Content - This will appear based on activeCategory */}

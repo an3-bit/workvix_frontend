@@ -9,63 +9,63 @@ const categories = [
     color: "bg-emerald-100",
     textColor: "text-emerald-700",
     hoverColor: "hover:bg-emerald-50",
-    href: "/jobs?category=Graphics%20%26%20Design"
+    href: "/services?category=Graphics%20%26%20Design"
   },
   {
     name: "Web Development",
     icon: Code,
     color: "bg-blue-100",
     textColor: "text-blue-700",
-    hoverColor: "hover:bg-blue-50",
-    href: "/jobs?category=Web%20Development"
+    hoverColor: "hover:bg-blue-50", 
+    href: "/services?category=Web%20Development"
   },
   {
     name: "Digital Marketing",
     icon: Megaphone,
     color: "bg-orange-100",
     textColor: "text-orange-700",
-    hoverColor: "hover:bg-orange-50",
-    href: "/jobs?category=Digital%20Marketing"
+    hoverColor: "hover:bg-orange-50", 
+    href: "/services?category=Digital%20Marketing"
   },
   {
     name: "Writing & Translation",
     icon: FileText,
     color: "bg-purple-100",
     textColor: "text-purple-700",
-    hoverColor: "hover:bg-purple-50",
-    href: "/jobs?category=Writing%20%26%20Translation"
+    hoverColor: "hover:bg-purple-50", 
+    href: "/services?category=Writing%20%26%20Translation"
   },
   {
     name: "Video & Animation",
     icon: Video,
     color: "bg-red-100",
     textColor: "text-red-700",
-    hoverColor: "hover:bg-red-50",
-    href: "/jobs?category=Video%20%26%20Animation"
+    hoverColor: "hover:bg-red-50", 
+    href: "/services?category=Video%20%26%20Animation"
   },
   {
     name: "Photography",
     icon: Image,
     color: "bg-indigo-100",
     textColor: "text-indigo-700",
-    hoverColor: "hover:bg-indigo-50",
-    href: "/jobs?category=Photography"
+    hoverColor: "hover:bg-indigo-50", 
+    href: "/services?category=Photography"
   },
   {
     name: "Music & Audio",
     icon: Music,
     color: "bg-pink-100",
     textColor: "text-pink-700",
-    hoverColor: "hover:bg-pink-50",
-    href: "/jobs?category=Music%20%26%20Audio"
+    hoverColor: "hover:bg-pink-50", 
+    href: "/services?category=Music%20%26%20Audio"
   },
   {
     name: "Programming & Tech",
     icon: Code,
     color: "bg-green-100",
     textColor: "text-green-700",
-    hoverColor: "hover:bg-green-50",
-    href: "/jobs?category=Programming%20%26%20Tech"
+    hoverColor: "hover:bg-green-50", 
+    href: "/services?category=Programming%20%26%20Tech"
   },
   {
     name: "Business",
@@ -73,15 +73,15 @@ const categories = [
     color: "bg-gray-100",
     textColor: "text-gray-700",
     hoverColor: "hover:bg-gray-50",
-    href: "/jobs?category=Business"
+    href: "/services?category=Business"
   },
   {
     name: "Lifestyle",
     icon: Globe,
     color: "bg-yellow-100",
     textColor: "text-yellow-700",
-    hoverColor: "hover:bg-yellow-50",
-    href: "/jobs?category=Lifestyle"
+    hoverColor: "hover:bg-yellow-50", 
+    href: "/services?category=Lifestyle"
   }
 ];
 

@@ -21,6 +21,7 @@ const Payments = lazy(() => import('./pages/client/payments/PaymentsPage')); // 
 const queryClient = new QueryClient();
 
 // Lazy load components
+const ServicePage = lazy(() => import("./pages/ServicesPage"));
 const SignIn = lazy(() => import("./pages/general/SignIn"));
 const Index = lazy(() => import("./pages/general/Index"));
 const Join = lazy(() => import("./pages/general/Join"));
@@ -106,7 +107,8 @@ const App = () => {
               <Route path="/explore-skills" element={<ExploreSkills />} />
               <Route path="/premium-services" element={<PremiumServices />} />
               <Route path="/become-seller" element={<BecomeSeller />} />
-               
+              <Route path="/services/:categorySlug/:subcategory" element={<ServicePage />} />
+
               {/* <Route path="/job-posted-notification" element={<JobPostedNotification />} /> Corrected import path */}
               {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
               <Route path="/chat" element={<ChatPage />} />
