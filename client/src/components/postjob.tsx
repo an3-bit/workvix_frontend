@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UploadCloud } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/lib/api';
+import { useNavigate } from 'react-router-dom';
 
 const PostJobForm: React.FC = () => {
   const { toast } = useToast();
@@ -45,68 +45,85 @@ const PostJobForm: React.FC = () => {
       setSelectedFile(null);
     }
   };
+const navigate = useNavigate();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  if (!formData.title || !formData.description || !formData.category || !formData.budget || !formData.urgency || !formData.deadline) {
+    toast({
+      title: 'Missing Information',
+      description: 'Please fill in all required job fields.',
+      variant: 'destructive',
+    });
+    return;
+  }
 
-    if (!formData.title || !formData.description || !formData.category || !formData.budget || !formData.urgency || !formData.deadline) {
-      toast({
-        title: 'Missing Information',
-        description: 'Please fill in all required job fields.',
-        variant: 'destructive',
-      });
-      return;
+  try {
+    setLoading(true);
+
+    let attachmentUrl: string | null = null;
+    if (selectedFile) {
+      // For now, you can send file as FormData if your backend supports it
+      // Or first upload to storage and get a URL
     }
 
-    try {
-      setLoading(true);
+    // Payload matches DB schema exactly
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      budget: parseFloat(formData.budget),
+      min_budget: formData.min_budget ? parseFloat(formData.min_budget) : null,
+      max_budget: formData.max_budget ? parseFloat(formData.max_budget) : null,
+      urgency: formData.urgency,
+      deadline: formData.deadline,
+      attachment_url: attachmentUrl,
+    };
+  
+  localStorage.setItem('pendingJob', JSON.stringify(payload));
+  navigate('/job-posted-notification');
 
-      // Upload file if selected
-      let attachmentUrl: string | null = null;
-      if (selectedFile) {
-        const filePath = `${Date.now()}-${selectedFile.name}`;
-        // TODO: Upload to storage and get URL
-        // attachmentUrl = uploadedFileUrl;
-      }
-const jobData = await api.jobs.create({
-     title: formData.title,
-     description: formData.description,
-     category: formData.category,
-     budget: parseFloat(formData.budget),
-     min_budget: formData.min_budget ? parseFloat(formData.min_budget) : null,
-     max_budget: formData.max_budget ? parseFloat(formData.max_budget) : null,
-     urgency: formData.urgency,
-     deadline: formData.deadline,
-     attachment_url: attachmentUrl,
-   } );
+    // const res = await fetch('http://localhost:5000/jobs', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(payload),
+    // });
 
-      toast({
-        title: 'Job Posted Successfully',
-        description: 'Your job has been posted and freelancers will be notified.',
-      });
+    // if (!res.ok) {
+    //   const err = await res.json();
+    //   throw new Error(err.message || 'Failed to post job');
+    // }
 
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        budget: '',
-        min_budget: '',
-        max_budget: '',
-        urgency: '',
-        deadline: '',
-      });
-      setSelectedFile(null);
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'An error occurred while posting the job.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    // toast({
+    //   title: 'Job Posted Successfully',
+    //   description: 'Your job has been posted and freelancers will be notified.',
+    // });
+
+    // setFormData({
+    //   title: '',
+    //   description: '',
+    //   category: '',
+    //   budget: '',
+    //   min_budget: '',
+    //   max_budget: '',
+    //   urgency: '',
+    //   deadline: '',
+    // });
+    // setSelectedFile(null);
+
+  } catch (error: any) {
+    toast({
+      title: 'Error',
+      description: error.message || 'An error occurred while posting the job.',
+      variant: 'destructive',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

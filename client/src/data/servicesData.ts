@@ -160,9 +160,9 @@ export const servicesData: Service[] = [
       "Mobile-first approach"
     ],
     pricing: {
-      starting: "$200",
-      popular: "$800",
-      premium: "$2500"
+      starting: "$5",
+      popular: "$100",
+      premium: "$500"
     },
     deliveryTime: "7-30 days",
     tags: ["website development", "web design", "responsive design", "HTML", "CSS", "JavaScript"]

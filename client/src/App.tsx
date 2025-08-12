@@ -16,7 +16,7 @@ const AdminLogin = lazy(() => import("./components/admin/AdminLogin"));
 const AffiliateLayout = lazy(() => import("./pages/affiliate/AffiliateDashboard").then(mod => ({ default: mod.AffiliateLayout })));
 const ProfileSettings = lazy(() => import('./pages/client/settings/ProfileSettingsPage')); // Renamed from ProfileSettings.tsx
 const Payments = lazy(() => import('./pages/client/payments/PaymentsPage')); // Renamed from Payments.tsx
-
+const JobPostedNotification = lazy(() => import("./pages/general/jobspostednotification")); // Corrected import path
 
 const queryClient = new QueryClient();
 
@@ -107,7 +107,10 @@ const App = () => {
               <Route path="/explore-skills" element={<ExploreSkills />} />
               <Route path="/premium-services" element={<PremiumServices />} />
               <Route path="/become-seller" element={<BecomeSeller />} />
+
               <Route path="/services/:categorySlug/:subcategory" element={<ServicePage />} />
+              <Route path="/job-posted-notification" element={<JobPostedNotification />} />
+
 
               {/* <Route path="/job-posted-notification" element={<JobPostedNotification />} /> Corrected import path */}
               {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
