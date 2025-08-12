@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .env
 .env.*
+.idx
+package-lock.json
+node_modules
