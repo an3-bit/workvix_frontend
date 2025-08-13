@@ -61,6 +61,7 @@ const Join = () => {
       agreeToTerms: false,
     },
   });
+
   const onRegistrationSubmit = async (values: z.infer<typeof registrationFormSchema>) => {
     setIsSubmitting(true);
 
@@ -87,58 +88,39 @@ const Join = () => {
         }),
       });
 
-      // Log detailed response info
-      console.log({
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        url: response.url
-      });
-
       // Check for non-JSON responses
       const contentType = response.headers.get('content-type');
       if (!contentType?.includes('application/json')) {
         throw new Error(`Server returned non-JSON response: ${contentType}`);
       }
 
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        console.error('Response parsing error:', parseError);
-        const text = await response.text();
-        console.error('Raw response:', text);
-        throw new Error('Server returned invalid JSON response');
-      }
+      const responseData = await response.json();
 
       if (response.ok) {
         toast({
           title: "Account Created!",
-          description: `Welcome! You've successfully joined as a ${role}.`,
+          description: `Welcome! You've successfully joined as a ${role}. Redirecting to sign in...`,
         });
+        
+        // Redirect to sign-in page after successful registration
+        setTimeout(() => {
+          navigate("/signin");
+        }, 2000); // Redirect after 2 seconds
       } else {
         throw new Error(responseData.message || `Registration failed: ${response.statusText}`);
       }
 
     } catch (error: any) {
-      console.error('Registration error:', {
-        error,
-        message: error.message,
-        stack: error.stack
-      });
-
-      const errorMessage = error.message || "An unexpected error occurred. Please try again later.";
-
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: errorMessage,
+        description: error.message || "An unexpected error occurred. Please try again later.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
   if (loading) {
     return (
