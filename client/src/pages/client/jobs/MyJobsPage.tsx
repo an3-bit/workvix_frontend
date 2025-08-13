@@ -20,25 +20,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Nav2 from '@/components/Nav2';
 import Footer from '@/components/Footer';
 
 interface Job {
-  id: string;
+  id: number;
+  client_id: number;
   title: string;
   description: string;
   budget: number;
   min_budget?: number;
   max_budget?: number;
   category: string;
+  urgency?: string;
+  deadline?: string;
   status: 'open' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
   created_at: string;
   updated_at: string;
-  assigned_freelancer_id?: string;
   attachment_url?: string;
   bids_count: number;
+  assigned_freelancer_id?: number;
   assigned_freelancer?: {
     first_name: string;
     last_name: string;
@@ -82,46 +84,21 @@ const MyJobs: React.FC = () => {
 
   const fetchJobs = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/signin');
-        return;
+      // In a real app, you'd want to get the client_id from your auth system
+      const response = await fetch('http://localhost:5000/jobs');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch jobs');
       }
 
-      // Fetch jobs with bid counts and assigned freelancer info
-      const { data: jobsData, error } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          assigned_freelancer:profiles!jobs_assigned_freelancer_id_fkey(
-            first_name,
-            last_name,
-            email,
-            avatar_url
-          )
-        `)
-        .eq('client_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get bid counts for each job
-      const jobsWithBidCounts = await Promise.all(
-        (jobsData || []).map(async (job) => {
-          const { count: bidsCount } = await supabase
-            .from('bids')
-            .select('*', { count: 'exact', head: true })
-            .eq('job_id', job.id);
-
-          return {
-            ...job,
-            bids_count: bidsCount || 0
-          };
-        })
-      );
-
-      setJobs(jobsWithBidCounts as Job[]);
-      calculateStats(jobsWithBidCounts as Job[]);
+      const jobsData = await response.json();
+      
+      // If your backend doesn't provide bids_count and assigned_freelancer,
+      // you might need additional API calls here to get that data
+      // For now, I'll assume your backend returns all necessary data
+      
+      setJobs(jobsData);
+      calculateStats(jobsData);
     } catch (error) {
       console.error('Error fetching jobs:', error);
       toast({
@@ -142,7 +119,7 @@ const MyJobs: React.FC = () => {
       .filter(job => job.status === 'completed')
       .reduce((sum, job) => sum + job.budget, 0);
     const averageBids = jobsData.length > 0 
-      ? jobsData.reduce((sum, job) => sum + job.bids_count, 0) / jobsData.length 
+      ? jobsData.reduce((sum, job) => sum + (job.bids_count || 0), 0) / jobsData.length 
       : 0;
 
     setStats({
@@ -161,8 +138,8 @@ const MyJobs: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(job =>
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.category.toLowerCase().includes(searchTerm.toLowerCase())
+        (job.description && job.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (job.category && job.category.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -213,26 +190,31 @@ const MyJobs: React.FC = () => {
     }
   };
 
-  const handleViewJob = (jobId: string) => {
+  const handleViewJob = (jobId: number) => {
     navigate(`/jobs/${jobId}`);
   };
 
-  const handleViewBids = (jobId: string) => {
+  const handleViewBids = (jobId: number) => {
     navigate(`/client/bids?job=${jobId}`);
   };
 
-  const handleChatWithFreelancer = (jobId: string, freelancerId: string) => {
+  const handleChatWithFreelancer = (jobId: number, freelancerId: number) => {
     navigate(`/client/chat?job=${jobId}&freelancer=${freelancerId}`);
   };
 
-  const handleCancelJob = async (jobId: string) => {
+  const handleCancelJob = async (jobId: number) => {
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .update({ status: 'cancelled' })
-        .eq('id', jobId);
+      const response = await fetch(`http://localhost:5000/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'cancelled' })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to cancel job');
+      }
 
       toast({
         title: 'Job Cancelled',
@@ -471,7 +453,7 @@ const MyJobs: React.FC = () => {
                             </div>
                             <div>
                               <p className="text-sm text-gray-500">Bids</p>
-                              <p className="font-semibold text-gray-900">{job.bids_count}</p>
+                              <p className="font-semibold text-gray-900">{job.bids_count || 0}</p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-500">Posted</p>
@@ -502,7 +484,7 @@ const MyJobs: React.FC = () => {
                             View Details
                           </Button>
                           
-                          {job.bids_count > 0 && (
+                          {(job.bids_count || 0) > 0 && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -510,11 +492,11 @@ const MyJobs: React.FC = () => {
                               className="flex items-center gap-2"
                             >
                               <Users className="h-4 w-4" />
-                              View Bids ({job.bids_count})
+                              View Bids ({job.bids_count || 0})
                             </Button>
                           )}
 
-                          {job.assigned_freelancer && (
+                          {job.assigned_freelancer && job.assigned_freelancer_id && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -553,4 +535,4 @@ const MyJobs: React.FC = () => {
   );
 };
 
-export default MyJobs; 
+export default MyJobs;

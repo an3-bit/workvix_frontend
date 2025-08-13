@@ -86,48 +86,43 @@ const JobsBid: React.FC = () => {
     }
   };
 
-  const fetchJobDetails = async () => {
-    try {
-      // First fetch the job details
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', jobId)
-        .maybeSingle();
-
-      if (jobError) throw jobError;
-
-      if (!jobData) {
-        throw new Error('Job not found');
-      }
-
-      // Then fetch the client information separately
-      let clientData = null;
-      if (jobData.client_id) {
-        const { data: clientInfo, error: clientError } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, email')
-          .eq('id', jobData.client_id)
-          .maybeSingle();
-
-        if (!clientError && clientInfo) {
-          clientData = clientInfo;
-        }
-      }
-
-      // Combine the data
-      const processedJobData: Job = {
-        ...jobData,
-        client: clientData
-      };
-      
-      setJob(processedJobData);
-      return processedJobData;
-    } catch (error) {
-      console.error('Error fetching job details:', error);
-      throw error;
+const fetchJobDetails = async () => {
+  try {
+    // Fetch the job details from your local backend
+    const jobRes = await fetch(`http://localhost:5000/jobs/${jobId}`);
+    if (!jobRes.ok) {
+      throw new Error(`Failed to fetch job details: ${jobRes.statusText}`);
     }
-  };
+    const jobData = await jobRes.json();
+
+    if (!jobData) {
+      throw new Error('Job not found');
+    }
+
+    // Fetch the client details if client_id exists
+    let clientData = null;
+    if (jobData.client_id) {
+      const clientRes = await fetch(`http://localhost:5000/users/${jobData.client_id}`);
+      if (clientRes.ok) {
+        clientData = await clientRes.json();
+      }
+    }
+
+    // Combine the data
+    const processedJobData: Job = {
+      ...jobData,
+      client: clientData
+    };
+
+    setJob(processedJobData);
+    return processedJobData;
+
+  } catch (error) {
+    console.error('Error fetching job details:', error);
+    throw error;
+  }
+};
+
 
   const checkExistingBid = async (userId: string) => {
     try {
